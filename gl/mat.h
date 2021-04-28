@@ -1,0 +1,350 @@
+#ifndef __MAT_H__
+#define __MAT_H__
+
+#include <vec.h>
+class mat3;
+class mat4;
+
+class mat2
+{
+	vec2 col0, col1;
+	float* ptr_value = NULL;
+
+	friend class mat3;
+	friend class mat4;
+
+public:
+	mat2();
+	mat2(float v00, float v10, float v01, float v11);
+	mat2(float v);
+	mat2(const vec2& _col0, const vec2& _col1);
+	mat2(const mat2& A);
+	mat2(mat2&& A);
+	mat2(const mat3& A);
+	mat2(const mat4& A);
+	~mat2();
+
+	mat2& operator =(const mat2& A);
+	mat2& operator =(mat2&& A);
+
+	vec2& operator [](uint i);
+	vec2  operator [](uint i)const;
+
+	mat2& operator +();
+	mat2& operator -();
+	mat2& operator +=(float value);
+	mat2& operator +=(const vec2& v);
+	mat2& operator +=(const mat2& A);
+	mat2& operator -=(float value);
+	mat2& operator -=(const vec2& v);
+	mat2& operator -=(const mat2& A);
+	mat2& operator *=(float value);
+	mat2& operator *=(const mat2& A);
+	mat2& operator %=(float value);
+	mat2& operator %=(const vec2& A);
+	mat2& operator %=(const mat2& A);
+	mat2& operator /=(float value);
+	mat2& operator /=(const vec2& v);
+	mat2& operator /=(const mat2& A);
+
+	float* data();
+	friend ostream& operator <<(ostream& out, const mat2& A);
+
+	friend mat2 operator +(const mat2& A, float value);
+	friend mat2 operator -(const mat2& A, float value);
+	friend mat2 operator *(const mat2& A, float value);
+	friend mat2 operator %(const mat2& A, float value);
+	friend mat2 operator /(const mat2& A, float value);
+
+	friend mat2 operator +(float value, const mat2& A);
+	friend mat2 operator -(float value, const mat2& A);
+	friend mat2 operator *(float value, const mat2& A);
+	friend mat2 operator %(float value, const mat2& A);
+	friend mat2 operator /(float value, const mat2& A);
+
+	friend mat2 operator +(const mat2& A, const vec2& v);
+	friend mat2 operator -(const mat2& A, const vec2& v);
+	friend vec2 operator *(const mat2& A, const vec2& v);
+	friend mat2 operator %(const mat2& A, const vec2& v);
+	friend mat2 operator /(const mat2& A, const vec2& v);
+
+	friend mat2 operator +(const vec2& v, const mat2& A);
+	friend mat2 operator -(const vec2& v, const mat2& A);
+	friend mat2 operator *(const vec2& v, const mat2& A);
+	friend mat2 operator %(const vec2& v, const mat2& A);
+	friend mat2 operator /(const vec2& v, const mat2& A);
+
+	friend mat2 operator +(const mat2& A, const mat2& B);
+	friend mat2 operator -(const mat2& A, const mat2& B);
+	friend mat2 operator *(const mat2& A, const mat2& B);
+	friend mat2 operator %(const mat2& A, const mat2& B);
+	friend mat2 operator /(const mat2& A, const mat2& B);
+
+	friend mat2 pow(const mat2& A, float value);
+	friend mat2 pow(const mat2& A, const mat2& B);
+	friend mat2 pow(const mat2& A, const vec2& B);
+	friend mat2 pow(float value, const mat2& A);
+	friend mat2 pow(const vec2& B, const mat2& A);
+	friend float det(const mat2& A);
+	friend float trace(const mat2& A);
+	friend float norm(const mat2& A);
+	friend mat2 inverse(const mat2& A);
+	friend mat2 transpose(const mat2& A);
+	friend mat2 sin(const mat2& A);
+	friend mat2 cos(const mat2& A);
+	friend mat2 tan(const mat2& A);
+	friend mat2 sinh(const mat2& A);
+	friend mat2 cosh(const mat2& A);
+	friend mat2 tanh(const mat2& A);
+	friend mat2 asin(const mat2& A);
+	friend mat2 acos(const mat2& A);
+	friend mat2 atan(const mat2& A);
+	friend mat2 asinh(const mat2& A);
+	friend mat2 acosh(const mat2& A);
+	friend mat2 atanh(const mat2& A);
+	friend mat2 atan2(const mat2& Y, const mat2& X);
+	friend mat2 exp(const mat2& A);
+	friend mat2 log(const mat2& A);
+	friend mat2 log2(const mat2& A);
+	friend mat2 log10(const mat2& A);
+	friend mat2 abs(const mat2& A);
+	friend mat2 floor(const mat2& A);
+	friend mat2 ceil(const mat2& A);
+	friend mat2 round(const mat2& A, uint n = 0);
+	friend mat2 trunc(const mat2& A);
+	friend mat2 fix(const mat2& A);
+};
+
+class mat3
+{
+	vec3 col0, col1, col2;
+	float* ptr_value = NULL;
+
+	friend class mat2;
+	friend class mat4;
+
+public:
+	mat3();
+	mat3(float v00, float v10, float v20, float v01, float v11, float v21, float v02, float v12, float v22);
+	mat3(float v);
+	mat3(const vec3& _col0, const vec3& _col1, const vec3& _col2);
+	mat3(const mat2& A);
+	mat3(const mat3& A);
+	mat3(mat3&& A);
+	mat3(const mat4& A);
+	~mat3();
+
+	mat3& operator =(const mat3& A);
+	mat3& operator =(mat3&& A);
+
+	vec3& operator [](uint i);
+	vec3  operator [](uint i)const;
+
+	mat3& operator +();
+	mat3& operator -();
+	mat3& operator +=(float value);
+	mat3& operator +=(const vec3& v);
+	mat3& operator +=(const mat3& A);
+	
+	mat3& operator -=(float value);
+	mat3& operator -=(const vec3& v);
+	mat3& operator -=(const mat3& A);
+	
+	mat3& operator *=(float value);
+	mat3& operator *=(const mat3& A);
+
+	mat3& operator %=(float value);
+	mat3& operator %=(const vec3& v);
+	mat3& operator %=(const mat3& A);
+	
+	mat3& operator /=(float value);
+	mat3& operator /=(const vec3& v);
+	mat3& operator /=(const mat3& A);
+
+	float* data();
+	friend ostream& operator <<(ostream& out, const mat3& A);
+
+	friend mat3 operator +(const mat3& A, float value);
+	friend mat3 operator -(const mat3& A, float value);
+	friend mat3 operator *(const mat3& A, float value);
+	friend mat3 operator %(const mat3& A, float value);
+	friend mat3 operator /(const mat3& A, float value);
+
+	friend mat3 operator +(float value, const mat3& A);
+	friend mat3 operator -(float value, const mat3& A);
+	friend mat3 operator *(float value, const mat3& A);
+	friend mat3 operator %(float value, const mat3& A);
+	friend mat3 operator /(float value, const mat3& A);
+
+	friend mat3 operator +(const mat3& A, const vec3& v);
+	friend mat3 operator -(const mat3& A, const vec3& v);
+	friend vec3 operator *(const mat3& A, const vec3& v);
+	friend mat3 operator %(const mat3& A, const vec3& v);
+	friend mat3 operator /(const mat3& A, const vec3& v);
+
+	friend mat3 operator +(const vec3& v, const mat3& A);
+	friend mat3 operator -(const vec3& v, const mat3& A);
+	friend mat3 operator *(const vec3& v, const mat3& A);
+	friend mat3 operator %(const vec3& v, const mat3& A);
+	friend mat3 operator /(const vec3& v, const mat3& A);
+
+	friend mat3 operator +(const mat3& A, const mat3& B);
+	friend mat3 operator -(const mat3& A, const mat3& B);
+	friend mat3 operator *(const mat3& A, const mat3& B);
+	friend mat3 operator %(const mat3& A, const mat3& B);
+	friend mat3 operator /(const mat3& A, const mat3& B);
+
+	friend mat3 pow(const mat3& A, float value);
+	friend mat3 pow(const mat3& A, const mat3& B);
+	friend mat3 pow(const mat3& A, const vec3& B);
+	friend mat3 pow(float value, const mat3& A);
+	friend mat3 pow(const vec3& B, const mat3& A);
+
+	friend float trace(const mat3& A);
+	friend float det(const mat3& A);
+	friend float norm(const mat3& A);
+	friend mat3 inverse(mat3 A);
+	friend mat3 transpose(const mat3& A);
+	friend mat3 sin(const mat3& A);
+	friend mat3 cos(const mat3& A);
+	friend mat3 tan(const mat3& A);
+	friend mat3 sinh(const mat3& A);
+	friend mat3 cosh(const mat3& A);
+	friend mat3 tanh(const mat3& A);
+	friend mat3 asin(const mat3& A);
+	friend mat3 acos(const mat3& A);
+	friend mat3 atan(const mat3& A);
+	friend mat3 asinh(const mat3& A);
+	friend mat3 acosh(const mat3& A);
+	friend mat3 atanh(const mat3& A);
+	friend mat3 atan2(const mat3& Y, const mat3& X);
+	friend mat3 exp(const mat3& A);
+	friend mat3 log(const mat3& A);
+	friend mat3 log2(const mat3& A);
+	friend mat3 log10(const mat3& A);
+	friend mat3 abs(const mat3& A);
+	friend mat3 floor(const mat3& A);
+	friend mat3 ceil(const mat3& A);
+	friend mat3 round(const mat3& A, uint n = 0);
+	friend mat3 trunc(const mat3& A);
+	friend mat3 fix(const mat3& A);
+};
+mat3 cross(const vec3& v);
+
+class mat4
+{
+	vec4 col0, col1, col2, col3;
+
+	float* ptr_value = NULL;
+
+	friend class mat2;
+	friend class mat3;
+
+public:
+	mat4();
+	mat4(float v00, float v10, float v20, float v30, float v01, float v11, float v21, float v31, float v02, float v12, float v22, float v32, float v03, float v13, float v23, float v33);
+	mat4(float v);
+	mat4(const vec4& _col0, const vec4& _col1, const vec4& _col2, const vec4& _col3);
+	mat4(const mat2& A);
+	mat4(const mat3& A);
+	mat4(const mat4& A);
+	mat4(mat4&& A);
+	~mat4();
+
+	mat4& operator =(const mat4& A);
+	mat4& operator =(mat4&& A);
+	vec4& operator [](uint i);
+	vec4  operator [](uint i)const;
+
+	mat4& operator +();
+	mat4& operator -();
+
+	mat4& operator +=(float value);
+	mat4& operator +=(const vec4& v);
+	mat4& operator +=(const mat4& A);
+	
+	mat4& operator -=(float value);
+	mat4& operator -=(const vec4& v);
+	mat4& operator -=(const mat4& A);
+	
+	mat4& operator *=(float value);
+	mat4& operator *=(const mat4& A);
+
+	mat4& operator %=(float value);
+	mat4& operator %=(const vec4& A);
+	mat4& operator %=(const mat4& A);
+	
+	mat4& operator /=(float value);
+	mat4& operator /=(const vec4& v);
+	mat4& operator /=(const mat4& A);
+
+	float* data();
+	friend ostream& operator <<(ostream& out, const mat4& A);
+
+	friend mat4 operator +(const mat4& A, float value);
+	friend mat4 operator -(const mat4& A, float value);
+	friend mat4 operator *(const mat4& A, float value);
+	friend mat4 operator %(const mat4& A, float value);
+	friend mat4 operator /(const mat4& A, float value);
+
+	friend mat4 operator +(float value, const mat4& A);
+	friend mat4 operator -(float value, const mat4& A);
+	friend mat4 operator *(float value, const mat4& A);
+	friend mat4 operator %(float value, const mat4& A);
+	friend mat4 operator /(float value, const mat4& A);
+
+	friend mat4 operator +(const mat4& A, const vec4& v);
+	friend mat4 operator -(const mat4& A, const vec4& v);
+	friend vec4 operator *(const mat4& A, const vec4& v);
+	friend mat4 operator %(const mat4& A, const vec4& v);
+	friend mat4 operator /(const mat4& A, const vec4& v);
+
+	friend mat4 operator +(const vec4& v, const mat4& A);
+	friend mat4 operator -(const vec4& v, const mat4& A);
+	friend mat4 operator *(const vec4& v, const mat4& A);
+	friend mat4 operator %(const vec4& v, const mat4& A);
+	friend mat4 operator /(const vec4& v, const mat4& A);
+
+	friend mat4 operator +(const mat4& A, const mat4& B);
+	friend mat4 operator -(const mat4& A, const mat4& B);
+	friend mat4 operator *(const mat4& A, const mat4& B);
+	friend mat4 operator %(const mat4& A, const mat4& B);
+	friend mat4 operator /(const mat4& A, const mat4& B);
+
+	friend mat4 pow(const mat4& A, float value);
+	friend mat4 pow(const mat4& A, const mat4& B);
+	friend mat4 pow(const mat4& A, const vec4& B);
+	friend mat4 pow(float value, const mat4& A);
+	friend mat4 pow(const vec4& B, const mat4& A);
+
+	friend float det(const mat4& A);
+	friend float trace(const mat4& A);
+	friend float norm(const mat4& A);
+	friend mat4 inverse(mat4 A);
+	friend mat4 transpose(const mat4& A);
+	friend mat4 sin(const mat4& A);
+	friend mat4 cos(const mat4& A);
+	friend mat4 tan(const mat4& A);
+	friend mat4 sinh(const mat4& A);
+	friend mat4 cosh(const mat4& A);
+	friend mat4 tanh(const mat4& A);
+	friend mat4 asin(const mat4& A);
+	friend mat4 acos(const mat4& A);
+	friend mat4 atan(const mat4& A);
+	friend mat4 asinh(const mat4& A);
+	friend mat4 acosh(const mat4& A);
+	friend mat4 atanh(const mat4& A);
+	friend mat4 atan2(const mat4& Y, const mat4& X);
+	friend mat4 exp(const mat4& A);
+	friend mat4 log(const mat4& A);
+	friend mat4 log2(const mat4& A);
+	friend mat4 log10(const mat4& A);
+	friend mat4 abs(const mat4& A);
+	friend mat4 floor(const mat4& A);
+	friend mat4 ceil(const mat4& A);
+	friend mat4 round(const mat4& A, uint n = 0);
+	friend mat4 trunc(const mat4& A);
+	friend mat4 fix(const mat4& A);
+};
+
+#endif
