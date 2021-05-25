@@ -1,0 +1,127 @@
+#ifndef __SHADER__
+#define __SHADER__
+
+#include <list>
+#include <map>
+#include <set>
+
+#include "glass/common.h"
+#include "glass/Uniform"
+
+class BaseShader
+{
+private:
+	static std::multiset<uint> existing_BaseShaders;
+
+protected:
+	uint _id = 0;
+	uint _type = 0;
+	std::string _filename;
+	std::string _code;
+	std::string clean_code;
+	std::list<std::string> include_paths;
+	std::map<uint, std::string> line_map;
+
+public:
+	std::set<uint> comments_set;
+
+protected:
+	void init();
+	void del();
+	void find_comments();
+	void replace_includes();
+	void format_error(std::string& info);
+
+public:
+	BaseShader(uint __type);
+	BaseShader(const BaseShader& vertex_shader);
+	BaseShader(BaseShader&& vertex_shader);
+	virtual ~BaseShader();
+	BaseShader& operator =(const BaseShader& vertex_shader);
+	BaseShader& operator =(BaseShader&& vertex_shader);
+
+	uint id()const;
+	std::string code()const;
+	bool is_comment(int pos);
+	std::string filename()const;
+	bool empty()const;
+	void compile(const std::string& file_name);
+	void add_include_path(const std::string& include_path);
+};
+
+class VertexShader : public BaseShader
+{
+public:
+	VertexShader() : BaseShader(GL_VERTEX_SHADER) {}
+};
+
+class FragmentShader : public BaseShader
+{
+public:
+	FragmentShader() : BaseShader(GL_FRAGMENT_SHADER) {}
+};
+
+class GeometryShader : public BaseShader
+{
+public:
+	GeometryShader() : BaseShader(GL_GEOMETRY_SHADER) {}
+};
+
+class Model;
+class sampler2D;
+class Layout;
+class Shader
+{
+	friend class Uniform;
+
+private:
+	static std::multiset<uint> existing_Shaders;
+	static uint active_Shader;
+
+private:
+	uint _id = 0;
+	bool linked = false;
+	bool enable_warning = true;
+	uint available_texture_unit = 1; // for class Uniform to use
+	
+private:
+	void init();
+	void del();
+	void find_layouts(const std::string& code);
+	
+public:
+	enum ShaderType
+	{
+		VERTEX,
+		FRAGMENT,
+		GEOMETRY
+	};
+
+public:
+	VertexShader vertex_shader;
+	FragmentShader fragment_shader;
+	GeometryShader geometry_shader;
+	Uniform uniform;
+	Uniform::BlockMap uniform_block = Uniform::BlockMap(&uniform);
+	std::map<uint, std::string> layout_map;
+
+public:
+	Shader();
+	Shader(const Shader& shader_program);
+	Shader(Shader&& shader_program);
+	~Shader();
+	Shader& operator =(const Shader& shader_program);
+	Shader& operator =(Shader&& shader_program);
+	uint id()const;
+	void compile(ShaderType type, const std::string& vertex_code);
+	void link();
+	void use()const;
+	void unuse()const;
+	bool isUsing()const;
+	void draw(Layout& layout, GLenum type = GL_TRIANGLES);
+	void draw(Model& model);
+	void warningOn();
+	void warningOff();
+};
+
+#endif

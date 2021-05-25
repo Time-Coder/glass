@@ -1,0 +1,74 @@
+#ifndef __POINTLIGHT__
+#define __POINTLIGHT__
+
+#include "glass/mat"
+#include "glass/samplerCube"
+#include "glass/Model"
+#include "glass/FBO"
+
+class PointLight: public Uniform::Bindable
+{
+	// for glsl	
+	vec3 __color = vec3(1.0f, 1.0f, 1.0f);
+	float __brightness = 1.0f;
+	float __radius = 0;
+	float Kl = 0.09f, Kq = 0.032f;
+	vec3 __position;
+	bool __using_shadow = false;
+	mat4 __mat[6];
+
+public:
+	samplerCube depth_map;
+	// end
+
+	Model shape;
+	
+private:
+	float __coverage = 50;
+	bool is_open = true;
+
+private:
+	void update_mat();
+
+public:
+	PointLight();
+
+	float coverage()const;
+	float radius()const;
+	float brightness()const;
+	vec3 color()const;
+	vec3 position()const;
+
+	void setCoverage(float distance);
+	void setBrightness(float _brightness);
+	void setColor(const vec3& _color);
+	void setColor(float r, float g, float b);
+
+	void setPosition(const vec3& v);
+	void setPosition(float x, float y, float z);
+	void move(float dx, float dy, float dz);
+	void move(const vec3& v);
+	void moveTo(float x, float y, float z);
+	void moveTo(const vec3& v);
+	void moveX(float dx);
+	void moveY(float dy);
+	void moveZ(float dz);
+	void moveXTo(float x);
+	void moveYTo(float y);
+	void moveZTo(float z);
+
+	mat4& mat(int i);
+	void useShadow(bool flag = true);
+	bool usingShadow()const;
+	void setShape(const Model& model);
+
+	void bind();
+	void unbind();
+
+	void open();
+	void close();
+	bool isOpen()const;
+	bool isClose()const;
+};
+
+#endif

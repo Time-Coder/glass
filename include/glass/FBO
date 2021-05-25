@@ -1,0 +1,427 @@
+#ifndef __FBO__
+#define __FBO__
+
+#include <set>
+#include <map>
+
+#include "glass/RBO"
+#include "glass/utils/type.h"
+#include "glass/sampler2D"
+#include "glass/samplerCube"
+#include "glass/utils/exceptions.h"
+
+struct FBO
+{
+	enum AttachmentType
+	{
+		COLOR,
+		DEPTH,
+		STENCIL,
+		DEPTH_STENCIL
+	};
+
+	template<class BufferType>
+	struct Attachment
+	{
+		AttachmentType type;
+		GLenum format = 0;
+		GLenum dtype = 0;
+		BufferType* _ = NULL;
+
+		Attachment(AttachmentType _type, GLenum _format = 0, GLenum _dtype = 0):
+		type(_type), format(_format), dtype(_dtype) {}
+	};
+
+private:
+	static std::multiset<uint> existing_FBOs;
+	static uint active_FBO;
+
+	struct _Attachment
+	{
+		FBO* parent = NULL;
+		GLenum id = 0;
+		std::string buffer_type = "sampler2D";
+		AttachmentType type = FBO::COLOR;
+
+		GLenum format = 0;
+		GLenum dtype = 0;
+		
+		void* _buffer = NULL;
+
+	public:
+		std::string name;
+
+	public:
+		template<class BufferType>
+		void init(FBO* _parent, AttachmentType attachment_type, GLenum _format = 0, GLenum _dtype = 0);
+		
+		_Attachment(const std::string& _name);
+		_Attachment(const _Attachment& attachment);
+		_Attachment(_Attachment&& attachment);
+		_Attachment& operator =(const _Attachment& attachment);
+		_Attachment& operator =(_Attachment&& attachment);
+		~_Attachment();
+		void clear();
+		bool empty()const;
+
+		template<class BufferType>
+		BufferType& buffer();
+	};
+
+private:
+	uint _id = 0;
+	uint _screen_width = 1024;
+	uint _screen_height = 1024;
+	uint _buffer_width = 1024;
+	uint _buffer_height = 1024;
+	std::vector<_Attachment> color_attachments;
+	_Attachment* depth_attachment = NULL;
+	_Attachment* stencil_attachment = NULL;
+
+	bool is_applied = false;
+	bool _auto_clear = true;
+	bool _auto_resize = true;
+	uint clear_value = 0;
+	vec4 clear_color = vec4(-1);
+	vec4 old_clear_color;
+	uint max_color_attachments;
+	uint used_color_attachments = 1;
+
+	Image temp_image;
+
+private:
+	void init();
+	void del();
+	void apply();
+	void _bind();
+	void _unbind()const;
+	int vector_find(std::vector<_Attachment>&, const std::string& name);
+
+public:
+	FBO(uint __screen_width = 1024, uint __screen_height = 1024,
+		uint __buffer_width = 0, uint __buffer_height = 0);
+	FBO(const FBO& fbo);
+	FBO(FBO&& fbo);
+	~FBO();
+
+	FBO& operator =(const FBO& fbo);
+	FBO& operator =(FBO&& fbo);
+
+	uint id()const;
+	uint screenWidth()const;
+	uint screenHeight()const;
+	uint bufferWidth()const;
+	uint bufferHeight()const;
+	void resize(uint width, uint height);
+	void screenResize(uint width, uint height);
+	void bufferResize(uint width, uint height);
+	void autoClear(bool flag);
+	void autoResize(bool flag);
+
+	void bind();
+	void unbind()const;
+	uint status();
+	bool completed();
+	void clear();
+	void clearColor(const vec3& c);
+	void clearColor(const vec4& c);
+	void clearColor(float r, float g, float b, float a = 1.0);
+	vec4 clearColor();
+
+	template<class BufferType>
+	void attach(const Attachment<BufferType>& attachment);
+
+	template<class BufferType>
+	void attach(const std::string& name, const Attachment<BufferType>& attachment);
+	
+	template<class BufferType>
+	BufferType& color(const std::string& name);
+
+	template<class BufferType>
+	BufferType& color(uint n = 0);
+
+	template<class BufferType>
+	BufferType& depth();
+
+	template<class BufferType>
+	BufferType& stencil();
+
+	template<class BufferType>
+	BufferType& depth_stencil();
+};
+
+template<class BufferType>
+void FBO::_Attachment::init(FBO* _parent, AttachmentType attachment_type, GLenum _format, GLenum _dtype)
+{
+	parent = _parent;
+	type = attachment_type;
+	
+	switch(attachment_type)
+	{
+	case FBO::COLOR: id = GL_COLOR_ATTACHMENT0 + parent->color_attachments.size() - 1; break;
+	case FBO::DEPTH: id = GL_DEPTH_ATTACHMENT; break;
+	case FBO::STENCIL: id = GL_STENCIL_ATTACHMENT; break;
+	case FBO::DEPTH_STENCIL: id = GL_DEPTH_STENCIL_ATTACHMENT; break;
+	}
+
+	format = _format;
+	dtype = _dtype;
+
+	if(dtype == 0)
+	{
+		switch(attachment_type)
+		{
+		case FBO::COLOR:
+		case FBO::STENCIL: dtype = GL_UNSIGNED_BYTE; break;
+		case FBO::DEPTH: dtype = GL_FLOAT; break;
+		case FBO::DEPTH_STENCIL: dtype = GL_UNSIGNED_INT_24_8; break;
+		}
+	}
+
+	if(format == 0)
+	{
+		bool is_RBO = same_type(BufferType, RBO);
+		switch(attachment_type)
+		{
+			case FBO::COLOR: format = (is_RBO ? GL_RGB5 : GL_RGB); break;
+			case FBO::DEPTH: format = (is_RBO ? GL_DEPTH_COMPONENT16 : GL_DEPTH_COMPONENT); break;
+			case FBO::STENCIL: format = (is_RBO ? GL_STENCIL_INDEX8 : GL_STENCIL_INDEX); break;
+			case FBO::DEPTH_STENCIL: format = (is_RBO ? GL_DEPTH24_STENCIL8 : GL_DEPTH_STENCIL); break;
+		}
+	}
+
+	parent->_bind();
+	if(same_type(BufferType, sampler2D))
+	{
+		buffer_type = "sampler2D";
+		_buffer = (void*)(new sampler2D(parent->bufferWidth(), parent->bufferHeight(), format, dtype));
+		if(_buffer == NULL)
+		{
+			parent->_unbind();
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+		if(same_type(BufferType, sampler2D))
+		{
+			((sampler2D*)_buffer)->filter(GL_LINEAR);
+		}
+		glFramebufferTexture2D(GL_FRAMEBUFFER, id, GL_TEXTURE_2D, ((sampler2D*)_buffer)->id(), 0);
+	}
+	else if(same_type(BufferType, samplerCube))
+	{
+		buffer_type = "samplerCube";
+		_buffer = (void*)(new samplerCube(parent->bufferWidth(), parent->bufferHeight(), format, dtype));
+		if(_buffer == NULL)
+		{
+			parent->_unbind();
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+		glFramebufferTexture(GL_FRAMEBUFFER, id, ((samplerCube*)_buffer)->id(), 0);
+	}
+	else if(same_type(BufferType, RBO))
+	{
+		buffer_type = "RBO";
+		_buffer = (void*)(new RBO(parent->bufferWidth(), parent->bufferHeight(), format));
+		if(_buffer == NULL)
+		{
+			parent->_unbind();
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, id, GL_RENDERBUFFER, ((RBO*)_buffer)->id());
+	}
+	else
+	{
+		throw glass::TypeError("Unknown buffer type " + type_name(BufferType));
+	}
+}
+
+template<class BufferType>
+BufferType& FBO::_Attachment::buffer()
+{
+	if(_buffer == NULL)
+	{
+		throw glass::RuntimeError("Current attachment is empty!");
+	}
+
+	if((same_type(BufferType, sampler2D) && buffer_type == "sampler2D") ||
+	   (same_type(BufferType, samplerCube) && buffer_type == "samplerCube") ||
+	   (same_type(BufferType, RBO) && buffer_type == "RBO"))
+	{
+		return *((BufferType*)_buffer);
+	}
+	else
+	{
+		throw glass::TypeError("Cannot convert " + buffer_type + " to " + type_name(BufferType));
+	}
+}
+
+template<class BufferType>
+void FBO::attach(const FBO::Attachment<BufferType>& attachment)
+{
+	if(attachment.type == FBO::COLOR)
+	{
+		uint i = color_attachments.size();
+		const std::string& name = "color_attachment" + str::str(i);
+		color_attachments.push_back(_Attachment(name));
+		color_attachments.back().init<BufferType>(this, FBO::COLOR, attachment.format, attachment.dtype);
+		clear_value |= GL_COLOR_BUFFER_BIT;
+	}
+	else if(attachment.type == FBO::DEPTH)
+	{
+		if(depth_attachment != NULL)
+		{
+			throw glass::RuntimeError("FBO " + str::str(_id) + " has already attached depth attachment.");
+		}
+		depth_attachment = new _Attachment("depth_attachment");
+		if(depth_attachment == NULL)
+		{
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+		depth_attachment->init<BufferType>(this, FBO::DEPTH, attachment.format, attachment.dtype);
+		clear_value |= GL_DEPTH_BUFFER_BIT;
+	}
+	else if(attachment.type == FBO::STENCIL)
+	{
+		if(stencil_attachment != NULL || (depth_attachment != NULL && depth_attachment->type == FBO::DEPTH_STENCIL))
+		{
+			throw glass::RuntimeError("FBO " + str::str(_id) + " has already attached stencil attachment.");
+		}
+		stencil_attachment = new _Attachment("stencil_attachment");
+		if(stencil_attachment == NULL)
+		{
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+		stencil_attachment->init<BufferType>(this, FBO::STENCIL, attachment.format, attachment.dtype);
+		clear_value |= GL_STENCIL_BUFFER_BIT;
+	}
+	else if(attachment.type == FBO::DEPTH_STENCIL)
+	{
+		if(depth_attachment != NULL || stencil_attachment != NULL)
+		{
+			throw glass::RuntimeError("FBO " + str::str(_id) + " has already attached depth and/or stencil attachment.");
+		}
+		depth_attachment = new _Attachment("depth_stencil_attachment");
+		if(depth_attachment == NULL)
+		{
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+		depth_attachment->init<BufferType>(this, FBO::DEPTH_STENCIL, attachment.format, attachment.dtype);
+		clear_value |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	}
+	else
+	{
+		_unbind();
+		throw glass::TypeError("Unknown attachment type " + attachment.type);
+	}
+	_unbind();
+}
+
+template<class BufferType>
+void FBO::attach(const std::string& name, const FBO::Attachment<BufferType>& attachment)
+{
+	if(attachment.type == FBO::COLOR)
+	{
+		if(vector_find(color_attachments, name) != -1)
+		{
+			throw glass::RuntimeError("Attachment point " + name + " has already been attached.");
+		}
+
+		color_attachments.push_back(_Attachment(name));
+		color_attachments.back().init<BufferType>(this, FBO::COLOR, attachment.format, attachment.dtype);
+		clear_value |= GL_COLOR_BUFFER_BIT;
+	}
+	else
+	{
+		_unbind();
+		throw glass::RuntimeError("Only color buffer support attach with a key name.");
+	}
+	_unbind();
+}
+
+template<class BufferType>
+BufferType& FBO::color(const std::string& name)
+{
+	int i = vector_find(color_attachments, name);
+	if(i == -1)
+	{
+		throw glass::KeyError("Color buffer " + name + " is not exist.");
+	}
+
+	if(same_type(BufferType, Image))
+	{
+	    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	    glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
+	    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		Image image(_screen_height, _screen_width, 3);
+		glReadPixels(0, 0, _screen_width, _screen_height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+		temp_image = image.flip_y();
+		return force_cast<BufferType>(temp_image);
+	}
+	else
+	{
+		return color_attachments[i].buffer<BufferType>();
+	}
+}
+
+template<class BufferType>
+BufferType& FBO::color(uint n)
+{
+	if(n >= color_attachments.size())
+	{
+		throw glass::IndexError(n, 0, color_attachments.size()-1);
+	}
+
+	if(same_type(BufferType, Image))
+	{
+	    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	    glReadBuffer(GL_COLOR_ATTACHMENT0 + n);
+	    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		Image image(_screen_height, _screen_width, 3);
+		glReadPixels(0, 0, _screen_width, _screen_height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+		temp_image = image.flip_y();
+		return force_cast<BufferType>(temp_image);
+	}
+	else
+	{
+		return color_attachments[n].buffer<BufferType>();
+	}
+}
+
+template<class BufferType>
+BufferType& FBO::depth()
+{
+	if(depth_attachment == NULL)
+	{
+		throw glass::RuntimeError("Depth buffer is not attached");
+	}
+	if(depth_attachment->type != FBO::DEPTH)
+	{
+		throw glass::RuntimeError("Depth buffer is compact with stencil buffer.\nPlease use depth_stencil to access it.");
+	}
+	return depth_attachment->buffer<BufferType>();
+}
+
+template<class BufferType>
+BufferType& FBO::stencil()
+{
+	if(depth_attachment == NULL && stencil_attachment == NULL)
+	{
+		throw glass::RuntimeError("Stencil buffer is not attached");
+	}
+	if(depth_attachment != NULL && depth_attachment->type == FBO::DEPTH_STENCIL)
+	{
+		throw glass::RuntimeError("Stencil buffer is compact with depth buffer.\nPlease use depth_stencil to access it.");
+	}
+	return stencil_attachment->buffer<BufferType>();
+}
+
+template<class BufferType>
+BufferType& FBO::depth_stencil()
+{
+	if(depth_attachment == NULL || depth_attachment->type != FBO::DEPTH_STENCIL)
+	{
+		throw glass::RuntimeError("Depth_Stencil buffer is not attached");
+	}
+	return depth_attachment->buffer<BufferType>();
+}
+
+#endif

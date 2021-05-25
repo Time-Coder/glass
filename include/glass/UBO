@@ -1,0 +1,241 @@
+#ifndef __UBO__
+#define __UBO__
+
+#include <set>
+
+#include "glass/Uniform"
+
+typedef unsigned int uint;
+
+class Counter
+{
+	int* data = NULL;
+	uint length = 0;
+
+public:
+	void init(uint _length);
+	Counter() {}
+	Counter(uint _length);
+	~Counter();
+	uint get()const;
+	void borrow(uint value);
+	void put_back(uint value);
+};
+
+class UBO
+{
+private:
+	static std::multiset<uint> existing_UBOs;
+	static uint active_UBO;
+	static bool is_poll_init;
+	static Counter binding_points_poll;
+
+private:
+	class Reference
+	{
+		UBO* parent = NULL;
+		std::string name;
+
+	public:
+		Reference(UBO* _parent, const std::string& _name);
+
+		std::string type()const;
+		uint size()const;
+		int offset()const;
+
+		template<class DataType>
+		void operator =(const DataType& value);
+
+		Reference operator [](const std::string& sub_name)const;
+		Reference operator [](uint index)const;
+
+		bool operator ==(const Reference& ref)const;
+		bool operator !=(const Reference& ref)const;
+	};
+
+private:
+	uint _id = 0;
+	uint _size = 0;
+	uint _binding_point = 0;
+
+public:
+	Uniform::BlockMap::Reference block;
+
+private:
+	void init();
+	void del();
+	bool is_atom(const std::string& name);
+	void copy(const UBO& ubo);
+
+public:
+	UBO();
+	UBO(const UBO& ubo);
+	UBO(UBO&& ubo);
+
+	template<class DataType>
+	UBO& operator =(const DataType& ubo);
+
+	UBO& operator =(UBO&& ubo);
+	Reference operator [](const std::string& member_name);
+	~UBO();
+	uint id()const;
+	uint size()const;
+	bool empty()const;
+	void bind();
+	void bind(uint point);
+	void unbind()const;
+	bool isBind()const;
+	uint binding_point()const;
+	void setStructure(const Uniform::BlockMap::Reference& block);
+	void malloc(uint size);
+
+	template<class DataType>
+	void set(const std::string& name, const DataType& value);
+
+	void* set(const std::string& name, void* ptr_value);
+
+	void set_atom(const std::string& name, void* ptr_value);
+
+	template<class DataType>
+	void set_atom(const std::string& name, const DataType& value);
+	
+	void set_bool(const std::string& name, bool value);
+	void set_uint(const std::string& name, const uint& value);
+	void set_int(const std::string& name, const int& value);
+	void set_float(const std::string& name, const float& value);
+	void set_double(const std::string& name, const double& value);
+	void set_bvec2(const std::string& name, const bvec2& value);
+	void set_bvec3(const std::string& name, const bvec3& value);
+	void set_bvec4(const std::string& name, const bvec4& value);
+	void set_ivec2(const std::string& name, const ivec2& value);
+	void set_ivec3(const std::string& name, const ivec3& value);
+	void set_ivec4(const std::string& name, const ivec4& value);
+	void set_uvec2(const std::string& name, const uvec2& value);
+	void set_uvec3(const std::string& name, const uvec3& value);
+	void set_uvec4(const std::string& name, const uvec4& value);
+	void set_vec2(const std::string& name, const vec2& value);
+	void set_vec3(const std::string& name, const vec3& value);
+	void set_vec4(const std::string& name, const vec4& value);
+	void set_dvec2(const std::string& name, const dvec2& value);
+	void set_dvec3(const std::string& name, const dvec3& value);
+	void set_dvec4(const std::string& name, const dvec4& value);
+	void set_mat2(const std::string& name, mat2 value);
+	void set_mat3(const std::string& name, mat3 value);
+	void set_mat4(const std::string& name, mat4 value);
+};
+
+template<class DataType>
+void UBO::set_atom(const std::string& name, const DataType& value)
+{
+	if(!block.contains(name))
+	{
+		throw glass::KeyError(name + "is not a member of uniform block " + block.name);
+	}
+	std::string type = block[name].type;
+
+	__SET_ATOM_GENERAL_CODE
+	else
+	{
+		throw glass::TypeError("uniform block member " + name + " is not an atom variable.");
+	}
+}
+
+template<class DataType>
+void UBO::Reference::operator =(const DataType& value)
+{
+	parent->set(name, value);
+}
+
+template<class DataType>
+void UBO::set(const std::string& name, const DataType& value)
+{
+	if(block.empty())
+	{
+		throw glass::RuntimeError("Please call UBO::setStructure(Uniform::Block) before assign value.");
+	}
+
+	block.parent->refresh();
+
+	if(!block.contains(name))
+	{
+		throw glass::KeyError(name + " is not a member of uniform block " + block.name);
+	}
+
+	if(is_atom(name))
+	{
+		set_atom(name, value);
+		return;
+	}
+
+	std::string type = block[name].type;
+	if(type != type_name(DataType))
+	{
+		throw glass::TypeError("Cannot convert " + type_name(DataType) + " to " + type + ".");
+	}
+	block.parent->please_define(type);
+
+	if(block.parent->defined_structs.count(type))
+	{
+		unsigned long long host_hash = block.parent->defined_structs[type].host_hash;
+		if(host_hash != 0 && typeid(DataType).hash_code() != host_hash)
+		{
+			throw glass::TypeError("Cannot convert host type " + type_name(DataType) + " to GLSL type " + type);
+		}
+	}
+
+	if(sizeof(DataType) < block[name].size)
+	{
+		throw glass::TypeError("Cannot convert host type " + type_name(DataType) + " to glsl type " + type);
+	}
+
+	unsigned char* ptr = (unsigned char*)(&(value));
+	if(std::is_base_of<Uniform::Bindable, DataType>::value && 
+	   (block.parent->defined_structs.count(type) == 0 ||
+	    block.parent->defined_structs[type].host_hash == 0) )
+	{
+		ptr += Uniform::Bindable::offset;
+	}
+	for(std::string atom : block[name].atoms)
+	{
+		ptr += block[atom].offset;
+		set_atom(atom, (void*)(ptr));
+		ptr += block[atom].size + block[atom].padding_size;
+	}
+}
+
+template<class DataType>
+UBO& UBO::operator =(const DataType& value)
+{
+	if(same_type(DataType, UBO))
+	{
+		copy(force_cast<UBO>(value));
+		return *this;
+	}
+
+	void* ptr = (void*)(&value);
+	void* ptr_end = (void*)((unsigned char*)ptr + sizeof(value));
+
+	if(std::is_base_of<Uniform::Bindable, DataType>::value &&
+	   (block.parent->defined_structs.count(type_name(DataType)) == 0 ||
+	   	block.parent->defined_structs[type_name(DataType)].host_hash == 0) )
+	{
+		ptr = (void*)((unsigned char*)ptr + Uniform::Bindable::offset);
+	}
+
+	for(int i = 0; i < block.instance()->members.size(); i++)
+	{
+		if(block.instance()->members[i].name.find(".") == std::string::npos &&
+		   block.instance()->members[i].name.find("[") == std::string::npos)
+		{
+			ptr = this->set(block.instance()->members[i].name, ptr);
+			if(ptr >= ptr_end)
+			{
+				break;
+			}
+		}
+	}
+
+	return *this;
+}
+
+#endif
