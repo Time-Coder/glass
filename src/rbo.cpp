@@ -94,7 +94,10 @@ RBO& RBO::operator =(RBO&& rbo)
 {
 	if(&rbo != this)
 	{
-		del();
+		if(_id != rbo._id)
+		{
+			del();
+		}
 
 		_id = move(rbo._id);
 		_width = move(rbo._width);

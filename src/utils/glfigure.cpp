@@ -1,3 +1,6 @@
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include "glass/GLFigure"
 #include "glass/utils/image.h"
 #include "glass/utils/exceptions.h"
@@ -640,4 +643,20 @@ uint GLFigure::height()const
 	return __height;
 }
 
-GLFigure::~GLFigure() {}
+GLFigure::~GLFigure()
+{
+	if(__window != NULL)
+	{
+		glfwDestroyWindow(__window);
+	}
+}
+
+void GLFigure::hideCursor()
+{
+	glfwSetInputMode(__window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void GLFigure::showCursor()
+{
+	glfwSetInputMode(__window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}

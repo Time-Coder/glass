@@ -1,15 +1,16 @@
 #include "glass/common.h"
 #include "glass/samplerCube"
 #include "glass/utils/exceptions.h"
+#include "glass/utils/helper.h"
 
 using namespace std;
 
 uint samplerCube::active_samplerCube = 0;
-set<uint> samplerCube::existing_samplerCubes;
+multiset<uint> samplerCube::existing_samplerCubes;
 list<samplerCube::Instance> samplerCube::existing_instances;
 map<string, samplerCube::Instance*> samplerCube::path_map;
 
-samplerCube::Constructor::~Constructor()
+void samplerCube::destruct_all()
 {
 	if(samplerCube::active_samplerCube != 0)
 	{
@@ -27,7 +28,6 @@ samplerCube::Constructor::~Constructor()
 	samplerCube::path_map.clear();
 	samplerCube::existing_samplerCubes.clear();
 }
-samplerCube::Constructor samplerCube::constructor;
 
 void samplerCube::init()
 {
@@ -50,6 +50,39 @@ void samplerCube::init()
 	{
 		throw glass::RuntimeError("samplerCube " + str::str(instance->id) + " has already been destructed.");
 	}
+}
+
+void samplerCube::del()
+{
+	if(instance == NULL)
+	{
+		has_path = false;
+		return;
+	}
+
+	uint count = existing_samplerCubes.count(instance->id);
+	if(count > 0)
+	{
+		multiset_pop(existing_samplerCubes, instance->id);
+		if(count == 1 && !has_path)
+		{
+		#ifdef _DEBUG
+			cout << "destructing samplerCube " << instance->id << endl;
+		#endif
+			unbind();
+			glDeleteTextures(1, &(instance->id));
+			for(auto it = existing_instances.begin(); it != existing_instances.end(); it++)
+			{
+				if(&(*it) == instance)
+				{
+					existing_instances.erase(it);
+					break;
+				}
+			}
+		}
+	}
+	instance = NULL;
+	has_path = false;
 }
 
 samplerCube::samplerCube() {}
@@ -94,25 +127,45 @@ samplerCube::samplerCube(const string& filename)
 }
 
 samplerCube::samplerCube(const samplerCube& sampler) :
-instance(sampler.instance)
-{}
+instance(sampler.instance),
+has_path(sampler.has_path)
+{
+	if(instance != NULL && existing_samplerCubes.count(instance->id) > 0)
+	{
+		existing_samplerCubes.insert(instance->id);
+	}
+}
 
 samplerCube::samplerCube(samplerCube&& sampler) :
-instance(move(sampler.instance))
+instance(move(sampler.instance)),
+has_path(move(sampler.has_path))
 {
 	sampler.instance = NULL;
+	sampler.has_path = false;
 }
 
 samplerCube::~samplerCube()
 {
-	instance = NULL;
+	del();
+	if(existing_samplerCubes.size() == 0 && existing_instances.size() > 0)
+	{
+		destruct_all();
+	}
 }
 
 samplerCube& samplerCube::operator =(const samplerCube& sampler)
 {
-	if(this != &sampler)
+	if(this != &sampler && instance != sampler.instance)
 	{
+		del();
+
 		instance = sampler.instance;
+		has_path = sampler.has_path;
+
+		if(instance != NULL && existing_samplerCubes.count(instance->id) > 0)
+		{
+			existing_samplerCubes.insert(instance->id);
+		}
 	}
 
 	return *this;
@@ -122,8 +175,14 @@ samplerCube& samplerCube::operator =(samplerCube&& sampler)
 {
 	if(this != &sampler)
 	{
+		if(instance != sampler.instance)
+		{
+			del();
+		}
 		instance = move(sampler.instance);
+		has_path = move(sampler.has_path);
 		sampler.instance = NULL;
+		sampler.has_path = false;
 	}
 
 	return *this;
@@ -388,6 +447,7 @@ void samplerCube::setImages(const vector<string>& filenames)
 		}
 		path_map[path_key] = instance;
 	}
+	has_path = true;
 }
 
 void samplerCube::setImages(const Image& right, const Image& left,
@@ -434,6 +494,7 @@ void samplerCube::setImage(const string& filename)
 		setImage(Image(filename));
 		path_map[path_key] = instance;
 	}
+	has_path = true;
 }
 
 GLenum get_external_format(GLenum internal_format);

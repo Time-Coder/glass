@@ -96,10 +96,10 @@ inline T getEpsilon() {
 
 /// @brief  Will return the constant PI for the requested type.
 /// @return Pi
-template<class T>
-inline T PI() {
-    return static_cast<T>(3.14159265358979323846);
-}
+// template<class T>
+// inline T PI() {
+//     return static_cast<T>(3.14159265358979323846);
+// }
 
 } // namespace Math
 } // namespace Assimp

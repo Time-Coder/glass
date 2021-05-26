@@ -4,13 +4,12 @@
 #include <iostream>
 
 #include "glass/common.h"
-#include <GLFW/glfw3.h>
-
 #include "glass/utils/tictoc.h"
 #include "glass/vec"
 
 typedef unsigned int uint;
 
+struct GLFWwindow;
 class Image;
 class GLFigure
 {
@@ -143,6 +142,8 @@ public:
 	void show();
 	void setIcon(const Image& image);
 	void setIcon(const std::string& filename);
+	void hideCursor();
+	void showCursor();
 };
 
 #endif

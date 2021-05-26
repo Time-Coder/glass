@@ -144,7 +144,10 @@ VAO& VAO::operator =(VAO&& vao)
 {
 	if(this != &vao)
 	{
-		del();
+		if(_id != vao._id)
+		{
+			del();
+		}
 
 		_id = move(vao._id);
 		_ebo = move(vao._ebo);

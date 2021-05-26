@@ -1,3 +1,7 @@
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #include "glass/common.h"
 #include "glass/Model"
 #include "glass/Camera"
@@ -461,6 +465,11 @@ void Model::processNode(aiNode *node, const aiScene *scene)
 
 void Model::load(const string& filename)
 {
+	if(!path::isfile(filename))
+	{
+		throw glass::IOError("File " + filename + " is not exists.");
+	}
+	
 	base_dir = path::dirname(filename);
 	file_name = path::abspath(filename);
 

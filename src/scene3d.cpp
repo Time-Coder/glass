@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "glass/Scene3D"
 #include "glass/utils/path.h"
 #include "glass/utils/geometry.h"
@@ -21,11 +23,6 @@ void gauss_kernel(float sigma, float* weight)
 	{
 		weight[i] /= sum;
 	}
-}
-
-string here()
-{
-	return path::dirname(__FILE__);
 }
 
 int step(double x)
@@ -114,6 +111,19 @@ void Scene3D::init_shadering_merge()
 	shader["merge"].compile(Shader::VERTEX, glass::merge_vertex_shader);
 	shader["merge"].compile(Shader::FRAGMENT, glass::merge_fragment_shader);
 	shader["merge"].link();
+
+	if(!model.count("plane"))
+	{
+		model["plane"] = glass::plane();
+	}
+}
+
+void Scene3D::init_shadering_HDR()
+{
+	if(shader.count("luminance"))
+	{
+		return;
+	}
 
 	shader["luminance"].compile(Shader::VERTEX, glass::luminance_vertex_shader);
 	shader["luminance"].compile(Shader::FRAGMENT, glass::luminance_fragment_shader);
@@ -218,7 +228,7 @@ void Scene3D::init_shadering_dir_light_shadow()
 
 void Scene3D::prepare()
 {
-	glfwSetInputMode(window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	hideCursor();
 	camera.moveYTo(1.7);
 	camera.moveZTo(2);
 }
@@ -580,22 +590,30 @@ void Scene3D::draw()
 		shader["merge"].uniform["skybox_map"] = fbo["gbuffer"].color<sampler2D>("skybox");
 	}
 
-	fbos["luminance"][0].bind();
-	shader["merge"].draw(model["plane"]);
-	fbos["luminance"][0].unbind();
-
-	for(int i = 1; i < fbos["luminance"].size(); i++)
+	if(!using_HDR)
 	{
-		fbos["luminance"][i].bind();
-		shader["luminance"].uniform["type"] = (i == 1 ? 0 : (i == fbos["luminance"].size()-1 ? 2 : 1));
-		shader["luminance"].uniform["frame_image"] = fbos["luminance"][i-1].color<sampler2D>();
-		shader["luminance"].draw(model["plane"]);
-		fbos["luminance"][i].unbind();
+		shader["merge"].draw(model["plane"]);
 	}
-	
-	shader["HDR"].uniform["frame_image"] = fbos["luminance"][0].color<sampler2D>();
-	shader["HDR"].uniform["luminance_texture"] = fbos["luminance"].back().color<sampler2D>();
-	shader["HDR"].draw(model["plane"]);
+	else
+	{
+		init_shadering_HDR();
+		fbos["luminance"][0].bind();
+		shader["merge"].draw(model["plane"]);
+		fbos["luminance"][0].unbind();
+
+		for(int i = 1; i < fbos["luminance"].size(); i++)
+		{
+			fbos["luminance"][i].bind();
+			shader["luminance"].uniform["type"] = (i == 1 ? 0 : (i == fbos["luminance"].size()-1 ? 2 : 1));
+			shader["luminance"].uniform["frame_image"] = fbos["luminance"][i-1].color<sampler2D>();
+			shader["luminance"].draw(model["plane"]);
+			fbos["luminance"][i].unbind();
+		}
+		
+		shader["HDR"].uniform["frame_image"] = fbos["luminance"][0].color<sampler2D>();
+		shader["HDR"].uniform["luminance_texture"] = fbos["luminance"].back().color<sampler2D>();
+		shader["HDR"].draw(model["plane"]);
+	}
 }
 
 void Scene3D::onChangeSize(int width, int height)
@@ -702,14 +720,14 @@ void Scene3D::onKeyRepeat(const string& key)
 	else if(key == "ESC")
 	{
 		can_move = false;
-		glfwSetInputMode(window(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		showCursor();
 	}
 	else if(key == "ENTER")
 	{
 		camera.screenOffset(0, 0);
 		camera.screenZoom(1);
 		can_move = true;
-		glfwSetInputMode(window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		hideCursor();
 	}
 	else if(key == "F")
 	{
@@ -829,4 +847,14 @@ void Scene3D::setSkyBoxBack(const string& filename)
 	{
 		init_skybox();
 	}
+}
+
+void Scene3D::useHDR(bool flag)
+{
+	using_HDR = flag;
+}
+
+bool Scene3D::usingHDR()const
+{
+	return using_HDR;
 }

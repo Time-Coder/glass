@@ -206,7 +206,10 @@ UBO& UBO::operator =(UBO&& ubo)
 			throw glass::RuntimeError("Different structure uniform block cannot assign to each other.");
 		}
 
-		del();
+		if(_id != ubo._id)
+		{
+			del();
+		}
 		_id = move(ubo._id);
 		_size = move(ubo._size);
 

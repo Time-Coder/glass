@@ -21,6 +21,7 @@ class Scene3D: public GLFigure
 
 	float gauss_weights[5];
 	bool can_move = true;
+	bool using_HDR = false;
 
 public:
 	std::map<std::string, Model> models;
@@ -46,6 +47,7 @@ private:
 	void init_shadering_gbuffer();
 	void init_shadering_blur();
 	void init_shadering_merge();
+	void init_shadering_HDR();
 	void init_shadering_lighting();
 	void init_shadering_point_light_shadow();
 	void init_shadering_dir_light_shadow();
@@ -66,6 +68,8 @@ public:
 	void setSkyBoxRight(const std::string& filename);
 	void setSkyBoxFront(const std::string& filename);
 	void setSkyBoxBack(const std::string& filename);
+	void useHDR(bool flag = true);
+	bool usingHDR()const;
 };
 
 template<class DataType>

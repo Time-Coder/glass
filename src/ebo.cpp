@@ -84,7 +84,10 @@ EBO& EBO::operator =(EBO&& ebo)
 {
 	if(this != &ebo)
 	{
-		del();
+		if(_id != ebo._id)
+		{
+			del();
+		}
 
 		_id = move(ebo._id);
 		_size = move(ebo._size);

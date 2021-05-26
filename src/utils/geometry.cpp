@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "glass/utils/geometry.h"
 #include "glass/Model"
 

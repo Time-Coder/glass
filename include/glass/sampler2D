@@ -31,26 +31,21 @@ class sampler2D
 		bool is_applied = false;
 	};
 
-	struct Constructor
-	{
-		friend class sampler2D;
-		Constructor() {}
-		~Constructor();
-	};
-	static Constructor constructor;
-
 private:
 	static uint active_sampler2D;
-	static std::set<uint> existing_sampler2Ds;
+	static std::multiset<uint> existing_sampler2Ds;
 	static std::list<Instance> existing_instances;
 	static std::map<std::string, Instance*> path_map;
 	
 private:
 	Instance* instance = NULL;
+	bool has_path = false;
 
 private:
 	void init();
 	void _bind();
+	void del();
+	void destruct_all();
 
 public:
 	static uint max_units();

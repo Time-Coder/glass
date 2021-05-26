@@ -3,15 +3,16 @@
 #include "glass/common.h"
 #include "glass/sampler2D"
 #include "glass/utils/exceptions.h"
+#include "glass/utils/helper.h"
 
 using namespace std;
 
 uint sampler2D::active_sampler2D = 0;
-set<uint> sampler2D::existing_sampler2Ds;
+multiset<uint> sampler2D::existing_sampler2Ds;
 list<sampler2D::Instance> sampler2D::existing_instances;
 map<string, sampler2D::Instance*> sampler2D::path_map;
 
-sampler2D::Constructor::~Constructor()
+void sampler2D::destruct_all()
 {
 	if(sampler2D::active_sampler2D != 0)
 	{
@@ -29,7 +30,6 @@ sampler2D::Constructor::~Constructor()
 	sampler2D::existing_sampler2Ds.clear();
 	sampler2D::path_map.clear();
 }
-sampler2D::Constructor sampler2D::constructor;
 
 uint sampler2D::max_units()
 {
@@ -61,6 +61,39 @@ void sampler2D::init()
 	}
 }
 
+void sampler2D::del()
+{
+	if(instance == NULL)
+	{
+		has_path = false;
+		return;
+	}
+
+	uint count = existing_sampler2Ds.count(instance->id);
+	if(count > 0)
+	{
+		multiset_pop(existing_sampler2Ds, instance->id);
+		if(count == 1 && !has_path)
+		{
+		#ifdef _DEBUG
+			cout << "destructing sampler2D " << instance->id << endl;
+		#endif
+			unbind();
+			glDeleteTextures(1, &(instance->id));
+			for(auto it = existing_instances.begin(); it != existing_instances.end(); it++)
+			{
+				if(&(*it) == instance)
+				{
+					existing_instances.erase(it);
+					break;
+				}
+			}
+		}
+	}
+	instance = NULL;
+	has_path = false;
+}
+
 sampler2D::sampler2D() {}
 
 sampler2D::sampler2D(uint _width, uint _height, uint _format, uint _dtype)
@@ -79,23 +112,45 @@ sampler2D::sampler2D(const string& filename)
 }
 
 sampler2D::sampler2D(const sampler2D& sampler) :
-instance(sampler.instance)
-{}
+instance(sampler.instance),
+has_path(sampler.has_path)
+{
+	if(instance != NULL && existing_sampler2Ds.count(instance->id) > 0)
+	{
+		existing_sampler2Ds.insert(instance->id);
+	}
+}
 
 sampler2D::sampler2D(sampler2D&& sampler) :
-instance(move(sampler.instance))
-{}
+instance(move(sampler.instance)),
+has_path(move(sampler.has_path))
+{
+	sampler.instance = NULL;
+	sampler.has_path = false;
+}
 
 sampler2D::~sampler2D()
 {
-	instance = NULL;
+	del();
+	if(existing_sampler2Ds.size() == 0 && existing_instances.size() > 0)
+	{
+		destruct_all();
+	}
 }
 
 sampler2D& sampler2D::operator =(const sampler2D& sampler)
 {
-	if(this != &sampler)
+	if(this != &sampler && instance != sampler.instance)
 	{
+		del();
+
 		instance = sampler.instance;
+		has_path = sampler.has_path;
+
+		if(instance != NULL && existing_sampler2Ds.count(instance->id) > 0)
+		{
+			existing_sampler2Ds.insert(instance->id);
+		}
 	}
 
 	return *this;
@@ -105,7 +160,14 @@ sampler2D& sampler2D::operator =(sampler2D&& sampler)
 {
 	if(this != &sampler)
 	{
+		if(instance != sampler.instance)
+		{
+			del();
+		}
 		instance = move(sampler.instance);
+		has_path = move(sampler.has_path);
+		sampler.instance = NULL;
+		sampler.has_path = false;
 	}
 
 	return *this;
@@ -347,6 +409,7 @@ void sampler2D::setImage(const string& filename)
 		setImage(Image(filename, true));
 	    path_map[abspath] = instance;
 	}
+	has_path = true;
 }
 
 GLenum get_external_format(GLenum internal_format)

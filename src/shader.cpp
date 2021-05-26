@@ -102,7 +102,10 @@ BaseShader& BaseShader::operator =(BaseShader&& base_shader)
 {
 	if(this != &base_shader)
 	{
-		del();
+		if(_id != base_shader._id)
+		{
+			del();
+		}
 		_id = move(base_shader._id);
 		_type = move(base_shader._type);
 		_filename = move(base_shader._filename);
@@ -503,7 +506,10 @@ Shader& Shader::operator =(Shader&& shader)
 {
 	if(this != &shader)
 	{
-		del();
+		if(_id != shader._id)
+		{
+			del();
+		}
 
 		_id = move(shader._id);
 		linked = move(shader.linked);

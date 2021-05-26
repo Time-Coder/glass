@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "glass/PointLight"
 #include "glass/Uniform"
 #include "glass/utils/transform.h"

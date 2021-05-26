@@ -358,7 +358,10 @@ FBO& FBO::operator =(FBO&& fbo)
 {
 	if(this != &fbo)
 	{
-		del();
+		if(_id != fbo._id)
+		{
+			del();
+		}
 
 		_id = move(fbo._id);
 		_screen_width = move(fbo._screen_width);

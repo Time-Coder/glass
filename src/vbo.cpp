@@ -88,7 +88,10 @@ VBO& VBO::operator =(VBO&& vbo)
 {
 	if(this != &vbo)
 	{
-		del();
+		if(_id != vbo._id)
+		{
+			del();
+		}
 
 		_id = move(vbo._id);
 		_size = move(vbo._size);

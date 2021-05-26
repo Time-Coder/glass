@@ -31,26 +31,21 @@ class samplerCube
 		bool is_applied = false;
 	};
 
-	struct Constructor
-	{
-		friend class samplerCube;
-		Constructor() {}
-		~Constructor();
-	};
-	static Constructor constructor;
-
 private:
 	static uint active_samplerCube;
-	static std::set<uint> existing_samplerCubes;
+	static std::multiset<uint> existing_samplerCubes;
 	static std::list<Instance> existing_instances;
 	static std::map<std::string, Instance*> path_map;
 
 private:
 	Instance* instance = NULL;
+	bool has_path = false;
 
 private:
 	void _bind();
 	void init();
+	void del();
+	void destruct_all();
 
 public:
 	samplerCube();

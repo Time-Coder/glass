@@ -4,7 +4,7 @@
 #include <map>
 
 #ifndef __gl_h_
-#include "third_party/glad/glad/glad.h"
+#include "glass/utils/glad/glad.h"
 #endif
 
 typedef unsigned int uint;
