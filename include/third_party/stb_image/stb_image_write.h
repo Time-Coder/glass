@@ -30,25 +30,25 @@ UNICODE:
    Windows wchar_t filenames to utf8.
 USAGE:
    There are five functions, one for each image file format:
-     int stbi_write_png(char const *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
-     int stbi_write_bmp(char const *filename, int w, int h, int comp, const void *data);
-     int stbi_write_tga(char const *filename, int w, int h, int comp, const void *data);
-     int stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
-     int stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
-     void stbi_flip_vertically_on_write(int flag); // flag is non-zero to flip data vertically
+     int glass_stbi_write_png(char const *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
+     int glass_stbi_write_bmp(char const *filename, int w, int h, int comp, const void *data);
+     int glass_stbi_write_tga(char const *filename, int w, int h, int comp, const void *data);
+     int glass_stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
+     int glass_stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
+     void glass_stbi_flip_vertically_on_write(int flag); // flag is non-zero to flip data vertically
    There are also five equivalent functions that use an arbitrary write function. You are
    expected to open/close your file-equivalent before and after calling these:
-     int stbi_write_png_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data, int stride_in_bytes);
-     int stbi_write_bmp_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
-     int stbi_write_tga_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
-     int stbi_write_hdr_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const float *data);
-     int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality);
+     int glass_stbi_write_png_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const void  *data, int stride_in_bytes);
+     int glass_stbi_write_bmp_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+     int glass_stbi_write_tga_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+     int glass_stbi_write_hdr_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const float *data);
+     int glass_stbi_write_jpg_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality);
    where the callback is:
-      void stbi_write_func(void *context, void *data, int size);
+      void glass_stbi_write_func(void *context, void *data, int size);
    You can configure it with these global variables:
-      int stbi_write_tga_with_rle;             // defaults to true; set to 0 to disable RLE
-      int stbi_write_png_compression_level;    // defaults to 8; set to higher for more compression
-      int stbi_write_force_png_filter;         // defaults to -1; set to 0..5 to force a filter mode
+      int glass_stbi_write_tga_with_rle;             // defaults to true; set to 0 to disable RLE
+      int glass_stbi_write_png_compression_level;    // defaults to 8; set to higher for more compression
+      int glass_stbi_write_force_png_filter;         // defaults to -1; set to 0..5 to force a filter mode
    You can define STBI_WRITE_NO_STDIO to disable the file variant of these
    functions, so the library will not use stdio.h at all. However, this will
    also disable HDR writing, because it requires stdio for formatted output.
@@ -71,12 +71,12 @@ USAGE:
    writer, both because it is in BGR order and because it may have padding
    at the end of the line.)
    PNG allows you to set the deflate compression level by setting the global
-   variable 'stbi_write_png_compression_level' (it defaults to 8).
+   variable 'glass_stbi_write_png_compression_level' (it defaults to 8).
    HDR expects linear float data. Since the format is always 32-bit rgb(e)
    data, alpha (if provided) is discarded, and for monochrome data it is
    replicated across all three channels.
    TGA supports RLE or non-RLE compressed data. To use non-RLE-compressed
-   data, set the global variable 'stbi_write_tga_with_rle' to 0.
+   data, set the global variable 'glass_stbi_write_tga_with_rle' to 0.
    JPEG does ignore alpha channels in input data; quality is between 1 and 100.
    Higher quality looks better but results in a bigger image.
    JPEG baseline (no JPEG progressive).
@@ -130,32 +130,32 @@ LICENSE
 #endif
 
 #ifndef STB_IMAGE_WRITE_STATIC  // C++ forbids static forward declarations
-extern int stbi_write_tga_with_rle;
-extern int stbi_write_png_compression_level;
-extern int stbi_write_force_png_filter;
+extern int glass_stbi_write_tga_with_rle;
+extern int glass_stbi_write_png_compression_level;
+extern int glass_stbi_write_force_png_filter;
 #endif
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_png(char const *filename, int w, int h, int comp, const void  *data, int stride_in_bytes);
-STBIWDEF int stbi_write_bmp(char const *filename, int w, int h, int comp, const void  *data);
-STBIWDEF int stbi_write_tga(char const *filename, int w, int h, int comp, const void  *data);
-STBIWDEF int stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
-STBIWDEF int stbi_write_jpg(char const *filename, int x, int y, int comp, const void  *data, int quality);
+STBIWDEF int glass_stbi_write_png(char const *filename, int w, int h, int comp, const void  *data, int stride_in_bytes);
+STBIWDEF int glass_stbi_write_bmp(char const *filename, int w, int h, int comp, const void  *data);
+STBIWDEF int glass_stbi_write_tga(char const *filename, int w, int h, int comp, const void  *data);
+STBIWDEF int glass_stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
+STBIWDEF int glass_stbi_write_jpg(char const *filename, int x, int y, int comp, const void  *data, int quality);
 
 #ifdef STBI_WINDOWS_UTF8
 STBIWDEF int stbiw_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input);
 #endif
 #endif
 
-typedef void stbi_write_func(void *context, void *data, int size);
+typedef void glass_stbi_write_func(void *context, void *data, int size);
 
-STBIWDEF int stbi_write_png_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data, int stride_in_bytes);
-STBIWDEF int stbi_write_bmp_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
-STBIWDEF int stbi_write_tga_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
-STBIWDEF int stbi_write_hdr_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const float *data);
-STBIWDEF int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void  *data, int quality);
+STBIWDEF int glass_stbi_write_png_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const void  *data, int stride_in_bytes);
+STBIWDEF int glass_stbi_write_bmp_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+STBIWDEF int glass_stbi_write_tga_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+STBIWDEF int glass_stbi_write_hdr_to_func(glass_stbi_write_func *func, void *context, int w, int h, int comp, const float *data);
+STBIWDEF int glass_stbi_write_jpg_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void  *data, int quality);
 
-STBIWDEF void stbi_flip_vertically_on_write(int flip_boolean);
+STBIWDEF void glass_stbi_flip_vertically_on_write(int flip_boolean);
 
 #endif//INCLUDE_STB_IMAGE_WRITE_H
 
@@ -211,32 +211,32 @@ STBIWDEF void stbi_flip_vertically_on_write(int flip_boolean);
 #define STBIW_UCHAR(x) (unsigned char) ((x) & 0xff)
 
 #ifdef STB_IMAGE_WRITE_STATIC
-static int stbi_write_png_compression_level = 8;
-static int stbi_write_tga_with_rle = 1;
-static int stbi_write_force_png_filter = -1;
+static int glass_stbi_write_png_compression_level = 8;
+static int glass_stbi_write_tga_with_rle = 1;
+static int glass_stbi_write_force_png_filter = -1;
 #else
-int stbi_write_png_compression_level = 8;
-int stbi_write_tga_with_rle = 1;
-int stbi_write_force_png_filter = -1;
+int glass_stbi_write_png_compression_level = 8;
+int glass_stbi_write_tga_with_rle = 1;
+int glass_stbi_write_force_png_filter = -1;
 #endif
 
-static int stbi__flip_vertically_on_write = 0;
+static int glass_stbi__flip_vertically_on_write = 0;
 
-STBIWDEF void stbi_flip_vertically_on_write(int flag)
+STBIWDEF void glass_stbi_flip_vertically_on_write(int flag)
 {
-   stbi__flip_vertically_on_write = flag;
+   glass_stbi__flip_vertically_on_write = flag;
 }
 
 typedef struct
 {
-   stbi_write_func *func;
+   glass_stbi_write_func *func;
    void *context;
    unsigned char buffer[64];
    int buf_used;
-} stbi__write_context;
+} glass_stbi__write_context;
 
 // initialize a callback-based context
-static void stbi__start_write_callbacks(stbi__write_context *s, stbi_write_func *c, void *context)
+static void glass_stbi__start_write_callbacks(glass_stbi__write_context *s, glass_stbi_write_func *c, void *context)
 {
    s->func    = c;
    s->context = context;
@@ -244,7 +244,7 @@ static void stbi__start_write_callbacks(stbi__write_context *s, stbi_write_func 
 
 #ifndef STBI_WRITE_NO_STDIO
 
-static void stbi__stdio_write(void *context, void *data, int size)
+static void glass_stbi__stdio_write(void *context, void *data, int size)
 {
    fwrite(data,1,size,(FILE*) context);
 }
@@ -292,14 +292,14 @@ static FILE *stbiw__fopen(char const *filename, char const *mode)
    return f;
 }
 
-static int stbi__start_write_file(stbi__write_context *s, const char *filename)
+static int glass_stbi__start_write_file(glass_stbi__write_context *s, const char *filename)
 {
    FILE *f = stbiw__fopen(filename, "wb");
-   stbi__start_write_callbacks(s, stbi__stdio_write, (void *) f);
+   glass_stbi__start_write_callbacks(s, glass_stbi__stdio_write, (void *) f);
    return f != NULL;
 }
 
-static void stbi__end_write_file(stbi__write_context *s)
+static void glass_stbi__end_write_file(glass_stbi__write_context *s)
 {
    fclose((FILE *)s->context);
 }
@@ -309,7 +309,7 @@ static void stbi__end_write_file(stbi__write_context *s)
 typedef unsigned int stbiw_uint32;
 typedef int stb_image_write_test[sizeof(stbiw_uint32)==4 ? 1 : -1];
 
-static void stbiw__writefv(stbi__write_context *s, const char *fmt, va_list v)
+static void stbiw__writefv(glass_stbi__write_context *s, const char *fmt, va_list v)
 {
    while (*fmt) {
       switch (*fmt++) {
@@ -338,7 +338,7 @@ static void stbiw__writefv(stbi__write_context *s, const char *fmt, va_list v)
    }
 }
 
-static void stbiw__writef(stbi__write_context *s, const char *fmt, ...)
+static void stbiw__writef(glass_stbi__write_context *s, const char *fmt, ...)
 {
    va_list v;
    va_start(v, fmt);
@@ -346,7 +346,7 @@ static void stbiw__writef(stbi__write_context *s, const char *fmt, ...)
    va_end(v);
 }
 
-static void stbiw__write_flush(stbi__write_context *s)
+static void stbiw__write_flush(glass_stbi__write_context *s)
 {
    if (s->buf_used) {
       s->func(s->context, &s->buffer, s->buf_used);
@@ -354,19 +354,19 @@ static void stbiw__write_flush(stbi__write_context *s)
    }
 }
 
-static void stbiw__putc(stbi__write_context *s, unsigned char c)
+static void stbiw__putc(glass_stbi__write_context *s, unsigned char c)
 {
    s->func(s->context, &c, 1);
 }
 
-static void stbiw__write1(stbi__write_context *s, unsigned char a)
+static void stbiw__write1(glass_stbi__write_context *s, unsigned char a)
 {
    if (s->buf_used + 1 > sizeof(s->buffer))
       stbiw__write_flush(s);
    s->buffer[s->buf_used++] = a;
 }
 
-static void stbiw__write3(stbi__write_context *s, unsigned char a, unsigned char b, unsigned char c)
+static void stbiw__write3(glass_stbi__write_context *s, unsigned char a, unsigned char b, unsigned char c)
 {
    int n;
    if (s->buf_used + 3 > sizeof(s->buffer))
@@ -378,7 +378,7 @@ static void stbiw__write3(stbi__write_context *s, unsigned char a, unsigned char
    s->buffer[n+2] = c;
 }
 
-static void stbiw__write_pixel(stbi__write_context *s, int rgb_dir, int comp, int write_alpha, int expand_mono, unsigned char *d)
+static void stbiw__write_pixel(glass_stbi__write_context *s, int rgb_dir, int comp, int write_alpha, int expand_mono, unsigned char *d)
 {
    unsigned char bg[3] = { 255, 0, 255}, px[3];
    int k;
@@ -411,7 +411,7 @@ static void stbiw__write_pixel(stbi__write_context *s, int rgb_dir, int comp, in
       stbiw__write1(s, d[comp - 1]);
 }
 
-static void stbiw__write_pixels(stbi__write_context *s, int rgb_dir, int vdir, int x, int y, int comp, void *data, int write_alpha, int scanline_pad, int expand_mono)
+static void stbiw__write_pixels(glass_stbi__write_context *s, int rgb_dir, int vdir, int x, int y, int comp, void *data, int write_alpha, int scanline_pad, int expand_mono)
 {
    stbiw_uint32 zero = 0;
    int i,j, j_end;
@@ -419,7 +419,7 @@ static void stbiw__write_pixels(stbi__write_context *s, int rgb_dir, int vdir, i
    if (y <= 0)
       return;
 
-   if (stbi__flip_vertically_on_write)
+   if (glass_stbi__flip_vertically_on_write)
       vdir *= -1;
 
    if (vdir < 0) {
@@ -438,7 +438,7 @@ static void stbiw__write_pixels(stbi__write_context *s, int rgb_dir, int vdir, i
    }
 }
 
-static int stbiw__outfile(stbi__write_context *s, int rgb_dir, int vdir, int x, int y, int comp, int expand_mono, void *data, int alpha, int pad, const char *fmt, ...)
+static int stbiw__outfile(glass_stbi__write_context *s, int rgb_dir, int vdir, int x, int y, int comp, int expand_mono, void *data, int alpha, int pad, const char *fmt, ...)
 {
    if (y < 0 || x < 0) {
       return 0;
@@ -452,7 +452,7 @@ static int stbiw__outfile(stbi__write_context *s, int rgb_dir, int vdir, int x, 
    }
 }
 
-static int stbi_write_bmp_core(stbi__write_context *s, int x, int y, int comp, const void *data)
+static int glass_stbi_write_bmp_core(glass_stbi__write_context *s, int x, int y, int comp, const void *data)
 {
    int pad = (-x*3) & 3;
    return stbiw__outfile(s,-1,-1,x,y,comp,1,(void *) data,0,pad,
@@ -461,27 +461,27 @@ static int stbi_write_bmp_core(stbi__write_context *s, int x, int y, int comp, c
             40, x,y, 1,24, 0,0,0,0,0,0);             // bitmap header
 }
 
-STBIWDEF int stbi_write_bmp_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
+STBIWDEF int glass_stbi_write_bmp_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
 {
-   stbi__write_context s = { 0 };
-   stbi__start_write_callbacks(&s, func, context);
-   return stbi_write_bmp_core(&s, x, y, comp, data);
+   glass_stbi__write_context s = { 0 };
+   glass_stbi__start_write_callbacks(&s, func, context);
+   return glass_stbi_write_bmp_core(&s, x, y, comp, data);
 }
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_bmp(char const *filename, int x, int y, int comp, const void *data)
+STBIWDEF int glass_stbi_write_bmp(char const *filename, int x, int y, int comp, const void *data)
 {
-   stbi__write_context s = { 0 };
-   if (stbi__start_write_file(&s,filename)) {
-      int r = stbi_write_bmp_core(&s, x, y, comp, data);
-      stbi__end_write_file(&s);
+   glass_stbi__write_context s = { 0 };
+   if (glass_stbi__start_write_file(&s,filename)) {
+      int r = glass_stbi_write_bmp_core(&s, x, y, comp, data);
+      glass_stbi__end_write_file(&s);
       return r;
    } else
       return 0;
 }
 #endif //!STBI_WRITE_NO_STDIO
 
-static int stbi_write_tga_core(stbi__write_context *s, int x, int y, int comp, void *data)
+static int glass_stbi_write_tga_core(glass_stbi__write_context *s, int x, int y, int comp, void *data)
 {
    int has_alpha = (comp == 2 || comp == 4);
    int colorbytes = has_alpha ? comp-1 : comp;
@@ -490,7 +490,7 @@ static int stbi_write_tga_core(stbi__write_context *s, int x, int y, int comp, v
    if (y < 0 || x < 0)
       return 0;
 
-   if (!stbi_write_tga_with_rle) {
+   if (!glass_stbi_write_tga_with_rle) {
       return stbiw__outfile(s, -1, -1, x, y, comp, 0, (void *) data, has_alpha, 0,
          "111 221 2222 11", 0, 0, format, 0, 0, 0, 0, 0, x, y, (colorbytes + has_alpha) * 8, has_alpha * 8);
    } else {
@@ -499,7 +499,7 @@ static int stbi_write_tga_core(stbi__write_context *s, int x, int y, int comp, v
 
       stbiw__writef(s, "111 221 2222 11", 0,0,format+8, 0,0,0, 0,0,x,y, (colorbytes + has_alpha) * 8, has_alpha * 8);
 
-      if (stbi__flip_vertically_on_write) {
+      if (glass_stbi__flip_vertically_on_write) {
          j = 0;
          jend = y;
          jdir = 1;
@@ -560,20 +560,20 @@ static int stbi_write_tga_core(stbi__write_context *s, int x, int y, int comp, v
    return 1;
 }
 
-STBIWDEF int stbi_write_tga_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
+STBIWDEF int glass_stbi_write_tga_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
 {
-   stbi__write_context s = { 0 };
-   stbi__start_write_callbacks(&s, func, context);
-   return stbi_write_tga_core(&s, x, y, comp, (void *) data);
+   glass_stbi__write_context s = { 0 };
+   glass_stbi__start_write_callbacks(&s, func, context);
+   return glass_stbi_write_tga_core(&s, x, y, comp, (void *) data);
 }
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_tga(char const *filename, int x, int y, int comp, const void *data)
+STBIWDEF int glass_stbi_write_tga(char const *filename, int x, int y, int comp, const void *data)
 {
-   stbi__write_context s = { 0 };
-   if (stbi__start_write_file(&s,filename)) {
-      int r = stbi_write_tga_core(&s, x, y, comp, (void *) data);
-      stbi__end_write_file(&s);
+   glass_stbi__write_context s = { 0 };
+   if (glass_stbi__start_write_file(&s,filename)) {
+      int r = glass_stbi_write_tga_core(&s, x, y, comp, (void *) data);
+      glass_stbi__end_write_file(&s);
       return r;
    } else
       return 0;
@@ -603,7 +603,7 @@ static void stbiw__linear_to_rgbe(unsigned char *rgbe, float *linear)
    }
 }
 
-static void stbiw__write_run_data(stbi__write_context *s, int length, unsigned char databyte)
+static void stbiw__write_run_data(glass_stbi__write_context *s, int length, unsigned char databyte)
 {
    unsigned char lengthbyte = STBIW_UCHAR(length+128);
    STBIW_ASSERT(length+128 <= 255);
@@ -611,7 +611,7 @@ static void stbiw__write_run_data(stbi__write_context *s, int length, unsigned c
    s->func(s->context, &databyte, 1);
 }
 
-static void stbiw__write_dump_data(stbi__write_context *s, int length, unsigned char *data)
+static void stbiw__write_dump_data(glass_stbi__write_context *s, int length, unsigned char *data)
 {
    unsigned char lengthbyte = STBIW_UCHAR(length);
    STBIW_ASSERT(length <= 128); // inconsistent with spec but consistent with official code
@@ -619,7 +619,7 @@ static void stbiw__write_dump_data(stbi__write_context *s, int length, unsigned 
    s->func(s->context, data, length);
 }
 
-static void stbiw__write_hdr_scanline(stbi__write_context *s, int width, int ncomp, unsigned char *scratch, float *scanline)
+static void stbiw__write_hdr_scanline(glass_stbi__write_context *s, int width, int ncomp, unsigned char *scratch, float *scanline)
 {
    unsigned char scanlineheader[4] = { 2, 2, 0, 0 };
    unsigned char rgbe[4];
@@ -708,7 +708,7 @@ static void stbiw__write_hdr_scanline(stbi__write_context *s, int width, int nco
    }
 }
 
-static int stbi_write_hdr_core(stbi__write_context *s, int x, int y, int comp, float *data)
+static int glass_stbi_write_hdr_core(glass_stbi__write_context *s, int x, int y, int comp, float *data)
 {
    if (y <= 0 || x <= 0 || data == NULL)
       return 0;
@@ -728,26 +728,26 @@ static int stbi_write_hdr_core(stbi__write_context *s, int x, int y, int comp, f
       s->func(s->context, buffer, len);
 
       for(i=0; i < y; i++)
-         stbiw__write_hdr_scanline(s, x, comp, scratch, data + comp*x*(stbi__flip_vertically_on_write ? y-1-i : i));
+         stbiw__write_hdr_scanline(s, x, comp, scratch, data + comp*x*(glass_stbi__flip_vertically_on_write ? y-1-i : i));
       STBIW_FREE(scratch);
       return 1;
    }
 }
 
-STBIWDEF int stbi_write_hdr_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const float *data)
+STBIWDEF int glass_stbi_write_hdr_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const float *data)
 {
-   stbi__write_context s = { 0 };
-   stbi__start_write_callbacks(&s, func, context);
-   return stbi_write_hdr_core(&s, x, y, comp, (float *) data);
+   glass_stbi__write_context s = { 0 };
+   glass_stbi__start_write_callbacks(&s, func, context);
+   return glass_stbi_write_hdr_core(&s, x, y, comp, (float *) data);
 }
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_hdr(char const *filename, int x, int y, int comp, const float *data)
+STBIWDEF int glass_stbi_write_hdr(char const *filename, int x, int y, int comp, const float *data)
 {
-   stbi__write_context s = { 0 };
-   if (stbi__start_write_file(&s,filename)) {
-      int r = stbi_write_hdr_core(&s, x, y, comp, (float *) data);
-      stbi__end_write_file(&s);
+   glass_stbi__write_context s = { 0 };
+   if (glass_stbi__start_write_file(&s,filename)) {
+      int r = glass_stbi_write_hdr_core(&s, x, y, comp, (float *) data);
+      glass_stbi__end_write_file(&s);
       return r;
    } else
       return 0;
@@ -843,7 +843,7 @@ static unsigned int stbiw__zhash(unsigned char *data)
 
 #endif // STBIW_ZLIB_COMPRESS
 
-STBIWDEF unsigned char * stbi_zlib_compress(unsigned char *data, int data_len, int *out_len, int quality)
+STBIWDEF unsigned char * glass_stbi_zlib_compress(unsigned char *data, int data_len, int *out_len, int quality)
 {
 #ifdef STBIW_ZLIB_COMPRESS
    // user provided a zlib compress implementation, use that
@@ -1030,8 +1030,8 @@ static void stbiw__encode_png_line(unsigned char *pixels, int stride_bytes, int 
    int *mymap = (y != 0) ? mapping : firstmap;
    int i;
    int type = mymap[filter_type];
-   unsigned char *z = pixels + stride_bytes * (stbi__flip_vertically_on_write ? height-1-y : y);
-   int signed_stride = stbi__flip_vertically_on_write ? -stride_bytes : stride_bytes;
+   unsigned char *z = pixels + stride_bytes * (glass_stbi__flip_vertically_on_write ? height-1-y : y);
+   int signed_stride = glass_stbi__flip_vertically_on_write ? -stride_bytes : stride_bytes;
 
    if (type==0) {
       memcpy(line_buffer, z, width*n);
@@ -1059,9 +1059,9 @@ static void stbiw__encode_png_line(unsigned char *pixels, int stride_bytes, int 
    }
 }
 
-STBIWDEF unsigned char *stbi_write_png_to_mem(const unsigned char *pixels, int stride_bytes, int x, int y, int n, int *out_len)
+STBIWDEF unsigned char *glass_stbi_write_png_to_mem(const unsigned char *pixels, int stride_bytes, int x, int y, int n, int *out_len)
 {
-   int force_filter = stbi_write_force_png_filter;
+   int force_filter = glass_stbi_write_force_png_filter;
    int ctype[5] = { -1, 0, 4, 2, 6 };
    unsigned char sig[8] = { 137,80,78,71,13,10,26,10 };
    unsigned char *out,*o, *filt, *zlib;
@@ -1107,7 +1107,7 @@ STBIWDEF unsigned char *stbi_write_png_to_mem(const unsigned char *pixels, int s
       STBIW_MEMMOVE(filt+j*(x*n+1)+1, line_buffer, x*n);
    }
    STBIW_FREE(line_buffer);
-   zlib = stbi_zlib_compress(filt, y*( x*n+1), &zlen, stbi_write_png_compression_level);
+   zlib = glass_stbi_zlib_compress(filt, y*( x*n+1), &zlen, glass_stbi_write_png_compression_level);
    STBIW_FREE(filt);
    if (!zlib) return 0;
 
@@ -1146,11 +1146,11 @@ STBIWDEF unsigned char *stbi_write_png_to_mem(const unsigned char *pixels, int s
 }
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_png(char const *filename, int x, int y, int comp, const void *data, int stride_bytes)
+STBIWDEF int glass_stbi_write_png(char const *filename, int x, int y, int comp, const void *data, int stride_bytes)
 {
    FILE *f;
    int len;
-   unsigned char *png = stbi_write_png_to_mem((const unsigned char *) data, stride_bytes, x, y, comp, &len);
+   unsigned char *png = glass_stbi_write_png_to_mem((const unsigned char *) data, stride_bytes, x, y, comp, &len);
    if (png == NULL) return 0;
 
    f = stbiw__fopen(filename, "wb");
@@ -1162,10 +1162,10 @@ STBIWDEF int stbi_write_png(char const *filename, int x, int y, int comp, const 
 }
 #endif
 
-STBIWDEF int stbi_write_png_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int stride_bytes)
+STBIWDEF int glass_stbi_write_png_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int stride_bytes)
 {
    int len;
-   unsigned char *png = stbi_write_png_to_mem((const unsigned char *) data, stride_bytes, x, y, comp, &len);
+   unsigned char *png = glass_stbi_write_png_to_mem((const unsigned char *) data, stride_bytes, x, y, comp, &len);
    if (png == NULL) return 0;
    func(context, png, len);
    STBIW_FREE(png);
@@ -1184,7 +1184,7 @@ STBIWDEF int stbi_write_png_to_func(stbi_write_func *func, void *context, int x,
 static const unsigned char stbiw__jpg_ZigZag[] = { 0,1,5,6,14,15,27,28,2,4,7,13,16,26,29,42,3,8,12,17,25,30,41,43,9,11,18,
       24,31,40,44,53,10,19,23,32,39,45,52,54,20,22,33,38,46,51,55,60,21,34,37,47,50,56,59,61,35,36,48,49,57,58,62,63 };
 
-static void stbiw__jpg_writeBits(stbi__write_context *s, int *bitBufP, int *bitCntP, const unsigned short *bs) {
+static void stbiw__jpg_writeBits(glass_stbi__write_context *s, int *bitBufP, int *bitCntP, const unsigned short *bs) {
    int bitBuf = *bitBufP, bitCnt = *bitCntP;
    bitCnt += bs[1];
    bitBuf |= bs[0] << (24 - bitCnt);
@@ -1259,7 +1259,7 @@ static void stbiw__jpg_calcBits(int val, unsigned short bits[2]) {
    bits[0] = val & ((1<<bits[1])-1);
 }
 
-static int stbiw__jpg_processDU(stbi__write_context *s, int *bitBuf, int *bitCnt, float *CDU, int du_stride, float *fdtbl, int DC, const unsigned short HTDC[256][2], const unsigned short HTAC[256][2]) {
+static int stbiw__jpg_processDU(glass_stbi__write_context *s, int *bitBuf, int *bitCnt, float *CDU, int du_stride, float *fdtbl, int DC, const unsigned short HTDC[256][2], const unsigned short HTAC[256][2]) {
    const unsigned short EOB[2] = { HTAC[0x00][0], HTAC[0x00][1] };
    const unsigned short M16zeroes[2] = { HTAC[0xF0][0], HTAC[0xF0][1] };
    int dataOff, i, j, n, diff, end0pos, x, y;
@@ -1329,7 +1329,7 @@ static int stbiw__jpg_processDU(stbi__write_context *s, int *bitBuf, int *bitCnt
    return DU[0];
 }
 
-static int stbi_write_jpg_core(stbi__write_context *s, int width, int height, int comp, const void* data, int quality) {
+static int glass_stbi_write_jpg_core(glass_stbi__write_context *s, int width, int height, int comp, const void* data, int quality) {
    // Constants that don't pollute global namespace
    static const unsigned char std_dc_luminance_nrcodes[] = {0,0,1,5,1,1,1,1,1,1,0,0,0,0,0,0,0};
    static const unsigned char std_dc_luminance_values[] = {0,1,2,3,4,5,6,7,8,9,10,11};
@@ -1471,7 +1471,7 @@ static int stbi_write_jpg_core(stbi__write_context *s, int width, int height, in
                for(row = y, pos = 0; row < y+16; ++row) {
                   // row >= height => use last input row
                   int clamped_row = (row < height) ? row : height - 1;
-                  int base_p = (stbi__flip_vertically_on_write ? (height-1-clamped_row) : clamped_row)*width*comp;
+                  int base_p = (glass_stbi__flip_vertically_on_write ? (height-1-clamped_row) : clamped_row)*width*comp;
                   for(col = x; col < x+16; ++col, ++pos) {
                      // if col >= width => use pixel from last input column
                      int p = base_p + ((col < width) ? col : (width-1))*comp;
@@ -1509,7 +1509,7 @@ static int stbi_write_jpg_core(stbi__write_context *s, int width, int height, in
                for(row = y, pos = 0; row < y+8; ++row) {
                   // row >= height => use last input row
                   int clamped_row = (row < height) ? row : height - 1;
-                  int base_p = (stbi__flip_vertically_on_write ? (height-1-clamped_row) : clamped_row)*width*comp;
+                  int base_p = (glass_stbi__flip_vertically_on_write ? (height-1-clamped_row) : clamped_row)*width*comp;
                   for(col = x; col < x+8; ++col, ++pos) {
                      // if col >= width => use pixel from last input column
                      int p = base_p + ((col < width) ? col : (width-1))*comp;
@@ -1538,21 +1538,21 @@ static int stbi_write_jpg_core(stbi__write_context *s, int width, int height, in
    return 1;
 }
 
-STBIWDEF int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality)
+STBIWDEF int glass_stbi_write_jpg_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality)
 {
-   stbi__write_context s = { 0 };
-   stbi__start_write_callbacks(&s, func, context);
-   return stbi_write_jpg_core(&s, x, y, comp, (void *) data, quality);
+   glass_stbi__write_context s = { 0 };
+   glass_stbi__start_write_callbacks(&s, func, context);
+   return glass_stbi_write_jpg_core(&s, x, y, comp, (void *) data, quality);
 }
 
 
 #ifndef STBI_WRITE_NO_STDIO
-STBIWDEF int stbi_write_jpg(char const *filename, int x, int y, int comp, const void *data, int quality)
+STBIWDEF int glass_stbi_write_jpg(char const *filename, int x, int y, int comp, const void *data, int quality)
 {
-   stbi__write_context s = { 0 };
-   if (stbi__start_write_file(&s,filename)) {
-      int r = stbi_write_jpg_core(&s, x, y, comp, data, quality);
-      stbi__end_write_file(&s);
+   glass_stbi__write_context s = { 0 };
+   if (glass_stbi__start_write_file(&s,filename)) {
+      int r = glass_stbi_write_jpg_core(&s, x, y, comp, data, quality);
+      glass_stbi__end_write_file(&s);
       return r;
    } else
       return 0;
@@ -1571,7 +1571,7 @@ STBIWDEF int stbi_write_jpg(char const *filename, int x, int y, int comp, const 
       1.09  (2018-02-11)
              fix typo in zlib quality API, improve STB_I_W_STATIC in C++
       1.08  (2018-01-29)
-             add stbi__flip_vertically_on_write, external zlib, zlib quality, choose PNG filter
+             add glass_stbi__flip_vertically_on_write, external zlib, zlib quality, choose PNG filter
       1.07  (2017-07-24)
              doc fix
       1.06 (2017-07-23)

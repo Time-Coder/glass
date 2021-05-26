@@ -1,7 +1,7 @@
 #include "glass/utils/image.h"
-// #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-// #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
 #include "glass/utils/path.h"
@@ -54,7 +54,7 @@ Image::Image(Image&& image)
 
 Image::~Image()
 {
-	stbi_image_free(_data);
+	glass_stbi_image_free(_data);
 }
 
 Image& Image::operator =(const Image& image)
@@ -77,7 +77,7 @@ Image& Image::operator =(const Image& image)
 	{
 		if(_data != nullptr)
 		{
-			stbi_image_free(_data);
+			glass_stbi_image_free(_data);
 		}
 		_data = new unsigned char[image.size()];
 	}
@@ -197,7 +197,7 @@ void Image::read(const string& filename, bool flip_y)
 
 	if(_data != nullptr)
 	{
-		stbi_image_free(_data);
+		glass_stbi_image_free(_data);
 	}
 
 	string type = filename.substr(filename.size()-3, 3);
@@ -211,9 +211,9 @@ void Image::read(const string& filename, bool flip_y)
 #endif
 		if(flip_y)
 		{
-			stbi_set_flip_vertically_on_load(true);
+			glass_stbi_set_flip_vertically_on_load(true);
 		}
-		_data = stbi_load(filename.data(), &n_cols, &n_rows, &n_channels, 0);
+		_data = glass_stbi_load(filename.data(), &n_cols, &n_rows, &n_channels, 0);
 #ifdef USE_TIFF
 	}
 #endif
@@ -230,15 +230,15 @@ void Image::write(const string& filename)const
 
 	if(type == "jpg")
 	{
-		stbi_write_jpg(filename.c_str(), n_cols, n_rows, n_channels, _data, 0);
+		glass_stbi_write_jpg(filename.c_str(), n_cols, n_rows, n_channels, _data, 0);
 	}
 	else if(type == "png")
 	{
-		stbi_write_png(filename.c_str(), n_cols, n_rows, n_channels, _data, 0);
+		glass_stbi_write_png(filename.c_str(), n_cols, n_rows, n_channels, _data, 0);
 	}
 	else if(type == "bmp")
 	{
-		stbi_write_bmp(filename.c_str(), n_cols, n_rows, n_channels, _data);
+		glass_stbi_write_bmp(filename.c_str(), n_cols, n_rows, n_channels, _data);
 	}
 }
 
