@@ -19,7 +19,7 @@ __z_far(_z_far),
 __fov(_fov)
 {
 	head_light.close();
-	head_light.setBrightness(3);
+	head_light.setBrightness(0.05);
 	head_light.setCoverage(70);
 	head_light.setCutoffAngle(PI/10);
 	update_mat();

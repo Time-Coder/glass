@@ -180,8 +180,9 @@ vec3 PhongSpotLight(Fragment frag, SpotLight light, Camera camera)
         return vec3(0);
     }
 
-    float factor = soft_step(light.cutoff_angle-theta, light.soft_distance);
-    return factor * _PhongSpotLight(frag, light, camera);
+    float soft_factor = soft_step(light.cutoff_angle-theta, light.soft_distance);
+    float aggregation = 2.0 / (1.001 - cos(light.cutoff_angle));
+    return soft_factor * aggregation * _PhongSpotLight(frag, light, camera);
 }
 
 #endif

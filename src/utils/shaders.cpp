@@ -402,7 +402,8 @@ string glass::common_lighting_phong_shader =
 "        return vec3(0);\n"
 "    }\n"
 "    float factor = soft_step(light.cutoff_angle-theta, light.soft_distance);\n"
-"    return factor * _PhongSpotLight(frag, light, camera);\n"
+"    float aggregation = 2.0 / (1.001 - cos(light.cutoff_angle));\n"
+"    return factor * aggregation * _PhongSpotLight(frag, light, camera);\n"
 "}\n"
 "#endif\n"
 ;
