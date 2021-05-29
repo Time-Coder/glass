@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void glass::generateTBN(const vector<vec3>& positions, const vector<vec4>& tex_coords, const vector<uvec3>& indices, vector<vec3>& tangents, vector<vec3>& bitangents, vector<vec3>& normals)
+void glass::generateTBN(const vector<vec3>& positions, const vector<vec2>& tex_coords, const vector<uvec3>& indices, vector<vec3>& tangents, vector<vec3>& bitangents, vector<vec3>& normals)
 {
 	vector< vector<double> > weights(positions.size());
 	vector< vector<mat3 > > TBNs(positions.size());
@@ -15,8 +15,8 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec4>& tex_c
 		uint P2 = indices[i][1];
 		uint P3 = indices[i][2];
 
-		vec2 e1 = vec2(tex_coords[P1])/tex_coords[P1].w - vec2(tex_coords[P2])/tex_coords[P2].w;
-		vec2 e2 = vec2(tex_coords[P3])/tex_coords[P3].w - vec2(tex_coords[P2])/tex_coords[P2].w;
+		vec2 e1 = tex_coords[P1] - tex_coords[P2];
+		vec2 e2 = tex_coords[P3] - tex_coords[P2];
 		mat2 right_mat2 = inverse(mat2(e1, e2));
 		mat3 right_mat3(vec3(right_mat2[0], 0), vec3(right_mat2[1], 0), vec3());
 		vec3 E1 = positions[P1] - positions[P2];
@@ -55,7 +55,7 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec4>& tex_c
 	}
 }
 
-void glass::generateTBN(const vector<vec3>& positions, const vector<vec3>& normals, const vector<vec4>& tex_coords, const vector<uvec3>& indices, vector<vec3>& tangents, vector<vec3>& bitangents)
+void glass::generateTBN(const vector<vec3>& positions, const vector<vec3>& normals, const vector<vec2>& tex_coords, const vector<uvec3>& indices, vector<vec3>& tangents, vector<vec3>& bitangents)
 {
 	vector< vector<double> > weights(positions.size());
 	vector< vector<mat3 > > TBNs(positions.size());
@@ -64,8 +64,8 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec3>& norma
 		uint P1 = indices[i][0];
 		uint P2 = indices[i][1];
 		uint P3 = indices[i][2];
-		vec2 e1 = vec2(tex_coords[P1])/tex_coords[P1].w - vec2(tex_coords[P2])/tex_coords[P2].w;
-		vec2 e2 = vec2(tex_coords[P3])/tex_coords[P3].w - vec2(tex_coords[P2])/tex_coords[P2].w;
+		vec2 e1 = tex_coords[P1] - tex_coords[P2];
+		vec2 e2 = tex_coords[P3] - tex_coords[P2];
 		mat2 right_mat2 = inverse(mat2(e1, e2));
 		mat3 right_mat3(vec3(right_mat2[0], 0), vec3(right_mat2[1], 0), vec3());
 		vec3 E1 = positions[P1] - positions[P2];
@@ -217,37 +217,37 @@ Model glass::cube(float a)
 		vec3(-1.0f, 0.0f, 0.0f)
 	};
 
-	vector<vec4> tex_coords =
+	vector<vec2> tex_coords =
 	{
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 1.0f, 0.0f, 1.0f),
-		vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 1.0f, 0.0f, 1.0f),
-		vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 1.0f, 0.0f, 1.0f),
-		vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 1.0f, 0.0f, 1.0f),
-		vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 1.0f, 0.0f, 1.0f),
-		vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 0.0f, 0.0f, 1.0f),
-		vec4(1.0f, 1.0f, 0.0f, 1.0f),
-		vec4(0.0f, 1.0f, 0.0f, 1.0f)
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f)
 	};
 
 	vector<uvec3> indices = 
@@ -301,7 +301,7 @@ Model glass::sphere(float R, unsigned int n_theta, unsigned int n_phi)
 
 	vector<vec3> positions(n_phi*n_theta);
 	vector<vec3> normals(n_phi*n_theta);
-	vector<vec4> tex_coords(n_phi*n_theta);
+	vector<vec2> tex_coords(n_phi*n_theta);
 	vector<uvec3> indices(2*(n_phi-1)*(n_theta-1));
 
 	vec3 frag_norm, current_vertex;
@@ -321,8 +321,6 @@ Model glass::sphere(float R, unsigned int n_theta, unsigned int n_phi)
 			double phi = (y - 0.5) * PI;
 			tex_coords[index][0] = x;
 			tex_coords[index][1] = y;
-			tex_coords[index][2] = 0;
-			tex_coords[index][3] = 1;
 
 			normals[index][0] = cos(phi)*sin(theta);
 			normals[index][1] = sin(phi);
@@ -454,37 +452,37 @@ Model glass::floor(float blocks_per_meter)
 		vec3(-1.0f, 0.0f, 0.0f)
 	};
 
-	vector<vec4> tex_coords =
+	vector<vec2> tex_coords =
 	{
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
-		vec4(0.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f),
+		vec2(0.0f, blocks_per_meter*1000.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
-		vec4(0.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f),
+		vec2(0.0f, blocks_per_meter*1000.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
-		vec4(0.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f),
+		vec2(0.0f, blocks_per_meter*1000.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
-		vec4(0.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f),
+		vec2(0.0f, blocks_per_meter*1000.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
-		vec4(0.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
+		vec2(0.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f),
+		vec2(0.0f, blocks_per_meter*1000.0f),
 
-		vec4(0.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, 0.0f, 0.0f, 1.0f),
-		vec4(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f),
-		vec4(0.0f, blocks_per_meter*1000.0f, 0.0f, 1.0f)
+		vec2(0.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, 0.0f),
+		vec2(blocks_per_meter*1000.0f, blocks_per_meter*1000.0f),
+		vec2(0.0f, blocks_per_meter*1000.0f)
 	};
 
 	vector<uvec3> indices = 
@@ -521,3 +519,45 @@ Model glass::floor(float blocks_per_meter)
 
 	return model;
 }
+
+// Model glass::pyramid(float R, float H, uint n)
+// {
+// 	Model model;
+// 	model.setKey("pyramid(" + str::str(R) + ", " + str::str(H) + ", " + str::str(n) + ")");
+// 	if(model.exists())
+// 	{
+// 		return model;
+// 	}
+
+// 	vector<vec3> positions(3*n);
+// 	vector<vec3> normals(3*n);
+// 	vector<vec2> tex_coords(3*n);
+// 	for(int i = 0; i < n; i++)
+// 	{
+// 		double theta1 = 2*i*PI/n;
+// 		double theta2 = 2*(i+1)*PI/n;
+
+// 		positions[3*i] = vec3(0, H, 0);
+// 		positions[3*i+1] = vec3(cos(theta1), 0, -sin(theta1));
+// 		positions[3*i+2] = vec3(cos(theta2), 0, -sin(theta2));
+
+// 		normals[3*i] = normalize(cross(positions[3*i+1] - positions[3*i], positions[3*i+2] - positions[3*i]));
+// 		normals[3*i+1] = normals[3*i];
+// 		normals[3*i+2] = normals[3*i];
+// 	}
+
+// 	model.layout(0) = positions;
+// 	model.layout(1) = normals;
+
+// 	return model;
+// }
+
+// Model pyramid(float R_bottom, float R_top, float H, uint n);
+// Model regularTetrahedron(float a);
+// Model cone(float R, float H, uint n = 100);
+// Model cone(float R_bottom, float R_top, float H, uint n = 100);
+// Model prism(float R, float H, uint n);
+// Model box(float Lx, float Ly, float Lz);
+// Model parallelepiped(const vec3& a, const vec3& b, const vec3& c);
+// Model cylinder(float R, float H, uint n = 100);
+// Model torus(float r, float R, uint n_theta = 200, uint n_phi = 0);

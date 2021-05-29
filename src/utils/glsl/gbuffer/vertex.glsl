@@ -4,7 +4,7 @@
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
-layout (location = 2) in vec4 tex_coord;
+layout (location = 2) in vec2 tex_coord;
 layout (location = 3) in vec3 tangent;
 layout (location = 4) in vec3 bitangent;
 
@@ -12,7 +12,7 @@ out VertexOut
 {
 	vec3 position;
 	// vec4 pos_light;
-	vec4 tex_coord;
+	vec2 tex_coord;
 	mat3 TBN;
 	mat3 normalTBN;
 	vec3 to_camera_tangent;

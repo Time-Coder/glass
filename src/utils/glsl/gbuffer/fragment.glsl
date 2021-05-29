@@ -11,7 +11,7 @@ in VertexOut
 {
     vec3 position;
     // vec4 pos_light;
-    vec4 tex_coord;
+    vec2 tex_coord;
     mat3 TBN;
     mat3 normalTBN;
     vec3 to_camera_tangent;
@@ -32,7 +32,7 @@ Fragment createFragment()
 
     frag.normal = normalize(frag_in.TBN[2]);
 
-    frag.tex_coord = frag_in.tex_coord.st/frag_in.tex_coord.q;
+    frag.tex_coord = frag_in.tex_coord;
     if(model.material.using_bump_map)
     {
         frag = parallax_mapping(frag, model.material, frag_in.to_camera_tangent);

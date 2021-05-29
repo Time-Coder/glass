@@ -619,7 +619,7 @@ void Shader::draw(Layout& layout, VAO::DrawType type)
 		{
 			cout << "Warning: layout(location = " + str::str(it->first) + ") in " + layout_map[it->first] + " is not passed." << endl;
 		}
-		if(layout(it->first).dtype() != layout_map[it->first])
+		else if(layout(it->first).dtype() != layout_map[it->first])
 		{
 			throw glass::TypeError("Error when setting layout(location = " + str::str(it->first) + ") in " + layout_map[it->first] + ":\nCannot convert " + layout(it->first).dtype() + " to " + layout_map[it->first] + ".");
 		}

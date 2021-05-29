@@ -82,15 +82,15 @@ void Scene3D::init_shadering_blur()
 	shader["blur"].compile(Shader::VERTEX, glass::blur_vertex_shader);
 	shader["blur"].compile(Shader::FRAGMENT, glass::blur_fragment_shader);
 	shader["blur"].link();
-	gauss_kernel<5>(20, gauss_weights);
+	gauss_kernel<5>(30, gauss_weights);
 	shader["blur"].uniform["weights"] = gauss_weights;
 
-	fbos["blur"].push_back(FBO(width(), height(), width()/3, height()/3));
+	fbos["blur"].push_back(FBO(width(), height(), width()/4, height()/4));
 	fbos["blur"][0].clearColor(vec4(0));
 	fbos["blur"][0].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
 	fbos["blur"][0].color<sampler2D>().wrap(GL_CLAMP_TO_EDGE);
 
-	fbos["blur"].push_back(FBO(width(), height(), width()/3, height()/3));
+	fbos["blur"].push_back(FBO(width(), height(), width()/4, height()/4));
 	fbos["blur"][1].clearColor(vec4(0));
 	fbos["blur"][1].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
 	fbos["blur"][1].color<sampler2D>().wrap(GL_CLAMP_TO_EDGE);
@@ -133,11 +133,11 @@ void Scene3D::init_shadering_HDR()
 	shader["HDR"].compile(Shader::FRAGMENT, glass::HDR_fragment_shader);
 	shader["HDR"].link();
 
-	int luminance_width = 1024;
+	int luminance_width = 256;
 	int i = 0;
 	while(luminance_width > 0)
 	{
-		fbos["luminance"].push_back(FBO(width(), height(), luminance_width, luminance_width));
+		fbos["luminance"].push_back(FBO(width(), height(), i == 0 ? 1024 : luminance_width, i == 0 ? 1024 : luminance_width));
 		if(i == 0)
 		{
 			fbos["luminance"][i].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
@@ -562,7 +562,7 @@ void Scene3D::draw()
 	{
 		init_shadering_blur();
 
-		for(int i = 0; i < 11; i++)
+		for(int i = 0; i < 5; i++)
 		{
 			fbos["blur"][step(index_blur)].bind();
 			shader["blur"].uniform["color_map"] = 
@@ -634,8 +634,8 @@ void Scene3D::onChangeSize(int width, int height)
 	}
 	if(fbos.count("blur"))
 	{
-		fbos["blur"][0].bufferResize(width/3, height/3);
-		fbos["blur"][1].bufferResize(width/3, height/3);
+		fbos["blur"][0].bufferResize(width/4, height/4);
+		fbos["blur"][1].bufferResize(width/4, height/4);
 	}
 }
 

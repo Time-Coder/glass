@@ -389,7 +389,7 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
 	vector<vec3> positions;
 	vector<vec3> normals;
-	vector<vec4> tex_coords;
+	vector<vec2> tex_coords;
 	vector<vec3> tangents;
 	vector<vec3> bitangents;
 	for(uint i = 0; i < mesh->mNumVertices; i++)
@@ -398,12 +398,11 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene)
         normals.push_back(normalize(vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z)));
         if(mesh->mTextureCoords[0])
         {
-        	tex_coords.push_back(vec4(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y,
-        		                      mesh->mTextureCoords[0][i].z, 1));
+        	tex_coords.push_back(vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
         }
         else
         {
-        	tex_coords.push_back(vec4(0, 0, 0, 1));
+        	tex_coords.push_back(vec2(0, 0));
         }
 
         if(mesh->mTangents)
