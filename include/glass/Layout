@@ -25,7 +25,7 @@ public:
 	const GLVector& operator ()(uint location)const;
 	void order(const std::vector<uvec3>& _order_mat);
 	void apply();
-	void draw(GLenum type = GL_TRIANGLES);
+	void draw(VAO::DrawType type = VAO::TRIANGLES);
 	bool empty()const;
 };
 

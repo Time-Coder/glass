@@ -149,13 +149,13 @@ void Layout::apply()
 	}
 	if(!order_mat.empty())
 	{
-		ebo.bufferData(order_mat);
-		vao.addEBO(ebo);
+		ebo.setIndices(order_mat);
+		vao.setEBO(ebo);
 	}
 	is_applied = true;
 }
 
-void Layout::draw(GLenum type)
+void Layout::draw(VAO::DrawType type)
 {
 	if(defined_layouts.empty())
 	{

@@ -1,50 +1,38 @@
 #ifndef __RBO__
 #define __RBO__
 
-#include <set>
-
+#include "glass/BO"
 #include "glass/common.h"
 
 class Image;
-class RBO
+class RBO: public BO
 {
-private:
-	static std::multiset<uint> existing_RBOs;
-	static uint active_RBO;
+	struct RBO_Instance
+	{
+		uint width = 0;
+		uint height = 0;
+		uint dtype = GL_DEPTH24_STENCIL8;
+	};
 
 private:
-	uint _id = 0;
-	uint _width = 0;
-	uint _height = 0;
-	uint _dtype = GL_DEPTH24_STENCIL8;
-	
-private:
-	void init();
-	void del();
+	static std::unordered_map<uint, RBO_Instance> existing_RBOs;
 
 public:
 	RBO();
-	RBO(uint __width, uint __height, uint __dtype = GL_DEPTH24_STENCIL8);
+	RBO(uint _width, uint _height, uint _dtype = GL_DEPTH24_STENCIL8);
 	RBO(const RBO& rbo);
 	RBO(RBO&& rbo);
-	~RBO();
-
 	RBO& operator =(const RBO& rbo);
 	RBO& operator =(RBO&& rbo);
 
-	uint id()const;
+	bool empty()const;
+
+	void malloc(uint _width, uint _height, uint __dtype);
+	void realloc(uint _width, uint _height);
+
 	uint width()const;
 	uint height()const;
 	uint dtype()const;
-
-	void bind();
-	void unbind()const;
-	bool empty()const;
-	void clear();
-	void malloc(uint __width, uint __height, uint __dtype = GL_DEPTH24_STENCIL8);
-	void realloc(uint __width, uint __height);
-
-	Image image();
 };
 
 #endif

@@ -897,12 +897,12 @@ void Uniform::set_atom(const string& name, void* ptr_value)
 
 void UBO::set_atom(const string& name, void* ptr_value)
 {
-	if(!(block.contains(name)))
+	if(!(existing_UBOs[_id].block.contains(name)))
 	{
-		throw glass::KeyError(name + " is not a member of uniform block " + block.name);
+		throw glass::KeyError(name + " is not a member of uniform block " + existing_UBOs[_id].block.name);
 	}
 
-	string type = block[name].type;
+	string type = existing_UBOs[_id].block[name].type;
 	
 	SET_ATOM_COMMON_CODE
 	else throw glass::TypeError("Uniform block member " + name + " is not an atom variable.");
@@ -1237,7 +1237,7 @@ void Uniform::BlockMap::Reference::bind(const UBO& ubo)
 	// {
 	// 	cout << "Warning: uniform block " << name << "'s structure is not same as " << ubo.block.name << endl;
 	// }
-	bind(ubo.binding_point());
+	bind(ubo.bindingPoint());
 }
 
 void Uniform::BlockMap::Reference::unbind()

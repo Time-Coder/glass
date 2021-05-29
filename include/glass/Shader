@@ -7,6 +7,7 @@
 
 #include "glass/common.h"
 #include "glass/Uniform"
+#include "glass/Layout"
 
 class BaseShader
 {
@@ -69,7 +70,6 @@ public:
 
 class Model;
 class sampler2D;
-class Layout;
 class Shader
 {
 	friend class Uniform;
@@ -118,7 +118,7 @@ public:
 	void use()const;
 	void unuse()const;
 	bool isUsing()const;
-	void draw(Layout& layout, GLenum type = GL_TRIANGLES);
+	void draw(Layout& layout, VAO::DrawType type = VAO::TRIANGLES);
 	void draw(Model& model);
 	void warningOn();
 	void warningOff();

@@ -1,0 +1,81 @@
+#ifndef __BO__
+#define __BO__
+
+#include <unordered_map>
+
+#include "glass/common.h"
+
+typedef unsigned int uint;
+
+class BO
+{
+public:
+	enum BufferType
+	{
+		VERTEX = GL_ARRAY_BUFFER,
+		ELEMENT = GL_ELEMENT_ARRAY_BUFFER,
+		UNIFORM = GL_UNIFORM_BUFFER,
+		FRAME = GL_FRAMEBUFFER,
+		RENDER = GL_RENDERBUFFER
+	};
+
+	enum MemoryType
+	{
+		STREAM = GL_STREAM_DRAW,
+		STATIC = GL_STATIC_DRAW,
+		DYNAMIC = GL_DYNAMIC_DRAW
+	};
+
+protected:
+	struct Instance
+	{
+		uint size = 0; // n_bytes
+		uint n_sources = 0;
+		MemoryType mem_type = STATIC;
+		bool is_mapped = false;
+	};
+
+	static std::unordered_map<BufferType, std::unordered_map<uint, Instance> > existing_BOs;
+	static std::unordered_map<BufferType, uint> active_BO;
+
+protected:
+	BufferType _buffer_type = VERTEX;
+	uint _id = 0;
+
+protected:
+	virtual void init();
+	virtual void del();
+	virtual uint n_sources()const;
+
+private:
+	BufferType type()const;
+	std::string type_str()const;
+
+public:
+	BO(BufferType buffer_type);
+	BO(const BO& bo);
+	BO(BO&& bo);
+	BO& operator =(const BO& bo);
+	BO& operator =(BO&& bo);
+	virtual ~BO();
+	virtual uint id()const;
+	virtual void bind();
+	virtual void unbind()const;
+	virtual bool isBind()const;
+
+	virtual void malloc(uint n_bytes, MemoryType mem_type = STATIC);
+	virtual void calloc(uint n_elements, uint sizeof_element, MemoryType mem_type = STATIC);
+	virtual void memcpy(void* ptr_value, uint n_bytes, MemoryType mem_type = STATIC);
+	virtual void free();
+
+	virtual bool empty()const;
+	virtual uint size()const;
+	virtual MemoryType memType()const;
+
+	virtual void* ptr();
+	virtual bool apply();
+
+	virtual BO clone();
+};
+
+#endif

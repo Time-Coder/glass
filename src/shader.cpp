@@ -611,7 +611,7 @@ bool Shader::isUsing()const
 	return (existing_Shaders.count(_id) > 0 && active_Shader == _id);
 }
 
-void Shader::draw(Layout& layout, GLenum type)
+void Shader::draw(Layout& layout, VAO::DrawType type)
 {
 	for(auto it = layout_map.begin(); it != layout_map.end(); it++)
 	{

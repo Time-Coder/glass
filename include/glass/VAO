@@ -24,21 +24,33 @@ struct VertexAttribPointer
 
 	void interp(const VBO& _vbo);
 	void divisor(uint n);
-	void update_policy(uint n);
 	bool empty()const;
 };
 
 class VAO
 {
+	struct Instance
+	{
+		EBO ebo;
+		std::map<uint, VertexAttribPointer> map_VAP;
+		uint n_sources = 0;
+	};
+
+public:
+	enum DrawType
+	{
+		POINTS = GL_POINTS,
+		LINE_STRIP = GL_LINE_STRIP,
+		TRIANGLES = GL_TRIANGLES
+	};
+
 private:
-	static std::multiset<uint> existing_VAOs;
+	static std::unordered_map<uint, Instance> existing_VAOs;
 	static uint active_VAO;
 
 private:
 	uint _id = 0;
-	EBO _ebo;
-	std::map<uint, VertexAttribPointer> map_VAP;
-
+	
 private:
 	void init();
 	void del();
@@ -55,10 +67,11 @@ public:
 	EBO ebo()const;
 	void bind();
 	void unbind()const;
+	bool isBind()const;
 	bool empty()const;
-	void drawArrays(uint n, GLenum type = GL_TRIANGLES);
-	void drawElements(GLenum type = GL_TRIANGLES);
-	void addEBO(const EBO& _ebo);
+	void drawArrays(uint n, DrawType type = TRIANGLES);
+	void drawElements(DrawType type = TRIANGLES);
+	void setEBO(const EBO& _ebo);
 };
 
 #endif

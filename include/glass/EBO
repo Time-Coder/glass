@@ -1,26 +1,13 @@
 #ifndef __EBO__
 #define __EBO__
 
-#include <set>
 #include <vector>
+
 #include "glass/vec"
+#include "glass/BO"
 
-typedef unsigned int uint;
-
-class EBO
+class EBO: public BO
 {
-private:
-	static std::multiset<uint> existing_EBOs;
-	static uint active_EBO;
-
-private:
-	uint _id = 0;
-	uint _size = 0;
-
-private:
-	void init();
-	void del();
-
 public:
 	EBO();
 	EBO(const EBO& ebo);
@@ -28,22 +15,8 @@ public:
 	EBO& operator =(const EBO& ebo);
 	EBO& operator =(EBO&& ebo);
 	
-	~EBO();
-	uint id()const;
-	uint size()const;
-	bool empty()const;
-	void bind();
-	void unbind()const;
-	bool isBind()const;
-	void bufferData(void* ptr_value, uint n_bytes);
-	bool bufferData(const std::vector<uint>& indices);
-	bool bufferData(const std::vector<uvec3>& indices);
-
-	void clear();
-	void malloc(uint n_bytes);
-	void* ptr();
-	bool apply();
-	EBO clone();
+	void setIndices(const std::vector<uint>& indices, MemoryType mem_type = STATIC);
+	void setIndices(const std::vector<uvec3>& indices, MemoryType mem_type = STATIC);
 };
 
 #endif

@@ -1379,11 +1379,11 @@ DataType& GLVector::at(int i)
 	   (_dtype == "mat3" && same_type(DataType, mat3)) ||
 	   (_dtype == "mat4" && same_type(DataType, mat4)))
 	{
-		return force_cast<DataType>(((std::vector<DataType>*)vec)->at(i));
+		return force_cast<DataType>((*((std::vector<DataType>*)vec))[i]);
 	}
 	else if(_dtype == "bool" && same_type(DataType, bool))
 	{
-		return force_cast<DataType>(((std::vector<byte>*)vec)->at(i));
+		return force_cast<DataType>((*((std::vector<byte>*)vec))[i]);
 	}
 	else
 	{

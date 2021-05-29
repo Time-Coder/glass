@@ -3,8 +3,7 @@
 
 using namespace std;
 
-multiset<uint> FBO::existing_FBOs;
-uint FBO::active_FBO = 0;
+unordered_map<uint, FBO::FBO_Instance> FBO::existing_FBOs;
 
 int FBO::vector_find(std::vector<_Attachment>& v, const std::string& name)
 {
@@ -161,6 +160,20 @@ FBO::_Attachment::~_Attachment()
 	clear();
 }
 
+FBO::FBO_Instance::~FBO_Instance()
+{
+	if(depth_attachment != NULL)
+	{
+		delete depth_attachment;
+		depth_attachment = NULL;
+	}
+	if(stencil_attachment != NULL)
+	{
+		delete stencil_attachment;
+		stencil_attachment = NULL;
+	}
+}
+
 vec4 getClearColor()
 {
 	float color[4];
@@ -176,132 +189,20 @@ vec4 getClearColor()
 
 void FBO::init()
 {
-	if(_id == 0)
+	BO::init();
+	if(existing_FBOs[_id].clear_color.x == -1)
 	{
-		glGenFramebuffers(1, &_id);
-		if(_id == 0)
-		{
-			throw glass::RuntimeError("Failed to create FBO!");
-		}
-	#ifdef _DEBUG
-		cout << "constructing FBO " << _id << endl;
-	#endif
-		existing_FBOs.insert(_id);
-		if(clear_color.x == -1)
-		{
-			clear_color = getClearColor();
-		}
-	}
-	else if(existing_FBOs.count(_id) == 0)
-	{
-		throw glass::RuntimeError("FBO " + str::str(_id) + " has already been destructed.");
+		existing_FBOs[_id].clear_color = getClearColor();
 	}
 }
 
 void FBO::del()
 {
-	uint count = existing_FBOs.count(_id);
-	if(count > 0)
+	if(existing_BOs[FRAME].count(_id) && existing_BOs[FRAME][_id].n_sources == 1)
 	{
-		multiset_pop(existing_FBOs, _id);
-		if(count == 1)
-		{
-		#ifdef _DEBUG
-			cout << "destructing FBO " << _id << endl;
-		#endif
-			unbind();
-			glDeleteFramebuffers(1, &_id);
-		}
+		existing_FBOs.erase(_id);
 	}
-
-	if(depth_attachment != NULL)
-	{
-		delete depth_attachment;
-		depth_attachment = NULL;
-	}
-	if(stencil_attachment != NULL)
-	{
-		delete stencil_attachment;
-		stencil_attachment = NULL;
-	}
-}
-
-FBO::FBO(uint __screen_width, uint __screen_height,
-	     uint __buffer_width, uint __buffer_height) :
-_screen_width(__screen_width),
-_screen_height(__screen_height),
-_buffer_width(__buffer_width),
-_buffer_height(__buffer_height)
-{
-	if(_buffer_width == 0)
-	{
-		_buffer_width = _screen_width;
-	}
-
-	if(_buffer_height == 0)
-	{
-		_buffer_height = _screen_height;
-	}
-}
-
-FBO::FBO(const FBO& fbo) :
-_id(fbo._id),
-_screen_width(fbo._screen_width),
-_screen_height(fbo._screen_height),
-_buffer_width(fbo._buffer_width),
-_buffer_height(fbo._buffer_height),
-color_attachments(fbo.color_attachments),
-is_applied(fbo.is_applied),
-_auto_clear(fbo._auto_clear),
-_auto_resize(fbo._auto_resize),
-clear_value(fbo.clear_value),
-clear_color(fbo.clear_color),
-old_clear_color(fbo.old_clear_color),
-max_color_attachments(fbo.max_color_attachments)
-{
-	if(existing_FBOs.count(_id))
-	{
-		existing_FBOs.insert(_id);
-	}
-
-	if(fbo.depth_attachment != NULL)
-	{
-		depth_attachment = new _Attachment(*fbo.depth_attachment);
-		if(depth_attachment == NULL)
-		{
-			throw glass::MemoryError("Failed to allocate memory!");
-		}
-	}
-	if(fbo.stencil_attachment != NULL)
-	{
-		stencil_attachment = new _Attachment(*fbo.stencil_attachment);
-		if(stencil_attachment == NULL)
-		{
-			throw glass::MemoryError("Failed to allocate memory!");
-		}
-	}
-}
-
-FBO::FBO(FBO&& fbo) :
-_id(move(fbo._id)),
-_screen_width(move(fbo._screen_width)),
-_screen_height(move(fbo._screen_height)),
-_buffer_width(move(fbo._buffer_width)),
-_buffer_height(move(fbo._buffer_height)),
-color_attachments(move(fbo.color_attachments)),
-is_applied(move(fbo.is_applied)),
-_auto_clear(move(fbo._auto_clear)),
-_auto_resize(move(fbo._auto_resize)),
-clear_value(move(fbo.clear_value)),
-clear_color(move(fbo.clear_color)),
-old_clear_color(move(fbo.old_clear_color)),
-max_color_attachments(move(fbo.max_color_attachments)),
-depth_attachment(move(fbo.depth_attachment)),
-stencil_attachment(move(fbo.stencil_attachment))
-{
-	fbo._id = 0;
-	fbo.depth_attachment = NULL;
-	fbo.stencil_attachment = NULL;
+	BO::del();
 }
 
 FBO::~FBO()
@@ -309,106 +210,73 @@ FBO::~FBO()
 	del();
 }
 
+FBO::FBO(uint screen_width, uint screen_height,
+	     uint buffer_width, uint buffer_height) :
+BO(FRAME)
+{
+	init();
+	existing_FBOs[_id].screen_width = screen_width;
+	existing_FBOs[_id].screen_height = screen_height;
+	existing_FBOs[_id].buffer_width = buffer_width;
+	existing_FBOs[_id].buffer_height = buffer_height;
+
+	if(existing_FBOs[_id].buffer_width == 0)
+	{
+		existing_FBOs[_id].buffer_width = screen_width;
+	}
+
+	if(existing_FBOs[_id].buffer_height == 0)
+	{
+		existing_FBOs[_id].buffer_height = screen_height;
+	}
+}
+
+FBO::FBO(const FBO& fbo) : BO(fbo) {}
+
+FBO::FBO(FBO&& fbo) : BO(move(fbo)) {}
+
 FBO& FBO::operator =(const FBO& fbo)
 {
 	if(this != &fbo && _id != fbo._id)
 	{
-		del();
-
-		_id = fbo._id;
-		_screen_width = fbo._screen_width;
-		_screen_height = fbo._screen_height;
-		_buffer_width = fbo._buffer_width;
-		_buffer_height = fbo._buffer_height;
-		color_attachments = fbo.color_attachments;
-		is_applied = fbo.is_applied;
-		_auto_clear = fbo._auto_clear;
-		_auto_resize = fbo._auto_resize;
-		clear_value = fbo.clear_value;
-		clear_color = fbo.clear_color;
-		old_clear_color = fbo.old_clear_color;
-		max_color_attachments = fbo.max_color_attachments;
-
-		if(fbo.depth_attachment != NULL)
-		{
-			depth_attachment = new _Attachment(*fbo.depth_attachment);
-			if(depth_attachment == NULL)
-			{
-				throw glass::MemoryError("Failed to allocate memory!");
-			}
-		}
-		if(fbo.stencil_attachment != NULL)
-		{
-			stencil_attachment = new _Attachment(*fbo.stencil_attachment);
-			if(stencil_attachment == NULL)
-			{
-				throw glass::MemoryError("Failed to allocate memory!");
-			}
-		}
-
-		if(existing_FBOs.count(_id) > 0)
-		{
-			existing_FBOs.insert(_id);
-		}
+		return static_cast<FBO&>(BO::operator=(fbo));
 	}
-	return *this;
+	else
+	{
+		return *this;
+	}
 }
 
 FBO& FBO::operator =(FBO&& fbo)
 {
-	if(this != &fbo)
+	if(this != &fbo && _id != fbo._id)
 	{
-		if(_id != fbo._id)
-		{
-			del();
-		}
-
-		_id = move(fbo._id);
-		_screen_width = move(fbo._screen_width);
-		_screen_height = move(fbo._screen_height);
-		_buffer_width = move(fbo._buffer_width);
-		_buffer_height = move(fbo._buffer_height);
-		color_attachments = move(fbo.color_attachments);
-		is_applied = move(fbo.is_applied);
-		_auto_clear = move(fbo._auto_clear);
-		_auto_resize = move(fbo._auto_resize);
-		clear_value = move(fbo.clear_value);
-		clear_color = move(fbo.clear_color);
-		old_clear_color = move(fbo.old_clear_color);
-		max_color_attachments = move(fbo.max_color_attachments);
-		depth_attachment = move(fbo.depth_attachment);
-		stencil_attachment = move(fbo.stencil_attachment);
-
-		fbo._id = 0;
-		fbo.depth_attachment = NULL;
-		fbo.stencil_attachment = NULL;
+		return static_cast<FBO&>(BO::operator=(std::move(fbo)));
 	}
-	return *this;
-}
-
-uint FBO::id()const
-{
-	return _id;
+	else
+	{
+		return *this;
+	}
 }
 
 uint FBO::screenWidth()const
 {
-	return _screen_width;
+	return existing_FBOs[_id].screen_width;
 }
 
 uint FBO::screenHeight()const
 {
-	return _screen_height;
+	return existing_FBOs[_id].screen_height;
 }
 
 uint FBO::bufferWidth()const
 {
-	return _buffer_width;
+	return existing_FBOs[_id].buffer_width;
 }
 
 uint FBO::bufferHeight()const
 {
-	return _buffer_height;
+	return existing_FBOs[_id].buffer_height;
 }
 
 void FBO::resize(uint __width, uint __height)
@@ -419,96 +287,93 @@ void FBO::resize(uint __width, uint __height)
 
 void FBO::screenResize(uint __screen_width, uint __screen_height)
 {
-	_screen_width = __screen_width;
-	_screen_height = __screen_height;
+	init();
+	existing_FBOs[_id].screen_width = __screen_width;
+	existing_FBOs[_id].screen_height = __screen_height;
 }
 
 void FBO::bufferResize(uint __buffer_width, uint __buffer_height)
 {
-	_buffer_width = __buffer_width;
-	_buffer_height = __buffer_height;
+	init();
+	existing_FBOs[_id].buffer_width = __buffer_width;
+	existing_FBOs[_id].buffer_height = __buffer_height;
 
-	if(depth_attachment != NULL)
+	if(existing_FBOs[_id].depth_attachment != NULL)
 	{
-		if(depth_attachment->buffer_type == "sampler2D")
+		if(existing_FBOs[_id].depth_attachment->buffer_type == "sampler2D")
 		{
-			depth_attachment->buffer<sampler2D>().realloc(_buffer_width, _buffer_height);
+			existing_FBOs[_id].depth_attachment->buffer<sampler2D>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
-		else if(depth_attachment->buffer_type == "samplerCube")
+		else if(existing_FBOs[_id].depth_attachment->buffer_type == "samplerCube")
 		{
-			depth_attachment->buffer<samplerCube>().realloc(_buffer_width, _buffer_height);
+			existing_FBOs[_id].depth_attachment->buffer<samplerCube>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
-		else if(depth_attachment->buffer_type == "RBO")
+		else if(existing_FBOs[_id].depth_attachment->buffer_type == "RBO")
 		{
-			depth_attachment->buffer<RBO>().realloc(_buffer_width, _buffer_height);
+			existing_FBOs[_id].depth_attachment->buffer<RBO>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
 	}
 
-	if(stencil_attachment != NULL)
+	if(existing_FBOs[_id].stencil_attachment != NULL)
 	{
-		if(stencil_attachment->buffer_type == "sampler2D")
+		if(existing_FBOs[_id].stencil_attachment->buffer_type == "sampler2D")
 		{
-			stencil_attachment->buffer<sampler2D>().realloc(_buffer_width, _buffer_height);
+			existing_FBOs[_id].stencil_attachment->buffer<sampler2D>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
-		else if(stencil_attachment->buffer_type == "samplerCube")
+		else if(existing_FBOs[_id].stencil_attachment->buffer_type == "samplerCube")
 		{
-			stencil_attachment->buffer<samplerCube>().realloc(_buffer_width, _buffer_height);
+			existing_FBOs[_id].stencil_attachment->buffer<samplerCube>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
-		else if(stencil_attachment->buffer_type == "RBO")
+		else if(existing_FBOs[_id].stencil_attachment->buffer_type == "RBO")
 		{
-			stencil_attachment->buffer<RBO>().realloc(_buffer_width, _buffer_height);
+			existing_FBOs[_id].stencil_attachment->buffer<RBO>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
 	}
 
-	for(auto it = color_attachments.begin(); it != color_attachments.end(); it++)
+	for(auto it = existing_FBOs[_id].color_attachments.begin(); it != existing_FBOs[_id].color_attachments.end(); it++)
 	{
 		if(it->buffer_type == "sampler2D")
 		{
-			it->buffer<sampler2D>().realloc(_buffer_width, _buffer_height);
+			it->buffer<sampler2D>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
 		else if(it->buffer_type == "samplerCube")
 		{
-			it->buffer<samplerCube>().realloc(_buffer_width, _buffer_height);
+			it->buffer<samplerCube>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
 		else if(it->buffer_type == "RBO")
 		{
-			it->buffer<RBO>().realloc(_buffer_width, _buffer_height);
+			it->buffer<RBO>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
 		}
 	}
 }
 
 void FBO::_bind()
 {
-	init();
-	glBindFramebuffer(GL_FRAMEBUFFER, _id);
-	active_FBO = _id;
-}
-
-void FBO::bind()
-{
-	old_clear_color = getClearColor();
-	apply();
-	// glCullFace(GL_FRONT);
-	if(depth_attachment != NULL)
-	{
-		glEnable(GL_DEPTH_TEST);
-	}
-	if(_auto_resize)
-	{
-		glViewport(0, 0, _buffer_width, _buffer_height);
-	}
-	if(_auto_clear)
-	{
-		clear();
-	}
+	BO::bind();
 }
 
 void FBO::_unbind()const
 {
-	if(active_FBO == _id)
+	BO::unbind();
+}
+
+void FBO::bind()
+{
+	_apply();
+	existing_FBOs[_id].old_clear_color = getClearColor();
+	
+	// glCullFace(GL_FRONT);
+	if(existing_FBOs[_id].depth_attachment != NULL)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		active_FBO = 0;
+		glEnable(GL_DEPTH_TEST);
+	}
+	if(existing_FBOs[_id].auto_resize)
+	{
+		glViewport(0, 0, existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+	}
+	if(existing_FBOs[_id].auto_clear)
+	{
+		clear();
 	}
 }
 
@@ -516,25 +381,27 @@ void FBO::unbind()const
 {
 	_unbind();
 	// glCullFace(GL_BACK);
-	if(_auto_resize)
+	if(existing_FBOs[_id].auto_resize)
 	{
-		glViewport(0, 0, _screen_width, _screen_height);
+		glViewport(0, 0, existing_FBOs[_id].screen_width, existing_FBOs[_id].screen_height);
 	}
-	if(_auto_clear)
+	if(existing_FBOs[_id].auto_clear)
 	{
-		glClearColor(old_clear_color.x, old_clear_color.y, old_clear_color.z, old_clear_color.w);
+		glClearColor(existing_FBOs[_id].old_clear_color.x, existing_FBOs[_id].old_clear_color.y, existing_FBOs[_id].old_clear_color.z, existing_FBOs[_id].old_clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 }
 
 void FBO::autoClear(bool flag)
 {
-	_auto_clear = flag;
+	init();
+	existing_FBOs[_id].auto_clear = flag;
 }
 
 void FBO::autoResize(bool flag)
 {
-	_auto_resize = flag;
+	init();
+	existing_FBOs[_id].auto_resize = flag;
 }
 
 uint FBO::status()
@@ -544,7 +411,7 @@ uint FBO::status()
 		return 0;
 	}
 
-	bind();
+	_bind();
 	return glCheckFramebufferStatus(GL_FRAMEBUFFER);
 }
 
@@ -555,46 +422,47 @@ bool FBO::completed()
 		return false;
 	}
 
-	bind();
+	_bind();
 	return (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 }
 
 void FBO::clear()
 {
-	if(_id == 0 || clear_value == 0)
+	if(_id == 0 || (existing_FBOs.count(_id) && existing_FBOs[_id].clear_value == 0))
 	{
 		return;
 	}
 
 	_bind();
-	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-	glClear(clear_value);
+	glClearColor(existing_FBOs[_id].clear_color.x, existing_FBOs[_id].clear_color.y, existing_FBOs[_id].clear_color.z, existing_FBOs[_id].clear_color.w);
+	glClear(existing_FBOs[_id].clear_value);
 }
 
-void FBO::apply()
+void FBO::_apply()
 {
-	if(is_applied == true)
+	_bind();
+	if(existing_FBOs[_id].is_applied == true)
 	{
 		return;
 	}
 
-	if(color_attachments.empty() &&
-	   depth_attachment == NULL && 
-	   stencil_attachment == NULL)
+	if(existing_FBOs[_id].color_attachments.empty() &&
+	   existing_FBOs[_id].depth_attachment == NULL && 
+	   existing_FBOs[_id].stencil_attachment == NULL)
 	{
+		_unbind();
 		throw glass::RuntimeError("FBO is incompleted!");
 	}
 
-	_bind();
 	// glEnable(GL_CULL_FACE);
-	if(color_attachments.empty())
+	if(existing_FBOs[_id].color_attachments.empty())
 	{
 		glDrawBuffer(GL_NONE);
 	    glReadBuffer(GL_NONE);
 	}
-	else if(color_attachments.size() > 1)
+	else if(existing_FBOs[_id].color_attachments.size() > 1)
 	{
-		vector<GLuint> attachments(color_attachments.size());
+		vector<GLuint> attachments(existing_FBOs[_id].color_attachments.size());
 		for(int i = 0; i < attachments.size(); i++)
 		{
 			attachments[i] = GL_COLOR_ATTACHMENT0 + i;
@@ -608,25 +476,28 @@ void FBO::apply()
 		throw glass::RuntimeError("FBO is incompleted.");
 	}
 
-	is_applied = true;
+	existing_FBOs[_id].is_applied = true;
 }
 
 void FBO::clearColor(const vec3& c)
 {
-	clear_color = vec4(c, 1.0);
+	init();
+	existing_FBOs[_id].clear_color = vec4(c, 1.0);
 }
 
 void FBO::clearColor(const vec4& c)
 {
-	clear_color = c;
+	init();
+	existing_FBOs[_id].clear_color = c;
 }
 
 void FBO::clearColor(float r, float g, float b, float a)
 {
-	clear_color = vec4(r, g, b, a);
+	init();
+	existing_FBOs[_id].clear_color = vec4(r, g, b, a);
 }
 
 vec4 FBO::clearColor()
 {
-	return clear_color;
+	return existing_FBOs[_id].clear_color;
 }

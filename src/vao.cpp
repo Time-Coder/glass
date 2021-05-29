@@ -16,7 +16,7 @@ void VertexAttribPointer::interp(const VBO& _vbo)
 {
 	if(vertex_size == 0)
 	{
-		throw glass::Exception("Empty attrib for VBO!");
+		throw glass::Exception("Empty attrib for VBO.");
 	}
 
 	vbo = _vbo;
@@ -31,11 +31,6 @@ void VertexAttribPointer::interp(const VBO& _vbo)
 }
 
 void VertexAttribPointer::divisor(uint n)
-{
-	glVertexAttribDivisor(location, n);
-}
-
-void VertexAttribPointer::update_policy(uint n)
 {
 	glVertexAttribDivisor(location, n);
 }
@@ -58,14 +53,14 @@ bool VertexAttribPointer::empty()const
 VertexAttribPointer& VAO::operator [](uint location)
 {
 	bind();
-	if(!(map_VAP.count(location)))
+	if(!(existing_VAOs[_id].map_VAP.count(location)))
 	{
-		map_VAP[location] = VertexAttribPointer(location, 0, GL_FLOAT, GL_FALSE, 0, 0);
+		existing_VAOs[_id].map_VAP[location] = VertexAttribPointer(location, 0, GL_FLOAT, GL_FALSE, 0, 0);
 	}
-	return map_VAP[location];
+	return existing_VAOs[_id].map_VAP[location];
 }
 
-multiset<uint> VAO::existing_VAOs;
+unordered_map<uint, VAO::Instance> VAO::existing_VAOs;
 uint VAO::active_VAO = 0;
 
 void VAO::init()
@@ -75,14 +70,14 @@ void VAO::init()
 		glGenVertexArrays(1, &_id);
 		if(_id == 0)
 		{
-			throw glass::MemoryError("Failed to create VAO!");
+			throw glass::RuntimeError("Failed to create VAO.");
 		}
 	#ifdef _DEBUG
 		cout << "constructing VAO " << _id << endl;
 	#endif
-		existing_VAOs.insert(_id);
+		existing_VAOs[_id].n_sources++;
 	}
-	else if(existing_VAOs.count(_id) == 0)
+	else if(existing_VAOs.count(_id) == 0 || existing_VAOs[_id].n_sources == 0)
 	{
 		throw glass::RuntimeError("VAO " + str::str(_id) + " has been destructed.");
 	}
@@ -90,34 +85,42 @@ void VAO::init()
 
 void VAO::del()
 {
-	uint count = existing_VAOs.count(_id);
+	if(existing_VAOs.count(_id) == 0)
+	{
+		_id = 0;
+		return;
+	}
+
+	uint count = existing_VAOs[_id].n_sources;
 	if(count > 0)
 	{
-		multiset_pop(existing_VAOs, _id);
+		existing_VAOs[_id].n_sources--;
 		if(count == 1)
 		{
 		#ifdef _DEBUG
 			cout << "destructing VAO " << _id << endl;
 		#endif
 			unbind();
+			existing_VAOs.erase(_id);
 			glDeleteVertexArrays(1, &_id);
 		}
 	}
+	_id = 0;
 }
 
 VAO::VAO() {}
 
 VAO::VAO(const VAO& vao) :
-_id(vao._id), _ebo(vao._ebo), map_VAP(vao.map_VAP)
+_id(vao._id)
 {
-	if(existing_VAOs.count(_id) > 0)
+	if(existing_VAOs.count(_id) && existing_VAOs[_id].n_sources > 0)
 	{
-		existing_VAOs.insert(_id);
+		existing_VAOs[_id].n_sources++;
 	}
 }
 
 VAO::VAO(VAO&& vao) :
-_id(move(vao._id)), _ebo(move(vao._ebo)), map_VAP(move(vao.map_VAP))
+_id(move(vao._id))
 {	
 	vao._id = 0;
 }
@@ -129,12 +132,10 @@ VAO& VAO::operator =(const VAO& vao)
 		del();
 
 		_id = vao._id;
-		_ebo = vao._ebo;
-		map_VAP = vao.map_VAP;
 
-		if(existing_VAOs.count(_id) > 0)
+		if(existing_VAOs.count(_id) && existing_VAOs[_id].n_sources > 0)
 		{
-			existing_VAOs.insert(_id);
+			existing_VAOs[_id].n_sources++;
 		}
 	}
 	return *this;
@@ -150,9 +151,6 @@ VAO& VAO::operator =(VAO&& vao)
 		}
 
 		_id = move(vao._id);
-		_ebo = move(vao._ebo);
-		map_VAP = move(vao.map_VAP);
-		
 		vao._id = 0;
 	}
 	return *this;
@@ -179,20 +177,24 @@ void VAO::unbind()const
 	}
 }
 
-void VAO::addEBO(const EBO& __ebo)
+bool VAO::isBind()const
 {
-	_ebo = __ebo;
+	return (_id != 0 && existing_VAOs.count(_id) && existing_VAOs[_id].n_sources > 0 && active_VAO == _id);
+}
 
+void VAO::setEBO(const EBO& _ebo)
+{
 	bind();
-	_ebo.bind();
+	existing_VAOs[_id].ebo = _ebo;
+	existing_VAOs[_id].ebo.bind();
 }
 
 bool VAO::empty()const
 {
-	return (existing_VAOs.count(_id) == 0 || map_VAP.empty());
+	return (_id == 0 || existing_VAOs.count(_id) == 0 || existing_VAOs[_id].n_sources == 0 || existing_VAOs[_id].map_VAP.empty());
 }
 
-void VAO::drawArrays(uint n, GLenum type)
+void VAO::drawArrays(uint n, DrawType type)
 {
 	if(empty() || n == 0)
 	{
@@ -203,18 +205,23 @@ void VAO::drawArrays(uint n, GLenum type)
 	glDrawArrays(type, 0, n);
 }
 
-void VAO::drawElements(GLenum type)
+void VAO::drawElements(DrawType type)
 {
-	if(empty() || _ebo.empty())
+	if(empty() || existing_VAOs[_id].ebo.empty())
 	{
 		return;
 	}
 
 	bind();
-	glDrawElements(type, _ebo.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(type, existing_VAOs[_id].ebo.size()/sizeof(uint), GL_UNSIGNED_INT, 0);
 }
 
 EBO VAO::ebo()const
 {
-	return _ebo;
+	if(_id == 0 || existing_VAOs.count(_id) == 0)
+	{
+		return EBO();
+	}
+
+	return existing_VAOs[_id].ebo;
 }

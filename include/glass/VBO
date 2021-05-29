@@ -1,43 +1,16 @@
 #ifndef __VBO__
 #define __VBO__
 
-#include <set>
+#include "glass/BO"
 
-typedef unsigned int uint;
-
-class VBO
+class VBO: public BO
 {
-private:
-	static std::multiset<uint> existing_VBOs;
-	static uint active_VBO;
-
-private:
-	uint _id = 0;
-	uint _size = 0;
-
-private:
-	void init();
-	void del();
-
 public:
 	VBO();
 	VBO(const VBO& vbo);
 	VBO(VBO&& vbo);
 	VBO& operator =(const VBO& ebo);
 	VBO& operator =(VBO&& ebo);
-	~VBO();
-	uint id()const;
-	void bind();
-	void unbind()const;
-	bool isBind()const;
-	void bufferData(void* ptr_value, uint n_bytes);
-	bool empty()const;
-	uint size()const;
-	void clear();
-	void malloc(uint n_bytes);
-	void* ptr();
-	bool apply();
-	VBO clone();
 };
 
 #endif

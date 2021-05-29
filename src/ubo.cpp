@@ -64,8 +64,7 @@ void Counter::put_back(uint value)
 	data[value]++;
 }
 
-multiset<uint> UBO::existing_UBOs;
-uint UBO::active_UBO = 0;
+unordered_map<uint, UBO::UBO_Instance> UBO::existing_UBOs;
 bool UBO::is_poll_init = false;
 Counter UBO::binding_points_poll;
 
@@ -75,17 +74,17 @@ name(_name) {}
 
 string UBO::Reference::type()const
 {
-	return parent->block[name].type;
+	return UBO::existing_UBOs[parent->_id].block[name].type;
 }
 
 uint UBO::Reference::size()const
 {
-	return parent->block[name].size;
+	return UBO::existing_UBOs[parent->_id].block[name].size;
 }
 
 int UBO::Reference::offset()const
 {
-	return parent->block[name].location;
+	return UBO::existing_UBOs[parent->_id].block[name].location;
 }
 
 UBO::Reference UBO::Reference::operator [](const string& sub_name)const
@@ -118,62 +117,33 @@ void UBO::init()
 		is_poll_init = true;
 	}
 
-	if(_id == 0)
-	{
-		glGenBuffers(1, &_id);
-		if(_id == 0)
-		{
-			throw glass::RuntimeError("Failed to create UBO.");
-		}
-	#ifdef _DEBUG
-		cout << "constructing UBO " << _id << endl;
-	#endif
-		existing_UBOs.insert(_id);
-	}
-	else if(existing_UBOs.count(_id) == 0)
-	{
-		throw glass::RuntimeError("UBO " + str::str(_id) + " has already been destructed.");
-	}
+	BO::init();
 }
 
 void UBO::del()
 {
-	uint count = existing_UBOs.count(_id);
-	if(count > 0)
+	if(bindingPoint() != 0)
 	{
-		multiset_pop(existing_UBOs, _id);
-		if(count == 1)
-		{
-		#ifdef _DEBUG
-			cout << "destructing UBO " << _id << endl;
-		#endif
-			unbind();
-			glDeleteBuffers(1, &_id);
-		}
+		binding_points_poll.put_back(bindingPoint());
 	}
+
+	BO::del();
 }
 
-UBO::UBO() {}
+UBO::UBO(): BO(UNIFORM) {}
 
-UBO::UBO(const UBO& ubo) :
-_id(ubo._id),
-_size(ubo._size),
-_binding_point(ubo._binding_point),
-block(ubo.block)
+UBO::UBO(const UBO& ubo) : BO(ubo) {}
+
+UBO::UBO(UBO&& ubo) : BO(move(ubo)) {}
+
+UBO::~UBO()
 {
-	if(existing_UBOs.count(_id) > 0)
-	{
-		existing_UBOs.insert(_id);
-	}
+	del();
 }
 
-UBO::UBO(UBO&& ubo) :
-_id(move(ubo._id)),
-_size(move(ubo._size)),
-_binding_point(move(ubo._binding_point)),
-block(move(ubo.block))
+void UBO::bind()
 {
-	ubo._id = 0;
+	BO::bind();
 }
 
 void UBO::copy(const UBO& ubo)
@@ -183,16 +153,11 @@ void UBO::copy(const UBO& ubo)
 		del();
 
 		_id = ubo._id;
-		_size = ubo._size;
-		block = ubo.block;
 
-		binding_points_poll.put_back(_binding_point);
-		_binding_point = ubo._binding_point;
-		binding_points_poll.borrow(_binding_point);
-
-		if(existing_UBOs.count(_id) > 0)
+		if(existing_UBOs.count(_id))
 		{
-			existing_UBOs.insert(_id);
+			existing_UBOs[_id].binding_point = ubo.bindingPoint();
+			binding_points_poll.borrow(ubo.bindingPoint());
 		}
 	}
 }
@@ -201,30 +166,19 @@ UBO& UBO::operator =(UBO&& ubo)
 {
 	if(this != &ubo)
 	{
-		if(!block.empty() && block != ubo.block)
+		if(!existing_UBOs[_id].block.empty() && existing_UBOs[_id].block != existing_UBOs[ubo._id].block)
 		{
 			throw glass::RuntimeError("Different structure uniform block cannot assign to each other.");
 		}
 
-		if(_id != ubo._id)
-		{
-			del();
-		}
-		_id = move(ubo._id);
-		_size = move(ubo._size);
-
-		block = move(ubo.block);
-		binding_points_poll.put_back(_binding_point);
-		_binding_point = move(ubo._binding_point);
-
-		ubo._id = 0;
+		BO::operator=(std::move(ubo));
 	}
 	return *this;
 }
 
 UBO::Reference UBO::operator [](const string& member_name)
 {
-	if(block.empty())
+	if(!existing_UBOs.count(_id) || existing_UBOs[_id].block.empty())
 	{
 		throw glass::RuntimeError("Please call UBO::setStructure(Uniform::Block) before assign value!");
 	}
@@ -232,99 +186,54 @@ UBO::Reference UBO::operator [](const string& member_name)
 	return Reference(this, member_name);
 }
 
-UBO::~UBO()
+uint UBO::bindingPoint()const
 {
-	del();
-}
-
-uint UBO::id()const
-{
-	return _id;
-}
-
-uint UBO::size()const
-{
-	return _size;
-}
-
-uint UBO::binding_point()const
-{
-	return _binding_point;
+	return existing_UBOs.count(_id) ? existing_UBOs[_id].binding_point : 0;
 }
 
 void UBO::bind(uint point)
 {
-	if(_binding_point == point)
+	if(bindingPoint() == point)
 	{
 		return;
 	}
 
-	binding_points_poll.put_back(_binding_point);
+	if(bindingPoint() != 0)
+	{
+		binding_points_poll.put_back(bindingPoint());
+	}
 	binding_points_poll.borrow(point);
 
-	_binding_point = point;
 	bind();
+	existing_UBOs[_id].binding_point = point;
 	glBindBufferBase(GL_UNIFORM_BUFFER, point, _id);
 }
 
-void UBO::bind()
+void UBO::setStructure(const Uniform::BlockMap::Reference& block)
 {
-	init();
-	glBindBuffer(GL_UNIFORM_BUFFER, _id);
-	active_UBO = _id;
-}
+	this->malloc(block.size());
 
-void UBO::unbind()const
-{
-	if(active_UBO == _id)
-	{
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		active_UBO = 0;
-	}
-}
-
-bool UBO::isBind()const
-{
-	return (existing_UBOs.count(_id) > 0 && active_UBO == _id);
-}
-
-bool UBO::empty()const
-{
-	return (existing_UBOs.count(_id) == 0 || _size == 0);
-}
-
-void UBO::malloc(uint n_bytes)
-{
-	bind();
-	glBufferData(GL_UNIFORM_BUFFER, n_bytes, NULL, GL_STATIC_DRAW);
-	unbind();
-	_size = n_bytes;
-}
-
-void UBO::setStructure(const Uniform::BlockMap::Reference& _block)
-{
-	this->malloc(_block.size());
-	block = _block;
 	bind(binding_points_poll.get());
+	existing_UBOs[_id].block = block;
 }
 
 bool UBO::is_atom(const string& name)
 {
-	return (block.contains(name) && block[name].atoms.size() == 1 && block[name].atoms[0] == name);
+	return (existing_UBOs[_id].block.contains(name) && existing_UBOs[_id].block[name].atoms.size() == 1 && existing_UBOs[_id].block[name].atoms[0] == name);
 }
 
 #define SET_PREPARE(TYPENAME) \
-if(!(block.contains(name)))\
+if(!(existing_UBOs[_id].block.contains(name)))\
 {\
-	throw glass::KeyError("Member " + name + " is not defined in uniform block " + block.name);\
+	throw glass::KeyError("Member " + name + " is not defined in uniform block " + existing_UBOs[_id].block.name);\
 }\
-if(block[name].type != #TYPENAME)\
+if(existing_UBOs[_id].block[name].type != #TYPENAME)\
 {\
-	throw glass::TypeError(string("Cannot convert ") + #TYPENAME + " to " + block[name].type);\
+	throw glass::TypeError(string("Cannot convert ") + #TYPENAME + " to " + existing_UBOs[_id].block[name].type);\
 }\
-if(_size != block.size())\
+if(size() != existing_UBOs[_id].block.size())\
 {\
-	this->malloc(block.size());\
+	this->malloc(existing_UBOs[_id].block.size());\
 	bind(binding_points_poll.get());\
 }\
 bind();
@@ -333,7 +242,7 @@ bind();
 void UBO::set_##TYPENAME(const string& name, const TYPENAME& value)\
 {\
 	SET_PREPARE(TYPENAME)\
-	glBufferSubData(GL_UNIFORM_BUFFER, block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, (void*)(&value));\
+	glBufferSubData(GL_UNIFORM_BUFFER, existing_UBOs[_id].block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, (void*)(&value));\
 	unbind();\
 }
 
@@ -341,7 +250,7 @@ void UBO::set_##TYPENAME(const string& name, const TYPENAME& value)\
 void UBO::set_##TYPENAME(const string& name, TYPENAME value)\
 {\
 	SET_PREPARE(TYPENAME)\
-	glBufferSubData(GL_UNIFORM_BUFFER, block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, value.data());\
+	glBufferSubData(GL_UNIFORM_BUFFER, existing_UBOs[_id].block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, value.data());\
 	unbind();\
 }
 
@@ -350,7 +259,7 @@ void UBO::set_bool(const string& name, bool value)
 	SET_PREPARE(bool);
 
 	int int_value = (int)value;
-	glBufferSubData(GL_UNIFORM_BUFFER, block[name].location, GLSL::built_in_types["bool"].glsl_size, (void*)(&int_value));
+	glBufferSubData(GL_UNIFORM_BUFFER, existing_UBOs[_id].block[name].location, GLSL::built_in_types["bool"].glsl_size, (void*)(&int_value));
 	unbind();
 }
 
@@ -379,39 +288,39 @@ DEFINE_SET_MAT(mat4)
 
 void* UBO::set(const std::string& name, void* ptr_value)
 {
-	if(block.empty())
+	if(existing_UBOs[_id].block.empty())
 	{
 		throw glass::RuntimeError("Please call UBO::setStructure(Uniform::Block) before assign value!");
 	}
 
-	block.parent->refresh();
+	existing_UBOs[_id].block.parent->refresh();
 
-	if(!block.contains(name))
+	if(!existing_UBOs[_id].block.contains(name))
 	{
-		throw glass::KeyError(name + " is not a member of uniform block " + block.name);
+		throw glass::KeyError(name + " is not a member of uniform block " + existing_UBOs[_id].block.name);
 	}
 	if(is_atom(name))
 	{
 		set_atom(name, ptr_value);
-		return (void*)((unsigned char*)ptr_value + GLSL::built_in_types[block[name].type].size);
+		return (void*)((unsigned char*)ptr_value + GLSL::built_in_types[existing_UBOs[_id].block[name].type].size);
 	}
 
-	std::string type = block[name].type;
+	std::string type = existing_UBOs[_id].block[name].type;
 	std::string basetype = str::base_type(type);
-	if(block.parent->defined_structs.count(basetype) == 0 ||
-	   block.parent->defined_structs[basetype].host_hash == 0)
+	if(existing_UBOs[_id].block.parent->defined_structs.count(basetype) == 0 ||
+	   existing_UBOs[_id].block.parent->defined_structs[basetype].host_hash == 0)
 	{
 		throw glass::TypeError("Please call Uniform::define<" + basetype + ">() before assign value!");
 	}
 
-	block.parent->please_define(type);
+	existing_UBOs[_id].block.parent->please_define(type);
 
 	unsigned char* ptr = (unsigned char*)(ptr_value);
-	for(std::string atom : block[name].atoms)
+	for(std::string atom : existing_UBOs[_id].block[name].atoms)
 	{
-		ptr += block[atom].offset;
+		ptr += existing_UBOs[_id].block[atom].offset;
 		set_atom(atom, (void*)(ptr));
-		ptr += block[atom].size + block[atom].padding_size;
+		ptr += existing_UBOs[_id].block[atom].size + existing_UBOs[_id].block[atom].padding_size;
 	}
 
 	return (void*)ptr;
