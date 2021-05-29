@@ -38,6 +38,9 @@
 <ul class="index">
 <li><div class="item-arrow"></div><a href="#section-1-1">1.1&nbsp;&nbsp;Getting Start</a></li>
 <li><div class="item-arrow"></div><a href="#section-1-2">1.2&nbsp;&nbsp;Why GLASS?</a></li>
+<li><div class="item-arrow"></div><a href="#section-1-3">1.3&nbsp;&nbsp;Why this name?</a></li>
+<li><div class="item-arrow"></div><a href="#section-1-4">1.4&nbsp;&nbsp;Where to see more</a></li>
+<li><div class="item-arrow"></div><a href="#section-1-5">1.5&nbsp;&nbsp;Contact</a></li>
 </ul>
 </li>
 </ul>
@@ -94,11 +97,12 @@ Run the code then you will see following window.</p>
 <li><kbd>ESC</kbd> to exit navigation mode and show the cursor;</li>
 <li><kbd>Enter</kbd> to enter navigation mode again.</li>
 </ul>
-<p>Click [demos] to see more demos.</p>
-<p>Above example is using <strong>GLASS</strong> high level interface. <strong>GLASS</strong> library also provide a lot of interfaces for OpenGL core programming directly. See more details at [low level programming using GLASS].</p>
-<p>If you want to learn systematically about <strong>GLASS</strong>, [Developer Guide] will teach you step-by-step to build your more and more complicated VR world. And [API Reference] will be a good helper for your development.</p>
+<p>Click <a href="">demos</a> to see more demos.</p>
+<p>Above example is using <strong>GLASS</strong> high level interface. <strong>GLASS</strong> library also provide a lot of interfaces for OpenGL core programming directly. See more details at <a href="">low level programming using GLASS</a>.</p>
+<p>If you want to learn systematically about <strong>GLASS</strong>, <a href="">Tutorial</a> will guide you step-by-step to build your more and more complicated VR world. <a href="">Manual</a> is a comprehensive document for all the usage of <strong>GLASS</strong>. And <a href="">API Reference</a> explain all the interfaces in details.</p>
+<p>(Note: All url links are not available now. The coffee money you donate will accelerate the document writting process.)</p>
 <h2 id="section-1-2" class="h-title" >1.2&nbsp;&nbsp&nbsp;Why GLASS?</h2>
-<p>The reason is simple, because <strong>GLASS</strong> is simple. Simple and intuitive is the core philosophy of <strong>GLASS</strong>. As you see the code above, every line of code just work as it's literal meaning. That's very friendly for 3D developement beginer. And more, here lists all the advantages of <strong>GLASS</strong>:</p>
+<p>The reason is simple, because <strong>GLASS</strong> is simple. Simple and intuitive is the core philosophy of <strong>GLASS</strong>. As you see the code above, every line of code just work as it's literal meaning. That's very friendly for 3D developement beginer. And more, here lists all the features of <strong>GLASS</strong>:</p>
 <ul>
 <li><strong>User friendly interface</strong>: Compared to other 3D rendering engines, <strong>GLASS</strong> has the easiest interface and the most intuitive programming style.</li>
 <li><strong>Multi abstraction levels</strong>: Beginer can use high level interface. For higher controllable developement, you can introduce more 3D rendering objects to build your scene. And for more degree of freedom developement, you can also introduce OpenGL objects. And even more, you can use <strong>GLASS</strong> just for OpenGL core mode programming: pass data to GPU, tell GPU to do something... in <strong>GLASS</strong> way.</li>
@@ -106,12 +110,39 @@ Run the code then you will see following window.</p>
 <li><strong>Cross-platform</strong>: <strong>GLASS</strong> is based on OpenGL. Because OpenGL is cross-platform, you can use <strong>GLASS</strong> to all devices that support OpenGL: desktop application(Windows/Linux/Mac), embedded firmware(Android/IOS/Other Embedded OS) and after the API for JavaScript is ready, web application will also be OK.</li>
 <li><strong>Cross-language</strong>: It will be. But not now. <strong>GLASS</strong> will support pure C, Python, Java, JavaScript. Because <strong>GLASS</strong> is not just an API for one specific language, but also an architecture idea for 3D programming. This idea will be implement in different language for different developers. But now it's only support C++. Your voice and donation will accelerate the applying process.</li>
 </ul>
-<p>And for 3D rendering details, it has following advantages:</p>
+<p>And for 3D rendering details, it has following features:</p>
 <ul>
-<li><strong>Use CSM shadow</strong></li>
-<li><strong>Use defered shadering</strong></li>
+<li><strong>Window is integreted</strong>: You don't need struggling writing complex window related code.</li>
+<li><strong>Easy to bind Mouse/Keyboard callback behaviors</strong>: For example, If you want to do something when mouse is clicked, just overwrite <code>onClick()</code> function.</li>
+<li><strong>Default navigation method is integreted</strong>: You can use mouse and keyboard to navigate in scene in hello world program. Of course you can also override the navigation method in a simple way.</li>
+<li><strong>Easy to create primary geometry models</strong>: Functions are provided to generate sphere/cube models.</li>
+<li><strong>Easy to load 3D model from different formats</strong>: Just use <code>load(file_path)</code> to load a 3D model. No other thing need to care about.</li>
+<li><strong>3 kind of lights supported</strong>: You can use Point Light, Directional Light, Spot Light in your scene. And can easily control the parameter of lights.</li>
+<li><strong>Easy to hide/show models and lights</strong>: You can simplly use <code>hide()</code>/<code>show()</code> function to hide/show any models and <code>open()</code>/<code>close()</code> to turn on/off any lights.</li>
+<li><strong>Easy to turn on/off shadow</strong>: You only need to call one function to turn on/off the shadow of any lights.</li>
+<li><strong>Shadow range move with camera</strong>: No mater where you move to or where you look at, shadow display range will always cover your vision.</li>
+<li><strong>CMS shadow tech is used</strong>: CMS technique result in less memory usage and clearer shadow edge.</li>
+<li><strong>Use defered shadering + defered lighting</strong>: This make multi-lights shadering with shadow possible.</li>
+<li><strong>Point Light shape with bloom</strong>: You can set a shape of each point light. And point light shape will display with bloom just like a real light.</li>
+<li><strong>Easy to turn on/off HDR</strong>: You only need to call one function to turn on/off HDR of a scene.</li>
 </ul>
-<hr />
+<h2 id="section-1-3" class="h-title" >1.3&nbsp;&nbsp&nbsp;Why this name?</h2>
+<p>You can interpreter this name in 3 meaning:</p>
+<ul>
+<li>The 3D world is clear and just there. You can't see it clearly, without a <strong>GLASS</strong>. <strong>GLASS</strong> will return you clear world. Haha~</li>
+<li>The 3D world is just there. Look it through a piece of <strong>GLASS</strong>, the 3D world will projection to your eyes without any deformed. That represents <strong>GLASS</strong>'s intuitive interfaces.</li>
+<li><strong>GLASS</strong> works just like a Open<strong>GL</strong> <strong>Ass</strong>istant.</li>
+</ul>
+<p>What an awesome name, right?</p>
+<h2 id="section-1-4" class="h-title" >1.4&nbsp;&nbsp&nbsp;Where to see more</h2>
+<ul>
+<li><a href="">Tutorial</a> is the step-by-step programming guide of <strong>GLASS</strong> for learning.</li>
+<li><a href="">Manual</a> comprehensively introduce the usage of <strong>GLASS</strong> for reference.</li>
+<li><a href="">API Reference</a> explain all classes and functions in detail for reference.</li>
+</ul>
+<p>All above documents are not finished. Your donation or stars will give me great encouragement to write them.</p>
+<h2 id="section-1-5" class="h-title" >1.5&nbsp;&nbsp&nbsp;Contact</h2>
+<p>For any questions about this library, you can contact me directly via email: <a href="binghuiwang@foxmail.com">binghuiwang@foxmail.com</a></p>
     <!-- main content -->
 </article>
 </div>

@@ -1,8 +1,6 @@
 # GLASS -- Use easiest way to render 3D scene
 
-# Introduction
-
-## Getting Start
+## 1  Getting Start
 
 **GLASS** is an open source, cross-platform, object-oriented 3D rendering engine for C++. **GLASS** is built totally based on **OpenGL 4.6**. By using **GLASS**, you can build your VR scene in a very intuitive way. How intuitive? Just see following example:
 ```c++
@@ -39,7 +37,7 @@ int main()
 ```
 Run the code then you will see following window.
 
-<img src="Figures/duck.png" width="70%"/>
+<img src="doc/Figures/duck.png" width="70%"/>
 
 You can use mouse and key to navigate in the scene:
 
@@ -61,7 +59,7 @@ If you want to learn systematically about **GLASS**, [Tutorial]() will guide you
 
 (Note: All url links are not available now. The coffee money you donate will accelerate the document writting process.)
 
-## Why GLASS?
+## 2  Why GLASS
 
 The reason is simple, because **GLASS** is simple. Simple and intuitive is the core philosophy of **GLASS**. As you see the code above, every line of code just work as it's literal meaning. That's very friendly for 3D developement beginer. And more, here lists all the features of **GLASS**:
 
@@ -87,7 +85,7 @@ And for 3D rendering details, it has following features:
 * **Point Light shape with bloom**: You can set a shape of each point light. And point light shape will display with bloom just like a real light.
 * **Easy to turn on/off HDR**: You only need to call one function to turn on/off HDR of a scene.
 
-## Why this name?
+## 3  Why this name
 
 You can interpreter this name in 3 meaning:
 
@@ -97,14 +95,15 @@ You can interpreter this name in 3 meaning:
 
 What an awesome name, right?
 
-## Where to see more
+## 4  Where to see more
 * [Tutorial]() is the step-by-step programming guide of **GLASS** for learning.
 * [Manual]() comprehensively introduce the usage of **GLASS** for reference.
 * [API Reference]() explain all classes and functions in detail for reference.
+* [FAQ]() gives the answer to frequently asked questions.
 
 All above documents are not finished. Your donation or stars will give me great encouragement to write them.
 
-## What's next
+## 5  What's next
 There are a lot of things to do in next version (0.0.2):
 
 * Anti-aliasing for defered rendering/lighting.
@@ -119,6 +118,6 @@ There are a lot of things to do in next version (0.0.2):
 
 You can make contribution by commit pull-request. And we can work together to make it a better 3D rendering engine.
 
-## Contact
+## 6  Contact
 
 For any questions about this library, you can contact me directly via email: [binghuiwang@foxmail.com](binghuiwang@foxmail.com)
