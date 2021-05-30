@@ -1,6 +1,6 @@
 # GLASS -- Use easiest way to render 3D scene
 
-## 1  Getting Start
+## 1&nbsp;&nbsp;Getting Start
 
 **GLASS** is an open source, cross-platform, object-oriented 3D rendering engine for C++. **GLASS** is built totally based on **OpenGL 4.6**. By using **GLASS**, you can build your VR scene in a very intuitive way. How intuitive? Just see following example:
 ```c++
@@ -9,30 +9,30 @@
 
 int main()
 {
-	Scene3D scene;
-	// Create Scene3D object
+    Scene3D scene;
+    // Create Scene3D object
 
-	scene.models["floor"] = glass::floor();
-	// Add floor model
+    scene.models["floor"] = glass::floor();
+    // Add floor model
 
-	scene.models["floor"].setTexture("floor.png");
-	// Set floor texture as "floor.png"
+    scene.models["floor"].setTexture("floor.png");
+    // Set floor texture as "floor.png"
 
-	scene.models["duck"].load("duck/duck.dae");
-	// Add duck model
+    scene.models["duck"].load("duck/duck.dae");
+    // Add duck model
 
-	scene.models["duck"].zoom(0.01);
-	// Zoom duck size to scale 0.01
+    scene.models["duck"].zoom(0.01);
+    // Zoom duck size to scale 0.01
 
-	scene.dir_lights["light"].setDirection(-1, -1, -1);
-	// Add a direction light and set direction as (-1, -1, -1)
+    scene.dir_lights["light"].setDirection(-1, -1, -1);
+    // Add a direction light and set direction as (-1, -1, -1)
 
-	scene.dir_lights["light"].useShadow();
-	// Turn on shadow for this light,
-	// otherwise all models won't have shadow.
+    scene.dir_lights["light"].useShadow();
+    // Turn on shadow for this light,
+    // otherwise all models won't have shadow.
 
-	scene.show();
-	// Show the scene
+    scene.show();
+    // Show the scene
 }
 ```
 Run the code then you will see following window.
@@ -59,7 +59,7 @@ If you want to learn systematically about **GLASS**, [Tutorial]() will guide you
 
 (Note: All url links are not available now. The coffee money you donate will accelerate the document writting process.)
 
-## 2  Why GLASS
+## 2&nbsp;&nbsp;Why GLASS
 
 The reason is simple, because **GLASS** is simple. Simple and intuitive is the core philosophy of **GLASS**. As you see the code above, every line of code just work as it's literal meaning. That's very friendly for 3D developement beginer. And more, here lists all the features of **GLASS**:
 
@@ -85,7 +85,7 @@ And for 3D rendering details, it has following features:
 * **Point Light shape with bloom**: You can set a shape of each point light. And point light shape will display with bloom just like a real light.
 * **Easy to turn on/off HDR**: You only need to call one function to turn on/off HDR of a scene.
 
-## 3  Why this name
+## 3&nbsp;&nbsp;Why this name
 
 You can interpreter this name in 3 meaning:
 
@@ -95,7 +95,7 @@ You can interpreter this name in 3 meaning:
 
 What an awesome name, right?
 
-## 4  Where to see more
+## 4&nbsp;&nbsp;Where to see more
 * [Tutorial]() is the step-by-step programming guide of **GLASS** for learning.
 * [Manual]() comprehensively introduce the usage of **GLASS** for reference.
 * [API Reference]() explain all classes and functions in detail for reference.
@@ -103,7 +103,7 @@ What an awesome name, right?
 
 All above documents are not finished. Your donation or stars will give me great encouragement to write them.
 
-## 5  What's next
+## 5&nbsp;&nbsp;What's next
 There are a lot of things to do in next version (0.0.2):
 
 * Anti-aliasing for defered rendering/lighting.
@@ -118,6 +118,6 @@ There are a lot of things to do in next version (0.0.2):
 
 You can make contribution by commit pull-request. And we can work together to make it a better 3D rendering engine.
 
-## 6  Contact
+## 6&nbsp;&nbsp;Contact
 
-For any questions about this library, you can contact me directly via email: [binghuiwang@foxmail.com](binghuiwang@foxmail.com)
+For any questions about this library, you can contact me directly via email: [binghui.wang@foxmail.com](binghui.wang@foxmail.com)
