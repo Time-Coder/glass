@@ -10,28 +10,23 @@
 ((index) == 1 ? array[1] : \
 ((index) == 2 ? array[2] : array[3])))
 
-float[4] getCSMLevel(Fragment frag, Camera camera)
+float getCSMLevel(Fragment frag, Camera camera)
 {
     vec4 pos_viewspace = camera.view_mat * vec4(frag.position, 1.0);
     float D = -pos_viewspace.z/pos_viewspace.w;
-    int current_level = (D <= camera.cut[1] ? 0 : (D <= camera.cut[2] ? 1 : (D <= camera.cut[3] ? 2 : 3)));
-
-    float factor[4];
-    factor[0] = current_level;
-    factor[1] = (current_level == 0 ? 0 : 0.5*(ARRAY_ACCESS(camera.cut, current_level+1) - D)/(ARRAY_ACCESS(camera.cut, current_level+1) - ARRAY_ACCESS(camera.cut, current_level)));
-    factor[2] = 0.5;
-    factor[3] = (current_level == 3 ? 0 : 0.5*(D - ARRAY_ACCESS(camera.cut, current_level))/(ARRAY_ACCESS(camera.cut, current_level+1) - ARRAY_ACCESS(camera.cut, current_level)));
-    
-    float sum = 0;
-    for(int i = 1; i <= 3; i++)
+    float t0 = 0.3*(camera.cut[1]-camera.cut[0]);
+    if(D <= camera.cut[2]-t0)
     {
-        sum += factor[i];
+        return soft_step(D-camera.cut[1], t0);
     }
-    for(int i = 1; i <= 3; i++)
+    else if(D <= camera.cut[3]-t0)
     {
-        factor[i] /= sum;
+        return 1 + soft_step(D-camera.cut[2], t0);
     }
-    return factor;
+    else
+    {
+        return 2 + soft_step(D-camera.cut[3], t0);
+    }
 }
 
 float _dirLightShadow(DirLight light, Fragment frag, int level, int half_width)
@@ -70,11 +65,14 @@ float _dirLightShadow(DirLight light, Fragment frag, int level, int half_width)
 
 float dirLightShadow(DirLight light, Fragment frag, Camera camera, int half_width)
 {
-    float[4] factor = getCSMLevel(frag, camera);
-    int level = int(factor[0]);
+    float level = getCSMLevel(frag, camera);
 
-    float shadow = 0;
-    shadow += _dirLightShadow(light, frag, level, half_width);
+    float shadow = _dirLightShadow(light, frag, int(level), half_width);
+    if(level > float(int(level)) && int(level)+1 <= 3)
+    {
+        float rear = level - float(int(level));
+        shadow = (1-rear)*shadow + rear*_dirLightShadow(light, frag, int(level)+1, half_width);
+    }
 
     return shadow;
 }
