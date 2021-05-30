@@ -10,6 +10,8 @@ multiset<uint> samplerCube::existing_samplerCubes;
 list<samplerCube::Instance> samplerCube::existing_instances;
 map<string, samplerCube::Instance*> samplerCube::path_map;
 
+void width_adapt(uint width);
+
 void samplerCube::destruct_all()
 {
 	if(samplerCube::active_samplerCube != 0)
@@ -291,7 +293,10 @@ uint get_format(uint n_channels);
 void samplerCube::setRightImage(const Image& image)
 {
 	_bind();
+
 	uint format = get_format(image.channels());
+
+	width_adapt(image.width());
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 	
 	instance->width[0] = image.width();
@@ -309,6 +314,8 @@ void samplerCube::setLeftImage(const Image& image)
 {
 	_bind();
 	uint format = get_format(image.channels());
+
+	width_adapt(image.width());
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 
 	instance->width[1] = image.width();
@@ -326,6 +333,8 @@ void samplerCube::setUpImage(const Image& image)
 {
 	_bind();
 	uint format = get_format(image.channels());
+
+	width_adapt(image.width());
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 
 	instance->width[2] = image.width();
@@ -343,6 +352,8 @@ void samplerCube::setDownImage(const Image& image)
 {
 	_bind();
 	uint format = get_format(image.channels());
+
+	width_adapt(image.width());
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 
 	instance->width[3] = image.width();
@@ -360,6 +371,8 @@ void samplerCube::setFrontImage(const Image& image)
 {
 	_bind();
 	uint format = get_format(image.channels());
+
+	width_adapt(image.width());
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 
 	instance->width[5] = image.width();
@@ -377,6 +390,8 @@ void samplerCube::setBackImage(const Image& image)
 {
 	_bind();
 	uint format = get_format(image.channels());
+
+	width_adapt(image.width());
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 
 	instance->width[4] = image.width();
@@ -406,6 +421,8 @@ void samplerCube::setImages(const vector<Image>& images)
 	for(int i = 0; i < 6; i++)
 	{
 		uint format = get_format(images[i].channels());
+
+		width_adapt(images[i].width());
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, images[i].width(), images[i].height(), 0, format, GL_UNSIGNED_BYTE, images[i].data());
 
 		instance->width[i] = images[i].width();
@@ -438,6 +455,8 @@ void samplerCube::setImages(const vector<string>& filenames)
 		{
 			image.load(filenames[i], true);
 			uint format = get_format(image.channels());
+
+			width_adapt(image.width());
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, image.width(), image.height(), 0, format, GL_UNSIGNED_BYTE, image.data());
 
 			instance->width[i] = image.width();
@@ -503,6 +522,7 @@ void samplerCube::malloc(uint _width, uint _height, uint _format, uint _dtype)
 	_bind();
 	for(int i = 0; i < 6; i++)
 	{
+		width_adapt(_width);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, _format, 
 	                 _width, _height, 0, get_external_format(_format), _dtype, NULL);
 
@@ -518,6 +538,7 @@ void samplerCube::realloc(uint _width, uint _height)
 	_bind();
 	for(int i = 0; i < 6; i++)
 	{
+		width_adapt(_width);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, instance->format[i], 
 	                 _width, _height, 0, get_external_format(instance->format[i]), instance->dtype[i], NULL);
 

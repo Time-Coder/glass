@@ -370,6 +370,15 @@ uint get_format(uint n_channels)
 	}
 }
 
+void width_adapt(uint width)
+{
+	if(width % 4 != 0)
+	{
+		if(width % 2 == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+		else glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	}
+}
+
 uint sampler2D::generateMipmap()
 {
 	_bind();
@@ -390,6 +399,7 @@ void sampler2D::setImage(const Image& image)
 	instance->width = image.width();
 	instance->height = image.height();
 
+	width_adapt(instance->width);
 	glTexImage2D(GL_TEXTURE_2D, 0, instance->format, instance->width, instance->height, 0, instance->format, instance->dtype, image.data());
     glGenerateMipmap(GL_TEXTURE_2D);
 }
@@ -535,6 +545,8 @@ void sampler2D::malloc(uint _width, uint _height, uint _format, uint _dtype)
 	}
 
 	_bind();
+
+	width_adapt(_width);
 	glTexImage2D(GL_TEXTURE_2D, 0, _format, _width, _height, 0, get_external_format(_format), _dtype, NULL);
 	instance->width = _width;
 	instance->height = _height;
@@ -550,6 +562,8 @@ void sampler2D::realloc(uint _width, uint _height)
 	}
 
 	_bind();
+
+	width_adapt(_width);
 	glTexImage2D(GL_TEXTURE_2D, 0, instance->format, _width, _height, 0, get_external_format(instance->format), instance->dtype, NULL);
 	instance->width = _width;
 	instance->height = _height;
