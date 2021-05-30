@@ -18,7 +18,7 @@ int main()
     scene.models["floor"].setTexture("floor.png");
     // Set floor texture as "floor.png"
 
-    scene.models["duck"].load("duck/duck.dae");
+    scene.models["duck"].load("third_party/assimp5.0.1/test/models/Collada/duck.dae");
     // Add duck model
 
     scene.models["duck"].zoom(0.01);
