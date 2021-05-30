@@ -34,6 +34,10 @@ private:
 	void update_internal();
 
 public:
+	const static uint frame_width;
+	const static uint frame_height;
+
+public:
 	DirLight();
 	vec3 direction()const;
 	void setDirection(float x, float y, float z);

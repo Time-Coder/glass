@@ -30,8 +30,15 @@ mat4 Camera::getLightMat(DirLight* dir_light, double cut1, double cut2)
 	double k = tan_fov2*tan_fov2 * (1 + __aspect*__aspect);
 	double z_center = std::min(cut2, 0.5 * (cut1 + cut2) * (1 + k));
 	double R = sqrt(pow(cut2-z_center, 2) + cut2*cut2*k);
+	
+	double pixel_width = 2.0*R/(dir_light->frame_width);
+	double pixel_height = 2.0*R/(dir_light->frame_height);
 
 	vec4 center = dir_light->__direction_mat * inv_view_mat * vec4(0, 0, -z_center, 1);
+	
+	center.x = round(center.x/pixel_width)*pixel_width;
+	center.y = round(center.y/pixel_height)*pixel_height;
+
 	return glass::ortho(center.x - R, center.x + R,
                        center.y - R, center.y + R,
                        center.z - R, center.z + R + 10) * dir_light->__direction_mat;

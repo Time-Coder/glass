@@ -7,6 +7,9 @@
 
 using namespace glass;
 
+const uint PointLight::frame_width = 1024;
+const uint PointLight::frame_height = 1024;
+
 PointLight::PointLight()
 {
 	setCoverage(32);

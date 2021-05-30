@@ -7,6 +7,9 @@
 #include "glass/utils/transform.h"
 #include "glass/utils/helper.h"
 
+const uint DirLight::frame_width = 1024;
+const uint DirLight::frame_height = 1024;
+
 DirLight::DirLight()
 {
 	update_internal();

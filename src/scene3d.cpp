@@ -197,7 +197,7 @@ void Scene3D::init_shadering_point_light_shadow()
 	shader["point_light_shadow"].warningOff();
 
 	fbo["point_light_shadow"].screenResize(width(), height());
-	fbo["point_light_shadow"].bufferResize(1024, 1024);
+	fbo["point_light_shadow"].bufferResize(PointLight::frame_width, PointLight::frame_height);
 	fbo["point_light_shadow"].attach(FBO::Attachment<samplerCube>(FBO::DEPTH));
 }
 
@@ -213,16 +213,16 @@ void Scene3D::init_shadering_dir_light_shadow()
 	shader["dir_light_shadow"].link();
 	shader["dir_light_shadow"].warningOff();
 
-	fbos["dir_light_shadow"].push_back(FBO(width(), height(), 1024, 1024));
+	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][0].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
 
-	fbos["dir_light_shadow"].push_back(FBO(width(), height(), 1024, 1024));
+	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][1].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
 
-	fbos["dir_light_shadow"].push_back(FBO(width(), height(), 1024, 1024));
+	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][2].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
 
-	fbos["dir_light_shadow"].push_back(FBO(width(), height(), 1024, 1024));
+	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][3].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
 }
 

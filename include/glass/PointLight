@@ -31,6 +31,10 @@ private:
 	void update_mat();
 
 public:
+	const static uint frame_width;
+	const static uint frame_height;
+
+public:
 	PointLight();
 
 	float coverage()const;
