@@ -110,7 +110,7 @@ And for 3D rendering details, it has following features:
     * Open Game Engine Exchange (.ogex)
     * Unreal (.3d)
     * BlitzBasic 3D (.b3d)
-    * Quick3D (.q3d,.q3s)
+    * Quick3D (.q3d/.q3s)
     * Neutral File Format (.nff)
     * Sense8 WorldToolKit (.nff)
     * Object File Format (.off)
@@ -139,6 +139,7 @@ You can interpreter this name in 3 meaning:
 What an awesome name, right?
 
 ## 4&nbsp;&nbsp;Where to see more
+* [Build Guide]() will guide you to build this library for Windows(VS/MinGW/MinGW-w64/TDM/clang), MAC(XCode/gcc/clang) and Linux(gcc/clang).
 * [Tutorial]() is the step-by-step programming guide of **GLASS** for learning.
 * [Manual]() comprehensively introduce the usage of **GLASS** for reference.
 * [API Reference]() explain all classes and functions in detail for reference.
@@ -150,7 +151,7 @@ All above documents are not finished. Your donation or stars will give me great 
 There are a lot of things to do in next version (0.0.2):
 
 * Anti-aliasing for defered rendering/lighting.
-* Soft shadow edge: improved ESM and PCSS
+* Soft shadow edge: ESSM and PCSS
 * <del>Eliminate the shake of directional light shadow.</del>
 * Eliminate the stripe of point/spot light shadow.
 * <del>Eliminate the sudden change of shadow on the junction of 2 CMS levels.</del>
