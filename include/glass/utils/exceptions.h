@@ -49,7 +49,7 @@ class IndexError : public std::exception
 	std::string __message;
 
 public:
-	IndexError(int index, int lower_bound, int upper_bound)
+	IndexError(long long int index, long long int lower_bound, long long int upper_bound)
 	{
 		__message = std::string("Index ") + str::str(index) + std::string(" out of bound [") + str::str(lower_bound) + ", " + str::str(upper_bound) + "].";
 	}

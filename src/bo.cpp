@@ -207,7 +207,7 @@ bool BO::empty()const
 		    existing_BOs[_buffer_type][_id].n_sources == 0 || existing_BOs[_buffer_type][_id].size == 0);
 }
 
-uint BO::size()const
+size_t BO::size()const
 {
 	return (existing_BOs[_buffer_type].count(_id) ? existing_BOs[_buffer_type][_id].size : 0);
 }
@@ -245,7 +245,7 @@ BO::MemoryType BO::memType()const
 	return existing_BOs[_buffer_type][_id].mem_type;
 }
 
-void BO::malloc(uint n_bytes, MemoryType mem_type)
+void BO::malloc(size_t n_bytes, MemoryType mem_type)
 {
 	bind();
 	glBufferData(_buffer_type, n_bytes, NULL, mem_type);
@@ -253,9 +253,34 @@ void BO::malloc(uint n_bytes, MemoryType mem_type)
 	existing_BOs[_buffer_type][_id].mem_type = mem_type;
 }
 
-void BO::calloc(uint n_elements, uint sizeof_element, MemoryType mem_type)
+void BO::realloc(size_t n_bytes, MemoryType mem_type)
 {
-	uint n_bytes = n_elements * sizeof_element;
+	if(empty())
+	{
+		malloc(n_bytes, mem_type);
+		return;
+	}
+
+	size_t data_size = std::min(n_bytes, size());
+	void* data_temp = ::malloc(data_size);
+	if(data_temp == NULL)
+	{
+		throw glass::MemoryError("Failed to allocate memory!");
+	}
+	
+	void* pointer = this->ptr();
+	::memcpy(data_temp, pointer, data_size);
+	this->apply();
+	this->malloc(n_bytes, mem_type);
+	pointer = this->ptr();
+	::memcpy(pointer, data_temp, data_size);
+	this->apply();
+	::free(data_temp);
+}
+
+void BO::calloc(size_t n_elements, size_t sizeof_element, MemoryType mem_type)
+{
+	size_t n_bytes = n_elements * sizeof_element;
 
 	bind();
 	glBufferData(_buffer_type, n_bytes, NULL, mem_type);
@@ -263,12 +288,47 @@ void BO::calloc(uint n_elements, uint sizeof_element, MemoryType mem_type)
 	existing_BOs[_buffer_type][_id].mem_type = mem_type;
 }
 
-void BO::memcpy(void* ptr_value, uint n_bytes, MemoryType mem_type)
+void BO::memcpy(void* ptr_value, size_t n_bytes, MemoryType mem_type)
 {
 	bind();
 	glBufferData(_buffer_type, n_bytes, ptr_value, mem_type);
 	existing_BOs[_buffer_type][_id].size = n_bytes;
 	existing_BOs[_buffer_type][_id].mem_type = mem_type;
+}
+
+void BO::copyFrom(BO bo)
+{
+	if(size() == 0 || bo.size() == 0)
+	{
+		return;
+	}
+
+	bool self_is_bind = isBind();
+	bool source_is_bind = bo.isBind();
+
+	switch(_buffer_type)
+	{
+		case VERTEX:
+		case ELEMENT:
+		case UNIFORM:
+			glBindBuffer(GL_COPY_WRITE_BUFFER, _id);
+			break;
+		case FRAME:
+			glBindFramebuffer(GL_COPY_WRITE_BUFFER, _id);
+			break;
+		case RENDER:
+			glBindRenderbuffer(GL_COPY_WRITE_BUFFER, _id);
+			break;
+	}
+	bo.bind();
+
+	glCopyBufferSubData(bo._buffer_type, GL_COPY_WRITE_BUFFER, 0, 0, size());
+
+	if(self_is_bind) bind();
+	else unbind();
+
+	if(source_is_bind) bo.bind();
+	else bo.unbind();
 }
 
 void BO::free()
@@ -294,7 +354,7 @@ void* BO::ptr()
 	}
 	
 	bind();
-	void* pointer = glMapBuffer(_buffer_type, GL_WRITE_ONLY);
+	void* pointer = glMapBuffer(_buffer_type, GL_READ_WRITE);
 	existing_BOs[_buffer_type][_id].is_mapped = true;
 	return pointer;
 }
@@ -314,33 +374,4 @@ bool BO::apply()
 	bool result = glUnmapBuffer(_buffer_type);
 	existing_BOs[_buffer_type][_id].is_mapped = false;
 	return result;
-}
-
-BO BO::clone()
-{
-	BO bo(_buffer_type);
-	if(empty())
-	{
-		return bo;
-	}
-
-	bo.malloc(size());
-	bind();
-	switch(_buffer_type)
-	{
-		case VERTEX:
-		case ELEMENT:
-		case UNIFORM:
-			glBindBuffer(GL_COPY_WRITE_BUFFER, bo._id);
-			break;
-		case FRAME:
-			glBindFramebuffer(GL_COPY_WRITE_BUFFER, bo._id);
-			break;
-		case RENDER:
-			glBindRenderbuffer(GL_COPY_WRITE_BUFFER, bo._id);
-			break;
-	}
-
-	glCopyBufferSubData(_buffer_type, GL_COPY_WRITE_BUFFER, 0, 0, size());
-	return bo;
 }

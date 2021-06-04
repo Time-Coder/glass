@@ -533,6 +533,7 @@ void GLFigure::show()
 
 	glEnable(GL_MULTISAMPLE); // 抗锯齿
 	glEnable(GL_DEPTH_TEST); // 深度测试
+	// glEnable(GL_CULL_FACE); // 面剔除
 	// glEnable(GL_FRAMEBUFFER_SRGB); // Gamma 校正
 
 	while(!glfwWindowShouldClose(__window))

@@ -24,7 +24,7 @@ class samplerCube
 		uint s_wrap_type = GL_CLAMP_TO_EDGE;
 		uint t_wrap_type = GL_CLAMP_TO_EDGE;
 		uint r_wrap_type = GL_CLAMP_TO_EDGE;
-		uint min_filter_type = GL_LINEAR_MIPMAP_LINEAR;
+		uint min_filter_type = GL_LINEAR;
 		uint mag_filter_type = GL_LINEAR;
 		vec4 border_color;
 

@@ -4,6 +4,8 @@
 #include <unordered_map>
 
 #include "glass/common.h"
+#include "glass/utils/type.h"
+#include "glass/utils/exceptions.h"
 
 typedef unsigned int uint;
 
@@ -29,7 +31,7 @@ public:
 protected:
 	struct Instance
 	{
-		uint size = 0; // n_bytes
+		size_t size = 0; // n_bytes
 		uint n_sources = 0;
 		MemoryType mem_type = STATIC;
 		bool is_mapped = false;
@@ -63,19 +65,68 @@ public:
 	virtual void unbind()const;
 	virtual bool isBind()const;
 
-	virtual void malloc(uint n_bytes, MemoryType mem_type = STATIC);
-	virtual void calloc(uint n_elements, uint sizeof_element, MemoryType mem_type = STATIC);
-	virtual void memcpy(void* ptr_value, uint n_bytes, MemoryType mem_type = STATIC);
+	virtual void malloc(size_t n_bytes, MemoryType mem_type = STATIC);
+	virtual void calloc(size_t n_elements, size_t sizeof_element, MemoryType mem_type = STATIC);
+	virtual void realloc(size_t n_bytes, MemoryType mem_type = STATIC);
+	virtual void memcpy(void* ptr_value, size_t n_bytes, MemoryType mem_type = STATIC);
+	virtual void copyFrom(BO bo);
 	virtual void free();
 
 	virtual bool empty()const;
-	virtual uint size()const;
+	virtual size_t size()const;
 	virtual MemoryType memType()const;
 
 	virtual void* ptr();
 	virtual bool apply();
 
-	virtual BO clone();
+	template<class DataType>
+	DataType clone();
 };
+
+class VBO;
+class EBO;
+class UBO;
+class FBO;
+class RBO;
+template<class DataType>
+DataType BO::clone()
+{
+	if(_buffer_type == VERTEX && !same_type(DataType*, VBO*))
+		throw glass::TypeError("Cannot convert VBO to " + type_name(DataType));
+	else if(_buffer_type == ELEMENT && !same_type(DataType*, EBO*))
+		throw glass::TypeError("Cannot convert EBO to " + type_name(DataType));
+	else if(_buffer_type == UNIFORM && !same_type(DataType*, UBO*))
+		throw glass::TypeError("Cannot convert UBO to " + type_name(DataType));
+	else if(_buffer_type == FRAME && !same_type(DataType*, FBO*))
+		throw glass::TypeError("Cannot convert FBO to " + type_name(DataType));
+	else if(_buffer_type == RENDER && !same_type(DataType*, RBO*))
+		throw glass::TypeError("Cannot convert RBO to " + type_name(DataType));
+
+	DataType result;
+	if(empty())
+	{
+		return result;
+	}
+
+	result.malloc(size());
+	bind();
+	switch(_buffer_type)
+	{
+		case VERTEX:
+		case ELEMENT:
+		case UNIFORM:
+			glBindBuffer(GL_COPY_WRITE_BUFFER, result._id);
+			break;
+		case FRAME:
+			glBindFramebuffer(GL_COPY_WRITE_BUFFER, result._id);
+			break;
+		case RENDER:
+			glBindRenderbuffer(GL_COPY_WRITE_BUFFER, result._id);
+			break;
+	}
+
+	glCopyBufferSubData(_buffer_type, GL_COPY_WRITE_BUFFER, 0, 0, size());
+	return result;
+}
 
 #endif

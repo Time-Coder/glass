@@ -10,7 +10,7 @@ string glass::common_utils_shader =
 "#endif\n"
 "struct PointLight\n"
 "{\n"
-"	vec3 color;\n"
+"	 vec3 color;\n"
 "    float brightness;\n"
 "    float radius;\n"
 "    float Kl;\n"

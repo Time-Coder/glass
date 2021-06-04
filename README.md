@@ -75,11 +75,54 @@ And for 3D rendering details, it has following features:
 * **Easy to bind Mouse/Keyboard callback behaviors**: For example, If you want to do something when mouse is clicked, just overwrite `onClick()` function.
 * **Default navigation method is integreted**: You can use mouse and keyboard to navigate in scene in hello world program. Of course you can also override the navigation method in a simple way.
 * **Easy to create primary geometry models**: Functions are provided to generate sphere/cube models.
-* **Easy to load 3D model from different formats**: Just use `load(file_path)` to load a 3D model. No other thing need to care about.
+* **Easy to load 3D model from different formats**: Just use `load(file_path)` to load a 3D model. No other thing need to care about. Thanks to [assimp](http://assimp.org/), following 3D formats are supported:
+    * Autodesk (.fbx)
+    * Collada (.dae)
+    * glTF (.gltf/.glb)
+    * Blender 3D (.blend)
+    * 3ds Max 3DS (.3ds)
+    * 3ds Max ASE (.ase)
+    * Wavefront Object (.obj)
+    * Industry Foundation Classes (IFC/Step) (.ifc)
+    * XGL (.xgl/.zgl)
+    * Stanford Polygon Library (.ply)
+    * AutoCAD DXF (.dxf)
+    * LightWave (.lwo)
+    * LightWave Scene (.lws)
+    * Modo (.lxo)
+    * Stereolithography (.stl)
+    * DirectX X (.x)
+    * AC3D (.ac)
+    * Milkshape 3D (.ms3d)
+    * TrueSpace (.cob/.scn)
+    * Biovision BVH (.bvh)
+    * CharacterStudio Motion (.csm)
+    * Ogre XML (.xml)
+    * Irrlicht Mesh (.irrmesh)
+    * Irrlicht Scene (.irr)
+    * Quake I (.mdl)
+    * Quake II (.md2)
+    * Quake III Mesh (.md3)
+    * Quake III Map/BSP (.pk3)
+    * Return to Castle Wolfenstein (.mdc)
+    * Doom 3 (.md5)
+    * Valve Model (.smd/.vta)
+    * Open Game Engine Exchange (.ogex)
+    * Unreal (.3d)
+    * BlitzBasic 3D (.b3d)
+    * Quick3D (.q3d,.q3s)
+    * Neutral File Format (.nff)
+    * Sense8 WorldToolKit (.nff)
+    * Object File Format (.off)
+    * PovRAY Raw (.raw)
+    * Terragen Terrain (.ter)
+    * 3D GameStudio (3DGS) (.mdl)
+    * 3D GameStudio (3DGS) Terrain (.hmp)
+    * Izware Nendo (.ndo)
 * **3 kind of lights supported**: You can use Point Light, Directional Light, Spot Light in your scene. And can easily control the parameter of lights.
 * **Easy to hide/show models and lights**: You can simplly use `hide()`/`show()` function to hide/show any models and `open()`/`close()` to turn on/off any lights.
 * **Easy to turn on/off shadow**: You only need to call one function to turn on/off the shadow of any lights.
-* **Shadow range move with camera**: No mater where you move to or where you look at, shadow display range will always cover your vision.
+* **Shadow range move with camera**: No mater where you move to or where you look at, shadow display range will always cover your vision. And show edge won't shake with camera move.
 * **CMS shadow tech is used**: CMS technique result in less memory usage and clearer shadow edge.
 * **Use defered shadering + defered lighting**: This make multi-lights shadering with shadow possible.
 * **Point Light shape with bloom**: You can set a shape of each point light. And point light shape will display with bloom just like a real light.
@@ -107,14 +150,16 @@ All above documents are not finished. Your donation or stars will give me great 
 There are a lot of things to do in next version (0.0.2):
 
 * Anti-aliasing for defered rendering/lighting.
-* Soft shadow edge: VSM and PCSS
-* Eliminate the shake of directional light shadow.
+* Soft shadow edge: improved ESM and PCSS
+* <del>Eliminate the shake of directional light shadow.</del>
 * Eliminate the stripe of point/spot light shadow.
-* Eliminate the sudden change of shadow on the junction of 2 CMS levels.
+* <del>Eliminate the sudden change of shadow on the junction of 2 CMS levels.</del>
 * Eliminate the Peter Panning of shadow.
 * Accelerate multi-lights shadow rendering.
 * Instantiate rendering.
 * Different lighting mode including PBR.
+* Different shadow mode(shadow volum and shadow mapping) support.
+* SSAO support.
 
 You can make contribution by commit pull-request. And we can work together to make it a better 3D rendering engine.
 

@@ -77,7 +77,7 @@ void Layout::apply()
 		{
 			for(int i = 0; i < common_length; i++)
 			{
-				mat2* ptr_mat2 = it->second.ptr<mat2>(i);
+				mat2* ptr_mat2 = (mat2*)(it->second.ptr(i));
 				memcpy((void*)ptr, (void*)(&((*ptr_mat2)[0])), 2*sizeof(float));
 				ptr += 2*sizeof(float);
 				memcpy((void*)ptr, (void*)(&((*ptr_mat2)[1])), 2*sizeof(float));
@@ -88,7 +88,7 @@ void Layout::apply()
 		{
 			for(int i = 0; i < common_length; i++)
 			{
-				mat3* ptr_mat3 = it->second.ptr<mat3>(i);
+				mat3* ptr_mat3 = (mat3*)(it->second.ptr(i));
 				memcpy((void*)ptr, (void*)(&((*ptr_mat3)[0])), 3*sizeof(float));
 				ptr += 3*sizeof(float);
 				memcpy((void*)ptr, (void*)(&((*ptr_mat3)[1])), 3*sizeof(float));
@@ -101,7 +101,7 @@ void Layout::apply()
 		{
 			for(int i = 0; i < common_length; i++)
 			{
-				mat4* ptr_mat4 = it->second.ptr<mat4>(i);
+				mat4* ptr_mat4 = (mat4*)(it->second.ptr(i));
 				memcpy((void*)ptr, (void*)(&((*ptr_mat4)[0])), 4*sizeof(float));
 				ptr += 4*sizeof(float);
 				memcpy((void*)ptr, (void*)(&((*ptr_mat4)[1])), 4*sizeof(float));

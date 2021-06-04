@@ -10,7 +10,6 @@ layout(location = 3) out vec3 gbuffer_lights;
 in VertexOut
 {
     vec3 position;
-    // vec4 pos_light;
     vec2 tex_coord;
     mat3 TBN;
     mat3 normalTBN;
@@ -28,7 +27,6 @@ Fragment createFragment()
     Fragment frag;
 
     frag.position = frag_in.position;
-    // frag.pos_light = frag_in.pos_light.xyz/frag_in.pos_light.w;
 
     frag.normal = normalize(frag_in.TBN[2]);
 

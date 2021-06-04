@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "glass/VBO"
 #include "glass/vec"
 #include "glass/mat"
 #include "glass/utils/type.h"
@@ -13,6 +14,23 @@ class GLVector
 {
 	std::string _dtype;
 	void* vec = NULL;
+
+	bool using_VBO = false;
+	size_t _size = 0;
+	size_t _capacity = 0;
+	VBO data;
+
+private:
+	static const size_t DEFAULT_CAPACITY;
+
+private:
+	void expand();
+	void shrink();
+
+	template<class DataType>
+	void setDtype();
+
+	void setDtype(const std::string& __dtype);
 
 public:
 	uint location = -1;
@@ -27,26 +45,25 @@ public:
 	void divisor(uint n);
 
 public:
-	GLVector();
-	GLVector(const std::string& __dtype);
-	GLVector(const std::string& __dtype, uint n);
+	GLVector(bool use_VBO = false);
+	GLVector(const std::string& __dtype, bool use_VBO = false);
+	GLVector(const std::string& __dtype, size_t n, bool use_VBO = false);
 
 	template<class DataType>
-	GLVector(uint n, const DataType& value);
-	// GLVector(const_iterator& first, const_iterator& last);
+	GLVector(size_t n, const DataType& value, bool use_VBO = false);
 	
 	template<class DataType>
-	GLVector(typename std::vector<DataType>::const_iterator& first, typename std::vector<DataType>::const_iterator& last);
+	GLVector(typename std::vector<DataType>::const_iterator& first, typename std::vector<DataType>::const_iterator& last, bool use_VBO = false);
 	
 	GLVector(const GLVector& new_vec);
 	GLVector(GLVector&& new_vec);
 
 	template<class DataType>
-	GLVector(const std::vector<DataType>& new_vec);
+	GLVector(const std::vector<DataType>& new_vec, bool use_VBO = false);
 	~GLVector();
 
 	bool empty()const;
-	uint size()const;
+	size_t size()const;
 	const std::string& dtype()const;
 
 	GLVector& operator =(const GLVector& new_vec);
@@ -59,110 +76,52 @@ public:
 	void push_back(const DataType& element);
 
 	template<class DataType>
-	void push_front(const DataType& element);
-
-	// template<class DataType>
-	// iterator insert(const_iterator& it, const DataType& element);
-
-	// template<class DataType>
-	// iterator insert(const_iterator& it, int n, const DataType& element);
-
-	// template<class DataType>
-	// iterator insert(const_iterator& it, std::vector<DataType>::const_iterator& first, std::vector<DataType>::const_iterator& last);
-
-	// iterator insert(const_iterator& it, const_iterator& first, const_iterator& last);
+	size_t insert(long long int i, const DataType& element);
 
 	template<class DataType>
-	int insert(int i, const DataType& element);
+	size_t insert(long long int i, size_t n, const DataType& element);
 
 	template<class DataType>
-	int insert(int i, int n, const DataType& element);
-
-	template<class DataType>
-	int insert(int i, const typename std::vector<DataType>::const_iterator& first, const typename std::vector<DataType>::const_iterator& last);
-
-	// int insert(int i, const_iterator& first, const_iterator& last);
+	size_t insert(long long int i, const typename std::vector<DataType>::const_iterator& first, const typename std::vector<DataType>::const_iterator& last);
 
 	void pop_back();
 
 	template<class DataType>
 	DataType pop_back();
 
-	void pop_front();
-
-	template<class DataType>
-	DataType pop_front();
-
-	void pop(int i = -1);
-
-	template<class DataType>
-	DataType pop(int i = -1);
-
-	// void pop(const_iterator& it);
-
-	// template<class DataType>
-	// DataType pop(const_iterator& it);
-
-	int erase(int i, int len = 1);
-	// iterator erase(const_iterator& it, int len = 1);
-	// iterator erase(const_iterator& first, const_iterator& last);
-
-	GLVector slice(int pos_start, int pos_end);
-	// GLVector slice(const_iterator& first, const_iterator& last);
-
-	// template<class DataType>
-	// std::vector<DataType> slice(const_iterator& first, const_iterator& last);
-
-	template<class DataType>
-	std::vector<DataType> slice(int pos_start, int pos_end);
-
-	void extend(const GLVector& new_vec);
+	size_t erase(long long int i, size_t len = 1);
 
 	template<class DataType>
 	void extend(const std::vector<DataType>& new_vec);
 
 	template<class DataType>
-	const DataType& front()const;
+	DataType front();
 
 	template<class DataType>
-	DataType& front();
+	DataType back();
 
 	template<class DataType>
-	const DataType& back()const;
+	DataType get(long long int i);
 
 	template<class DataType>
-	DataType& back();
+	void set(long long int i, const DataType& value);
 
-	template<class DataType>
-	const DataType& at(int i)const;
-
-	template<class DataType>
-	DataType& at(int i);
-
-	template<class DataType>
-	DataType* ptr(int i);
-
-	void* ptr(int i);
+	void* ptr(long long int i);
 
 	template<class DataType>
 	operator std::vector<DataType>()const;
 
 	void clear();
+	void apply();
 };
 
 template<class DataType>
-void GLVector::init()
+void GLVector::setDtype() // reviewed
 {
-	if(vec) return;
-
-	if(same_type(DataType, bool) || same_type(DataType, std::_Bit_reference)) _dtype = "bool";
-	else if(same_type(DataType, uint)) _dtype = "uint";
+	if(same_type(DataType, uint)) _dtype = "uint";
 	else if(same_type(DataType, int)) _dtype = "int";
 	else if(same_type(DataType, float)) _dtype = "float";
 	else if(same_type(DataType, double)) _dtype = "double";
-	else if(same_type(DataType, bvec2)) _dtype = "bvec2";
-	else if(same_type(DataType, bvec3)) _dtype = "bvec3";
-	else if(same_type(DataType, bvec4)) _dtype = "bvec4";
 	else if(same_type(DataType, ivec2)) _dtype = "ivec2";
 	else if(same_type(DataType, ivec3)) _dtype = "ivec3";
 	else if(same_type(DataType, ivec4)) _dtype = "ivec4";
@@ -179,55 +138,82 @@ void GLVector::init()
 	else if(same_type(DataType, mat3)) _dtype = "mat3";
 	else if(same_type(DataType, mat4)) _dtype = "mat4";
 	else throw glass::TypeError("Not supported DataType " + type_name(DataType) + ".");
+}
 
-	if(same_type(DataType, bool) || same_type(DataType, std::_Bit_reference))
-		vec = (void*)(new std::vector<byte>());
+template<class DataType>
+void GLVector::init() // reviewed
+{
+	if(using_VBO)
+	{
+		if(_capacity != 0) return;
+		setDtype<DataType>();
+		_capacity = DEFAULT_CAPACITY;
+		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
+	}
 	else
+	{
+		if(vec) return;
+		setDtype<DataType>();
 		vec = (void*)(new std::vector<DataType>());
-
-	if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+		if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+	}
 }
 
 template<class DataType>
-GLVector::GLVector(uint n, const DataType& value)
+GLVector::GLVector(size_t n, const DataType& value, bool use_VBO): // reviewed
+using_VBO(use_VBO)
 {
-	if(same_type(DataType, bool) || same_type(DataType, std::_Bit_reference)) _dtype = "bool";
-	else if(same_type(DataType, uint)) _dtype = "uint";
-	else if(same_type(DataType, int)) _dtype = "int";
-	else if(same_type(DataType, float)) _dtype = "float";
-	else if(same_type(DataType, double)) _dtype = "double";
-	else if(same_type(DataType, bvec2)) _dtype = "bvec2";
-	else if(same_type(DataType, bvec3)) _dtype = "bvec3";
-	else if(same_type(DataType, bvec4)) _dtype = "bvec4";
-	else if(same_type(DataType, ivec2)) _dtype = "ivec2";
-	else if(same_type(DataType, ivec3)) _dtype = "ivec3";
-	else if(same_type(DataType, ivec4)) _dtype = "ivec4";
-	else if(same_type(DataType, uvec2)) _dtype = "uvec2";
-	else if(same_type(DataType, uvec3)) _dtype = "uvec3";
-	else if(same_type(DataType, uvec4)) _dtype = "uvec4";
-	else if(same_type(DataType, vec2)) _dtype = "vec2";
-	else if(same_type(DataType, vec3)) _dtype = "vec3";
-	else if(same_type(DataType, vec4)) _dtype = "vec4";
-	else if(same_type(DataType, dvec2)) _dtype = "dvec2";
-	else if(same_type(DataType, dvec3)) _dtype = "dvec3";
-	else if(same_type(DataType, dvec4)) _dtype = "dvec4";
-	else if(same_type(DataType, mat2)) _dtype = "mat2";
-	else if(same_type(DataType, mat3)) _dtype = "mat3";
-	else if(same_type(DataType, mat4)) _dtype = "mat4";
-	else throw glass::TypeError("Not supported DataType " + type_name(DataType) + ".");
-
-	if(same_type(DataType, bool))
-		vec = (void*)(new std::vector<byte>(n, (byte)(force_cast<bool>(value))));
-	else if(same_type(DataType, std::_Bit_reference))
-		vec = (void*)(new std::vector<byte>(n, (byte)((bool)(force_cast<std::_Bit_reference>(value)))));
+	setDtype<DataType>();
+	if(using_VBO)
+	{
+		_size = n;
+		_capacity = std::max(DEFAULT_CAPACITY, 2*n);
+		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
+		unsigned char* pointer = (unsigned char*)(data.ptr());
+		if(_dtype == "mat2")
+		{
+			for(int i = 0; i < n; i++)
+			{
+				memcpy((void*)pointer, force_cast<mat2>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat3")
+		{
+			for(int i = 0; i < n; i++)
+			{
+				memcpy((void*)pointer, force_cast<mat3>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat4")
+		{
+			for(int i = 0; i < n; i++)
+			{
+				memcpy((void*)pointer, force_cast<mat4>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else
+		{
+			for(int i = 0; i < n; i++)
+			{
+				memcpy((void*)pointer, (void*)(&value), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		data.apply();
+	}
 	else
+	{
 		vec = (void*)(new std::vector<DataType>(n, value));
-
-	if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+		if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+	}
 }
 
 template<class DataType>
-GLVector::GLVector(typename std::vector<DataType>::const_iterator& first, typename std::vector<DataType>::const_iterator& last)
+GLVector::GLVector(typename std::vector<DataType>::const_iterator& first, typename std::vector<DataType>::const_iterator& last, bool use_VBO): // reviewed
+using_VBO(use_VBO)
 {
 	if(first >= last)
 	{
@@ -235,49 +221,46 @@ GLVector::GLVector(typename std::vector<DataType>::const_iterator& first, typena
 		return;
 	}
 
-	if(same_type(DataType, bool)) _dtype = "bool";
-	else if(same_type(DataType, uint)) _dtype = "uint";
-	else if(same_type(DataType, int)) _dtype = "int";
-	else if(same_type(DataType, float)) _dtype = "float";
-	else if(same_type(DataType, double)) _dtype = "double";
-	else if(same_type(DataType, bvec2)) _dtype = "bvec2";
-	else if(same_type(DataType, bvec3)) _dtype = "bvec3";
-	else if(same_type(DataType, bvec4)) _dtype = "bvec4";
-	else if(same_type(DataType, ivec2)) _dtype = "ivec2";
-	else if(same_type(DataType, ivec3)) _dtype = "ivec3";
-	else if(same_type(DataType, ivec4)) _dtype = "ivec4";
-	else if(same_type(DataType, uvec2)) _dtype = "uvec2";
-	else if(same_type(DataType, uvec3)) _dtype = "uvec3";
-	else if(same_type(DataType, uvec4)) _dtype = "uvec4";
-	else if(same_type(DataType, vec2)) _dtype = "vec2";
-	else if(same_type(DataType, vec3)) _dtype = "vec3";
-	else if(same_type(DataType, vec4)) _dtype = "vec4";
-	else if(same_type(DataType, dvec2)) _dtype = "dvec2";
-	else if(same_type(DataType, dvec3)) _dtype = "dvec3";
-	else if(same_type(DataType, dvec4)) _dtype = "dvec4";
-	else if(same_type(DataType, mat2)) _dtype = "mat2";
-	else if(same_type(DataType, mat3)) _dtype = "mat3";
-	else if(same_type(DataType, mat4)) _dtype = "mat4";
-	else throw glass::TypeError("Not supported DataType " + type_name(DataType));
-
-	if(same_type(DataType, bool))
+	setDtype<DataType>();
+	if(using_VBO)
 	{
-		int length = last-first;
-		if(length <= 0)
+		_size = last - first;
+		_capacity = std::max(DEFAULT_CAPACITY, 2*_size);
+		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
+		unsigned char* pointer = (unsigned char*)(data.ptr());
+		if(_dtype == "mat2")
 		{
-			vec = (void*)(new std::vector<byte>());
-			if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+			for(auto it = first; it < last; it++)
+			{
+				memcpy((void*)pointer, force_cast<mat2>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat3")
+		{
+			for(auto it = first; it < last; it++)
+			{
+				memcpy((void*)pointer, force_cast<mat3>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat4")
+		{
+			for(auto it = first; it < last; it++)
+			{
+				memcpy((void*)pointer, force_cast<mat4>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
 		}
 		else
 		{
-			vec = (void*)(new std::vector<byte>(length));
-			if(!vec) throw glass::MemoryError("Failed to allocate memory!");
-
-			for(int i = 0; i < length; i++)
+			for(auto it = first; it < last; it++)
 			{
-				(*((std::vector<byte>*)vec))[i] = (byte)((bool)force_cast<std::_Bit_reference>(*(first + i)));
+				memcpy((void*)pointer, (void*)(&(*it)), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
 			}
 		}
+		data.apply();
 	}
 	else
 	{
@@ -287,44 +270,49 @@ GLVector::GLVector(typename std::vector<DataType>::const_iterator& first, typena
 }
 
 template<class DataType>
-GLVector::GLVector(const std::vector<DataType>& new_vec)
+GLVector::GLVector(const std::vector<DataType>& new_vec, bool use_VBO): // reviewed
+using_VBO(use_VBO)
 {
-	if(same_type(DataType, bool)) _dtype = "bool";
-	else if(same_type(DataType, uint)) _dtype = "uint";
-	else if(same_type(DataType, int)) _dtype = "int";
-	else if(same_type(DataType, float)) _dtype = "float";
-	else if(same_type(DataType, double)) _dtype = "double";
-	else if(same_type(DataType, bvec2)) _dtype = "bvec2";
-	else if(same_type(DataType, bvec3)) _dtype = "bvec3";
-	else if(same_type(DataType, bvec4)) _dtype = "bvec4";
-	else if(same_type(DataType, ivec2)) _dtype = "ivec2";
-	else if(same_type(DataType, ivec3)) _dtype = "ivec3";
-	else if(same_type(DataType, ivec4)) _dtype = "ivec4";
-	else if(same_type(DataType, uvec2)) _dtype = "uvec2";
-	else if(same_type(DataType, uvec3)) _dtype = "uvec3";
-	else if(same_type(DataType, uvec4)) _dtype = "uvec4";
-	else if(same_type(DataType, vec2)) _dtype = "vec2";
-	else if(same_type(DataType, vec3)) _dtype = "vec3";
-	else if(same_type(DataType, vec4)) _dtype = "vec4";
-	else if(same_type(DataType, dvec2)) _dtype = "dvec2";
-	else if(same_type(DataType, dvec3)) _dtype = "dvec3";
-	else if(same_type(DataType, dvec4)) _dtype = "dvec4";
-	else if(same_type(DataType, mat2)) _dtype = "mat2";
-	else if(same_type(DataType, mat3)) _dtype = "mat3";
-	else if(same_type(DataType, mat4)) _dtype = "mat4";
-	else throw glass::TypeError("Not supported DataType " + type_name(DataType) + ".");
-
-	if(same_type(DataType, bool))
+	setDtype<DataType>();
+	if(using_VBO)
 	{
-		int length = new_vec.size();
-
-		vec = (void*)(new std::vector<byte>(length));
-		if(!vec) throw glass::MemoryError("Failed to allocate memory!");
-		
-		for(int i = 0; i < length; i++)
+		_size = new_vec.size();
+		_capacity = new_vec.capacity();
+		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
+		unsigned char* pointer = (unsigned char*)(data.ptr());
+		if(_dtype == "mat2")
 		{
-			(*((std::vector<byte>*)vec))[i] = (byte)((bool)force_cast<std::_Bit_reference>(new_vec[i]));
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, force_cast<mat2>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
 		}
+		else if(_dtype == "mat3")
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, force_cast<mat3>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat4")
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, force_cast<mat4>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, (void*)(&(*it)), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		data.apply();
 	}
 	else
 	{
@@ -333,285 +321,215 @@ GLVector::GLVector(const std::vector<DataType>& new_vec)
 	}
 }
 
+#define __SAME_WITH_DTYPE(DataType, _dtype) \
+((_dtype == "uint" && same_type(DataType, uint)) ||\
+(_dtype == "int" && same_type(DataType, int)) ||\
+(_dtype == "float" && same_type(DataType, float)) ||\
+(_dtype == "double" && same_type(DataType, double)) ||\
+(_dtype == "ivec2" && same_type(DataType, ivec2)) ||\
+(_dtype == "ivec3" && same_type(DataType, ivec3)) ||\
+(_dtype == "ivec4" && same_type(DataType, ivec4)) ||\
+(_dtype == "uvec2" && same_type(DataType, uvec2)) ||\
+(_dtype == "uvec3" && same_type(DataType, uvec3)) ||\
+(_dtype == "uvec4" && same_type(DataType, uvec4)) ||\
+(_dtype == "vec2" && same_type(DataType, vec2)) ||\
+(_dtype == "vec3" && same_type(DataType, vec3)) ||\
+(_dtype == "vec4" && same_type(DataType, vec4)) ||\
+(_dtype == "dvec2" && same_type(DataType, dvec2)) ||\
+(_dtype == "dvec3" && same_type(DataType, dvec3)) ||\
+(_dtype == "dvec4" && same_type(DataType, dvec4)) ||\
+(_dtype == "mat2" && same_type(DataType, mat2)) ||\
+(_dtype == "mat3" && same_type(DataType, mat3)) ||\
+(_dtype == "mat4" && same_type(DataType, mat4)))
+
 template<class DataType>
-GLVector& GLVector::operator =(const std::vector<DataType>& new_vec)
+GLVector& GLVector::operator =(const std::vector<DataType>& new_vec) // reviewed
 {
-	if(((_dtype == "uint" && same_type(DataType, uint)) ||
-	    (_dtype == "int" && same_type(DataType, int)) ||
-	    (_dtype == "float" && same_type(DataType, float)) ||
-	    (_dtype == "double" && same_type(DataType, double)) ||
-	    (_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-	    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-	    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-	    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-	    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-	    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-	    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-	    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-	    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-	    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-	    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-	    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-	    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-	    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-	    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-	    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-	    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-	    (_dtype == "mat4" && same_type(DataType, mat4))) && vec != NULL)
+	if(!__SAME_WITH_DTYPE(DataType, _dtype))
 	{
-		*((std::vector<DataType>*)vec) = new_vec;
-
-		return *this;
-	}
-	else if(_dtype == "bool" && same_type(DataType, bool) && vec != NULL)
-	{
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		for(int i = 0; i < ptr_vec->size(); i++)
-		{
-			(*ptr_vec)[i] = (byte)((bool)force_cast<std::_Bit_reference>(new_vec[i]));
-		}
-		for(int i = ptr_vec->size(); i < new_vec.size(); i++)
-		{
-			ptr_vec->push_back((byte)((bool)force_cast<std::_Bit_reference>(new_vec[i])));
-		}
+		clear();
+		setDtype<DataType>();
 	}
 
-	std::string temp_dtype;
-	if(same_type(DataType, bool)) temp_dtype = "bool";
-	else if(same_type(DataType, uint)) temp_dtype = "uint";
-	else if(same_type(DataType, int)) temp_dtype = "int";
-	else if(same_type(DataType, float)) temp_dtype = "float";
-	else if(same_type(DataType, double)) temp_dtype = "double";
-	else if(same_type(DataType, bvec2)) temp_dtype = "bvec2";
-	else if(same_type(DataType, bvec3)) temp_dtype = "bvec3";
-	else if(same_type(DataType, bvec4)) temp_dtype = "bvec4";
-	else if(same_type(DataType, ivec2)) temp_dtype = "ivec2";
-	else if(same_type(DataType, ivec3)) temp_dtype = "ivec3";
-	else if(same_type(DataType, ivec4)) temp_dtype = "ivec4";
-	else if(same_type(DataType, uvec2)) temp_dtype = "uvec2";
-	else if(same_type(DataType, uvec3)) temp_dtype = "uvec3";
-	else if(same_type(DataType, uvec4)) temp_dtype = "uvec4";
-	else if(same_type(DataType, vec2)) temp_dtype = "vec2";
-	else if(same_type(DataType, vec3)) temp_dtype = "vec3";
-	else if(same_type(DataType, vec4)) temp_dtype = "vec4";
-	else if(same_type(DataType, dvec2)) temp_dtype = "dvec2";
-	else if(same_type(DataType, dvec3)) temp_dtype = "dvec3";
-	else if(same_type(DataType, dvec4)) temp_dtype = "dvec4";
-	else if(same_type(DataType, mat2)) temp_dtype = "mat2";
-	else if(same_type(DataType, mat3)) temp_dtype = "mat3";
-	else if(same_type(DataType, mat4)) temp_dtype = "mat4";
-	else throw glass::TypeError("Not supported DataType " + type_name(DataType));
-	
-	clear();
-
-	_dtype = temp_dtype;
-
-	if(same_type(DataType, bool))
+	if(using_VBO)
 	{
-		int length = new_vec.size();
-		vec = (void*)(new std::vector<byte>(length));
-		if(!vec) throw glass::MemoryError("Failed to allocate memory!");
-
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		for(int i = 0; i < length; i++)
+		_size = new_vec.size();
+		if(_capacity < _size)
 		{
-			(*ptr_vec)[i] = (byte)((bool)force_cast<std::_Bit_reference>(new_vec[i]));
+			_capacity = new_vec.capacity();
+			data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
 		}
+
+		unsigned char* pointer = (unsigned char*)(data.ptr());
+		if(_dtype == "mat2")
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, force_cast<mat2>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat3")
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, force_cast<mat3>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else if(_dtype == "mat4")
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, force_cast<mat4>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		else
+		{
+			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
+			{
+				memcpy((void*)pointer, (void*)(&(*it)), GLSL::built_in_types[_dtype].glsl_size);
+				pointer += GLSL::built_in_types[_dtype].glsl_size;
+			}
+		}
+		data.apply();
 	}
 	else
 	{
-		vec = (void*)(new std::vector<DataType>(new_vec));
-		if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+		if(vec != NULL)
+		{
+			*((std::vector<DataType>*)vec) = new_vec;
+		}
+		else
+		{
+			vec = (void*)(new std::vector<DataType>(new_vec));
+			if(!vec) throw glass::MemoryError("Failed to allocate memory!");
+		}
 	}
-
 	return *this;
 }
 
+#define __HANDLE_ELEMENT(PtrType, DataType, element, operation) \
+if(same_type(DataType, unsigned short)) operation((PtrType)force_cast<unsigned short>(element));\
+else if(same_type(DataType, uint)) operation((PtrType)force_cast<uint>(element));\
+else if(same_type(DataType, long uint)) operation((PtrType)force_cast<long uint>(element));\
+else if(same_type(DataType, long long uint)) operation((PtrType)force_cast<long long uint>(element));\
+else if(same_type(DataType, short)) operation((PtrType)force_cast<short>(element));\
+else if(same_type(DataType, int)) operation((PtrType)force_cast<int>(element));\
+else if(same_type(DataType, long int)) operation((PtrType)force_cast<long int>(element));\
+else if(same_type(DataType, long long int)) operation((PtrType)force_cast<long long int>(element));\
+else if(same_type(DataType, float)) operation((PtrType)force_cast<float>(element));\
+else if(same_type(DataType, double)) operation((PtrType)force_cast<double>(element));\
+else throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">")
+
 template<class DataType>
-void GLVector::push_back(const DataType& element)
+void GLVector::push_back(const DataType& element) // reviewed
 {
 	init<DataType>();
-	if(_dtype == "bool")
+	if(using_VBO)
 	{
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->push_back((byte)force_cast<bool>(element));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->push_back((byte)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->push_back((byte)((bool)force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->push_back((byte)((bool)force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->push_back((byte)((bool)force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->push_back((byte)((bool)force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "uint")
-	{
-		std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->push_back((uint)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->push_back((uint)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->push_back(force_cast<uint>(element));
-		else if(same_type(DataType, int)) ptr_vec->push_back((uint)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->push_back((uint)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->push_back((uint)(force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "int")
-	{
-		std::vector<int>* ptr_vec = (std::vector<int>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->push_back((int)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->push_back((int)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->push_back((int)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->push_back(force_cast<int>(element));
-		else if(same_type(DataType, float)) ptr_vec->push_back((int)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->push_back((int)(force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "float")
-	{
-		std::vector<float>* ptr_vec = (std::vector<float>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->push_back((float)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->push_back((float)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->push_back((float)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->push_back((float)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->push_back(force_cast<float>(element));
-		else if(same_type(DataType, double)) ptr_vec->push_back((float)(force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "double")
-	{
-		std::vector<double>* ptr_vec = (std::vector<double>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->push_back((double)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->push_back((double)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->push_back((double)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->push_back((double)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->push_back((double)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->push_back(force_cast<double>(element));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		((std::vector<DataType>*)vec)->push_back(element);
+		_size++;
+		expand();
+		if(_dtype == "uint")
+		{
+			uint* pointer = (uint*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(uint, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "int")
+		{
+			int* pointer = (int*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(int, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "float")
+		{
+			float* pointer = (float*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(float, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "double")
+		{
+			double* pointer = (double*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(double, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			void* pointer = (void*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			if(_dtype == "mat2")
+			{
+				memcpy(pointer, force_cast<mat2>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else if(_dtype == "mat3")
+			{
+				memcpy(pointer, force_cast<mat3>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else if(_dtype == "mat4")
+			{
+				memcpy(pointer, force_cast<mat4>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else // vec
+			{
+				memcpy(pointer, (void*)(&element), GLSL::built_in_types[_dtype].glsl_size);
+			}
+		}
+		else
+		{
+			throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 	else
 	{
-		throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		if(_dtype == "uint")
+		{
+			std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
+			__HANDLE_ELEMENT(uint, DataType, element, ptr_vec->push_back);
+		}
+		else if(_dtype == "int")
+		{
+			std::vector<int>* ptr_vec = (std::vector<int>*)vec;
+			__HANDLE_ELEMENT(int, DataType, element, ptr_vec->push_back);
+		}
+		else if(_dtype == "float")
+		{
+			std::vector<float>* ptr_vec = (std::vector<float>*)vec;
+			__HANDLE_ELEMENT(float, DataType, element, ptr_vec->push_back);
+		}
+		else if(_dtype == "double")
+		{
+			std::vector<double>* ptr_vec = (std::vector<double>*)vec;
+			__HANDLE_ELEMENT(double, DataType, element, ptr_vec->push_back);
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			((std::vector<DataType>*)vec)->push_back(element);
+		}
+		else
+		{
+			throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 }
 
-template<class DataType>
-void GLVector::push_front(const DataType& element)
-{
-	init<DataType>();
-	if(_dtype == "bool")
-	{
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin(), (byte)force_cast<bool>(element));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin(), (byte)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin(), (byte)((bool)force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin(), (byte)((bool)force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin(), (byte)((bool)force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin(), (byte)((bool)force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "uint")
-	{
-		std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin(), (uint)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin(), (uint)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin(), force_cast<uint>(element));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin(), (uint)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin(), (uint)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin(), (uint)(force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "int")
-	{
-		std::vector<int>* ptr_vec = (std::vector<int>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin(), (int)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin(), (int)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin(), (int)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin(), force_cast<int>(element));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin(), (int)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin(), (int)(force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "float")
-	{
-		std::vector<float>* ptr_vec = (std::vector<float>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin(), (float)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin(), (float)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin(), (float)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin(), (float)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin(), force_cast<float>(element));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin(), (float)(force_cast<double>(element)));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "double")
-	{
-		std::vector<double>* ptr_vec = (std::vector<double>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin(), (double)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin(), (double)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin(), (double)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin(), (double)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin(), (double)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin(), force_cast<double>(element));
-		else throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
-		ptr_vec->insert(ptr_vec->begin(), element);
-	}
-	else
-	{
-		throw glass::TypeError("Try to push " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-}
-
-// template<class DataType>
-// GLVector::iterator GLVector::insert(GLVector::const_iterator& it, std::vector<DataType>::const_iterator& first, std::vector<DataType>::const_iterator& last)
-// {
-// 	int i = it - begin();
-// 	insert(i, first, last);
-// 	return begin() + i;
-// }
+#define __INSERT_ELEMENT(PtrType, DataType, element) \
+if(same_type(DataType, unsigned short)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<unsigned short>(element));\
+else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<uint>(element));\
+else if(same_type(DataType, long uint)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<long uint>(element));\
+else if(same_type(DataType, long long uint)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<long long uint>(element));\
+else if(same_type(DataType, short)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<short>(element));\
+else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<int>(element));\
+else if(same_type(DataType, long int)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<long int>(element));\
+else if(same_type(DataType, long long int)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<long long int>(element));\
+else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<float>(element));\
+else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, (PtrType)force_cast<double>(element));\
+else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">")
 
 template<class DataType>
-int GLVector::insert(int i, const DataType& element)
+size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 {
-	int length = size();
+	size_t length = size();
 	if(i < 0)
 	{
 		i += length;
@@ -622,271 +540,489 @@ int GLVector::insert(int i, const DataType& element)
 	}
 
 	init<DataType>();
-	if(_dtype == "bool")
+	if(using_VBO)
 	{
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, (byte)force_cast<bool>(element));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, (byte)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, (byte)((bool)force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, (byte)((bool)force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, (byte)((bool)force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, (byte)((bool)force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "uint")
-	{
-		std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, (uint)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, (uint)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, force_cast<uint>(element));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, (uint)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, (uint)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, (uint)(force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "int")
-	{
-		std::vector<int>* ptr_vec = (std::vector<int>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, (int)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, (int)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, (int)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, force_cast<int>(element));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, (int)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, (int)(force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "float")
-	{
-		std::vector<float>* ptr_vec = (std::vector<float>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, (float)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, (float)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, (float)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, (float)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, force_cast<float>(element));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, (float)(force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "double")
-	{
-		std::vector<double>* ptr_vec = (std::vector<double>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, (double)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, (double)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, (double)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, (double)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, (double)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, force_cast<double>(element));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
-		ptr_vec->insert(ptr_vec->begin()+i, element);
+		_size++;
+		expand();
+
+		if(_dtype == "uint")
+		{
+			uint* pointer = (uint*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-1-i != 0)
+			{
+				memmove((void*)((unsigned char*)pointer + GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+			__HANDLE_ELEMENT(uint, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "int")
+		{
+			int* pointer = (int*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-1-i != 0)
+			{
+				memmove((void*)((unsigned char*)pointer + GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+			__HANDLE_ELEMENT(int, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "float")
+		{
+			float* pointer = (float*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-1-i != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+			__HANDLE_ELEMENT(float, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "double")
+		{
+			double* pointer = (double*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-1-i != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+			__HANDLE_ELEMENT(double, DataType, element, *pointer=);
+			data.apply();
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			void* pointer = (void*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-1-i != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+			if(_dtype == "mat2")
+			{
+				memcpy(pointer, force_cast<mat2>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else if(_dtype == "mat3")
+			{
+				memcpy(pointer, force_cast<mat3>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else if(_dtype == "mat4")
+			{
+				memcpy(pointer, force_cast<mat4>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else
+			{
+				memcpy(pointer, (void*)(&element), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			data.apply();
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 	else
 	{
-		throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		if(_dtype == "uint")
+		{
+			std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
+			__INSERT_ELEMENT(uint, DataType, element);
+		}
+		else if(_dtype == "int")
+		{
+			std::vector<int>* ptr_vec = (std::vector<int>*)vec;
+			__INSERT_ELEMENT(int, DataType, element);
+		}
+		else if(_dtype == "float")
+		{
+			std::vector<float>* ptr_vec = (std::vector<float>*)vec;
+			__INSERT_ELEMENT(float, DataType, element);
+		}
+		else if(_dtype == "double")
+		{
+			std::vector<double>* ptr_vec = (std::vector<double>*)vec;
+			__INSERT_ELEMENT(double, DataType, element);
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
+			ptr_vec->insert(ptr_vec->begin()+i, element);
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 
 	return i;
 }
 
+#define __INSERT_N_ELEMENTS(PtrType, DataType, n, element) \
+if(same_type(DataType, unsigned short)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<unsigned short>(element));\
+else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<uint>(element));\
+else if(same_type(DataType, long uint)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<long uint>(element));\
+else if(same_type(DataType, long long uint)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<long long uint>(element));\
+else if(same_type(DataType, short)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<short>(element));\
+else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<int>(element));\
+else if(same_type(DataType, long int)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<long int>(element));\
+else if(same_type(DataType, long long int)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<long long int>(element));\
+else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<float>(element));\
+else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+index, n, (PtrType)force_cast<double>(element));\
+else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">")
+
 template<class DataType>
-int GLVector::insert(int i, int n, const DataType& element)
+size_t GLVector::insert(long long int index, size_t n, const DataType& element) // reviewed
 {
-	int length = size();
-	if(i < 0)
+	size_t length = size();
+	if(index < 0)
 	{
-		i += length;
+		index += length;
 	}
-	if(i < 0 || i > length)
+	if(index < 0 || index > length)
 	{
-		throw glass::IndexError(i, 0, length);
+		throw glass::IndexError(index, 0, length);
 	}
 
 	init<DataType>();
-	if(_dtype == "bool")
+	if(using_VBO)
 	{
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, n, (byte)force_cast<bool>(element));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, n, (byte)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, n, (byte)((bool)force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, n, (byte)((bool)force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, n, (byte)((bool)force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, n, (byte)((bool)force_cast<double>(element)));
-		else throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "uint")
-	{
-		std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, n, (uint)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, n, (uint)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, n, force_cast<uint>(element));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, n, (uint)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, n, (uint)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, n, (uint)(force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "int")
-	{
-		std::vector<int>* ptr_vec = (std::vector<int>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, n, (int)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, n, (int)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, n, (int)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, n, force_cast<int>(element));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, n, (int)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, n, (int)(force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "float")
-	{
-		std::vector<float>* ptr_vec = (std::vector<float>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, n, (float)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, n, (float)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, n, (float)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, n, (float)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, n, force_cast<float>(element));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, n, (float)(force_cast<double>(element)));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if(_dtype == "double")
-	{
-		std::vector<double>* ptr_vec = (std::vector<double>*)vec;
-		if(same_type(DataType, bool)) ptr_vec->insert(ptr_vec->begin()+i, n, (double)(force_cast<bool>(element)));
-		else if(same_type(DataType, std::_Bit_reference)) ptr_vec->insert(ptr_vec->begin()+i, n, (double)((bool)force_cast<std::_Bit_reference>(element)));
-		else if(same_type(DataType, uint)) ptr_vec->insert(ptr_vec->begin()+i, n, (double)(force_cast<uint>(element)));
-		else if(same_type(DataType, int)) ptr_vec->insert(ptr_vec->begin()+i, n, (double)(force_cast<int>(element)));
-		else if(same_type(DataType, float)) ptr_vec->insert(ptr_vec->begin()+i, n, (double)(force_cast<float>(element)));
-		else if(same_type(DataType, double)) ptr_vec->insert(ptr_vec->begin()+i, n, force_cast<double>(element));
-		else throw glass::RuntimeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
-		ptr_vec->insert(ptr_vec->begin()+i, n, element);
+		_size += n;
+		expand();
+		if(_dtype == "uint")
+		{
+			uint* pointer = (uint*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			for(size_t i = 0; i < n; i++)
+			{
+				__HANDLE_ELEMENT(uint, DataType, element, *pointer=);
+				pointer++;
+			}
+
+			data.apply();
+		}
+		else if(_dtype == "int")
+		{
+			int* pointer = (int*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			for(size_t i = 0; i < n; i++)
+			{
+				__HANDLE_ELEMENT(int, DataType, element, *pointer=);
+				pointer++;
+			}
+
+			data.apply();
+		}
+		else if(_dtype == "float")
+		{
+			float* pointer = (float*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			for(size_t i = 0; i < n; i++)
+			{
+				__HANDLE_ELEMENT(float, DataType, element, *pointer=);
+				pointer++;
+			}
+
+			data.apply();
+		}
+		else if(_dtype == "double")
+		{
+			double* pointer = (double*)((unsigned char*)data.ptr() + index*sizeof(double));
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*sizeof(double)),
+						(void*)pointer,
+					    (_size-n-index)*sizeof(double));
+			}
+
+			for(size_t i = 0; i < n; i++)
+			{
+				__HANDLE_ELEMENT(double, DataType, element, *pointer=);
+				pointer++;
+			}
+			data.apply();
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			unsigned char* pointer = (unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size;
+			if(_size-n-index != 0)
+			{
+				memmove((void*)(pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			if(_dtype == "mat2")
+			{
+				for(size_t i = 0; i < n; i++)
+				{
+					memcpy((void*)pointer, force_cast<mat2>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			else if(_dtype == "mat3")
+			{
+				for(size_t i = 0; i < n; i++)
+				{
+					memcpy((void*)pointer, force_cast<mat3>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			else if(_dtype == "mat4")
+			{
+				for(size_t i = 0; i < n; i++)
+				{
+					memcpy((void*)pointer, force_cast<mat4>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			else // vec
+			{
+				for(size_t i = 0; i < n; i++)
+				{
+					memcpy((void*)pointer, (void*)(&element), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			
+			data.apply();
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 	else
 	{
-		throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		if(_dtype == "uint")
+		{
+			std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
+			__INSERT_N_ELEMENTS(uint, DataType, n, element);
+		}
+		else if(_dtype == "int")
+		{
+			std::vector<int>* ptr_vec = (std::vector<int>*)vec;
+			__INSERT_N_ELEMENTS(int, DataType, n, element);
+		}
+		else if(_dtype == "float")
+		{
+			std::vector<float>* ptr_vec = (std::vector<float>*)vec;
+			__INSERT_N_ELEMENTS(float, DataType, n, element);
+		}
+		else if(_dtype == "double")
+		{
+			std::vector<double>* ptr_vec = (std::vector<double>*)vec;
+			__INSERT_N_ELEMENTS(double, DataType, n, element);
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
+			ptr_vec->insert(ptr_vec->begin()+index, n, element);
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 
-	return i;
+	return index;
 }
 
-// template<class DataType>
-// GLVector::iterator GLVector::insert(GLVector::const_iterator& it, int n, const DataType& element) // reviewed
-// {
-// 	int i = it - begin();
-// 	insert(i, n, element);
-// 	return begin() + i;
-// }
-
-// template<class DataType>
-// GLVector::iterator GLVector::insert(GLVector::const_iterator& it, const DataType& element) // reviewed
-// {
-// 	int i = it - begin();
-// 	insert(i, element);
-// 	return begin() + i;
-// }
-
 template<class DataType>
-int GLVector::insert(int i, const typename std::vector<DataType>::const_iterator& first, const typename std::vector<DataType>::const_iterator& last)
+size_t GLVector::insert(long long int index, const typename std::vector<DataType>::const_iterator& first, const typename std::vector<DataType>::const_iterator& last) // reviewed
 {
-	int length = size();
-
-	if(i < 0)
+	size_t length = size();
+	if(index < 0)
 	{
-		i += length;
+		index += length;
 	}
-	if(i < 0 || i > length)
+	if(index < 0 || index > length)
 	{
-		throw glass::IndexError(i, 0, length);
+		throw glass::IndexError(index, 0, length);
 	}
 
 	if(first >= last)
 	{
-		return i;
+		return index;
 	}
+
+	size_t n = last - first;
 
 	init<DataType>();
-	if((_dtype == "uint" && same_type(DataType, uint)) ||
-	   (_dtype == "int" && same_type(DataType, int)) ||
-	   (_dtype == "float" && same_type(DataType, float)) ||
-	   (_dtype == "double" && same_type(DataType, double)) ||
-	   (_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-	   (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-	   (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-	   (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-	   (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-	   (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-	   (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-	   (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-	   (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-	   (_dtype == "vec2" && same_type(DataType, vec2)) ||
-	   (_dtype == "vec3" && same_type(DataType, vec3)) ||
-	   (_dtype == "vec4" && same_type(DataType, vec4)) ||
-	   (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-	   (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-	   (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-	   (_dtype == "mat2" && same_type(DataType, mat2)) ||
-	   (_dtype == "mat3" && same_type(DataType, mat3)) ||
-	   (_dtype == "mat4" && same_type(DataType, mat4)))
+	if(using_VBO)
 	{
-		std::vector<DataType>* dest_vec = (std::vector<DataType>*)vec;
-		dest_vec->insert(dest_vec->begin()+i, first, last);
-	}
-	else if(_dtype == "bool" && same_type(DataType, bool))
-	{
-		int src_length = last - first;
-		std::vector<byte> temp_vec(src_length);
-		for(int j = 0; j < src_length; j++)
+		_size += n;
+		expand();
+		if(_dtype == "uint")
 		{
-			temp_vec[j] = (byte)((bool)force_cast<std::_Bit_reference>(*(first+j)));
-		}
+			uint* pointer = (uint*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
 
-		std::vector<byte>* dest_vec = (std::vector<byte>*)vec;
-		dest_vec->insert(dest_vec->begin()+i, temp_vec.begin(), temp_vec.end());
+			for(auto it = first; it != last; it++)
+			{
+				__HANDLE_ELEMENT(uint, DataType, *it, *pointer=);
+				pointer++;
+			}
+
+			data.apply();
+		}
+		else if(_dtype == "int")
+		{
+			int* pointer = (int*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			for(auto it = first; it != last; it++)
+			{
+				__HANDLE_ELEMENT(int, DataType, *it, *pointer=);
+				pointer++;
+			}
+
+			data.apply();
+		}
+		else if(_dtype == "float")
+		{
+			float* pointer = (float*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			for(auto it = first; it != last; it++)
+			{
+				__HANDLE_ELEMENT(float, DataType, *it, *pointer=);
+				pointer++;
+			}
+
+			data.apply();
+		}
+		else if(_dtype == "double")
+		{
+			double* pointer = (double*)((unsigned char*)data.ptr() + index*sizeof(double));
+			if(_size-n-index != 0)
+			{
+				memmove((void*)((unsigned char*)pointer+n*sizeof(double)),
+						(void*)pointer,
+					    (_size-n-index)*sizeof(double));
+			}
+
+			for(auto it = first; it != last; it++)
+			{
+				__HANDLE_ELEMENT(double, DataType, *it, *pointer=);
+				pointer++;
+			}
+			data.apply();
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			unsigned char* pointer = (unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size;
+			if(_size-n-index != 0)
+			{
+				memmove((void*)(pointer+n*GLSL::built_in_types[_dtype].glsl_size),
+						(void*)pointer,
+					    (_size-n-index)*GLSL::built_in_types[_dtype].glsl_size);
+			}
+
+			if(_dtype == "mat2")
+			{
+				for(auto it = first; it != last; it++)
+				{
+					memcpy((void*)pointer, force_cast<mat2>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			else if(_dtype == "mat3")
+			{
+				for(auto it = first; it != last; it++)
+				{
+					memcpy((void*)pointer, force_cast<mat3>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			else if(_dtype == "mat4")
+			{
+				for(auto it = first; it != last; it++)
+				{
+					memcpy((void*)pointer, force_cast<mat4>(*it).data(), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			else // vec
+			{
+				for(auto it = first; it != last; it++)
+				{
+					memcpy((void*)pointer, (void*)(&(*it)), GLSL::built_in_types[_dtype].glsl_size);
+					pointer += GLSL::built_in_types[_dtype].glsl_size;
+				}
+			}
+			
+			data.apply();
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 	else
 	{
-		throw glass::TypeError("Try to insert std::vector<" + type_name(DataType) + "> to std::vector<" + _dtype + ">");
+		if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
+			ptr_vec->insert(ptr_vec->begin()+index, first, last);
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 
-	return i;
+	return index;
 }
+
+#define __POP_BACK_SET_RETURN \
+if(same_type(DataType, unsigned short)) return_value = force_cast<DataType>((unsigned short)back_value);\
+else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)back_value);\
+else if(same_type(DataType, long uint)) return_value = force_cast<DataType>((long uint)back_value);\
+else if(same_type(DataType, long long uint)) return_value = force_cast<DataType>((long long uint)back_value);\
+else if(same_type(DataType, short)) return_value = force_cast<DataType>((short)back_value);\
+else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)back_value);\
+else if(same_type(DataType, long int)) return_value = force_cast<DataType>((long int)back_value);\
+else if(same_type(DataType, long long int)) return_value = force_cast<DataType>((long long int)back_value);\
+else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)back_value);\
+else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)back_value);\
+else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
 
 template<class DataType>
 DataType GLVector::pop_back()
@@ -896,200 +1032,29 @@ DataType GLVector::pop_back()
 		throw glass::RuntimeError("Try to pop from empty std::vector");
 	}
 
-	DataType return_value;
-	if(_dtype == "bool")
+	DataType return_value = this->back<DataType>();
+	if(using_VBO)
 	{
-		bool back_value = (bool)(((std::vector<byte>*)vec)->back());
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>(back_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)back_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)back_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)back_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)back_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<byte>*)vec)->pop_back();
+		_size--;
+		shrink();
 	}
-	else if(_dtype == "uint")
+	else
 	{
-		uint back_value = ((std::vector<uint>*)vec)->back();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)back_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>(back_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)back_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)back_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)back_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<uint>*)vec)->pop_back();
-	}
-	else if(_dtype == "int")
-	{
-		int back_value = ((std::vector<int>*)vec)->back();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)back_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)back_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>(back_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)back_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)back_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<int>*)vec)->pop_back();
-	}
-	else if(_dtype == "float")
-	{
-		float back_value = ((std::vector<float>*)vec)->back();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)back_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)back_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)back_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>(back_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)back_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<float>*)vec)->pop_back();
-	}
-	else if(_dtype == "double")
-	{
-		double back_value = ((std::vector<double>*)vec)->back();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)back_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)back_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)back_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)back_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>(back_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<double>*)vec)->pop_back();
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		return_value = ((std::vector<DataType>*)vec)->back();
 		((std::vector<DataType>*)vec)->pop_back();
 	}
-	else
-	{
-		throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-	}
 	
 	return return_value;
 }
 
 template<class DataType>
-DataType GLVector::pop_front()
+void GLVector::set(long long int i, const DataType& value)
 {
 	if(empty())
 	{
-		throw glass::RuntimeError("Try to pop from empty std::vector");
+		throw glass::RuntimeError("Try to set value in empty std::vector");
 	}
 
-	DataType return_value;
-	if(_dtype == "bool")
-	{
-		bool front_value = (bool)(((std::vector<byte>*)vec)->front());
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>(front_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)front_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)front_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)front_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)front_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		ptr_vec->erase(ptr_vec->begin());
-	}
-	else if(_dtype == "uint")
-	{
-		uint front_value = ((std::vector<uint>*)vec)->front();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)front_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>(front_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)front_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)front_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)front_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
-		ptr_vec->erase(ptr_vec->begin());
-	}
-	else if(_dtype == "int")
-	{
-		int front_value = ((std::vector<int>*)vec)->front();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)front_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)front_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>(front_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)front_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)front_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		std::vector<int>* ptr_vec = (std::vector<int>*)vec;
-		ptr_vec->erase(ptr_vec->begin());
-	}
-	else if(_dtype == "float")
-	{
-		float front_value = ((std::vector<float>*)vec)->front();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)front_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)front_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)front_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>(front_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)front_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		std::vector<float>* ptr_vec = (std::vector<float>*)vec;
-		ptr_vec->erase(ptr_vec->begin());
-	}
-	else if(_dtype == "double")
-	{
-		double front_value = ((std::vector<double>*)vec)->front();
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)front_value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)front_value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)front_value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)front_value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>(front_value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		std::vector<double>* ptr_vec = (std::vector<double>*)vec;
-		ptr_vec->erase(ptr_vec->begin());
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		return_value = ((std::vector<DataType>*)vec)->front();
-		std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
-		ptr_vec->erase(ptr_vec->begin());
-	}
-	else
-	{
-		throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-	}
-	
-	return return_value;
-}
-
-template<class DataType>
-DataType GLVector::pop(int i)
-{
-	if(empty())
-	{
-		throw glass::RuntimeError("Try to pop from empty std::vector.");
-	}
-	int length = size();
+	size_t length = size();
 	if(i < 0)
 	{
 		i += length;
@@ -1098,202 +1063,102 @@ DataType GLVector::pop(int i)
 	{
 		throw glass::IndexError(i, 0, length-1);
 	}
-
-	DataType return_value;
-	if(_dtype == "bool")
+	
+	if(using_VBO)
 	{
-		bool value = (bool)(((std::vector<byte>*)vec)->at(i));
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>(value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<byte>*)vec)->erase(((std::vector<byte>*)vec)->begin()+i);
-	}
-	else if(_dtype == "uint")
-	{
-		uint value = ((std::vector<uint>*)vec)->at(i);
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>(value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<uint>*)vec)->erase(((std::vector<uint>*)vec)->begin()+i);
-	}
-	else if(_dtype == "int")
-	{
-		int value = ((std::vector<int>*)vec)->at(i);
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>(value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<int>*)vec)->erase(((std::vector<int>*)vec)->begin()+i);
-	}
-	else if(_dtype == "float")
-	{
-		float value = ((std::vector<float>*)vec)->at(i);
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>(value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>((double)value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<float>*)vec)->erase(((std::vector<float>*)vec)->begin()+i);
-	}
-	else if(_dtype == "double")
-	{
-		double value = ((std::vector<double>*)vec)->at(i);
-		if(same_type(DataType, bool)) return_value = force_cast<DataType>((bool)value);
-		else if(same_type(DataType, uint)) return_value = force_cast<DataType>((uint)value);
-		else if(same_type(DataType, int)) return_value = force_cast<DataType>((int)value);
-		else if(same_type(DataType, float)) return_value = force_cast<DataType>((float)value);
-		else if(same_type(DataType, double)) return_value = force_cast<DataType>(value);
-		else throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-		((std::vector<double>*)vec)->erase(((std::vector<double>*)vec)->begin()+i);
-	}
-	else if((_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-		    (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-		    (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-		    (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-		    (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-		    (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-		    (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-		    (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-		    (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-		    (_dtype == "vec2" && same_type(DataType, vec2)) ||
-		    (_dtype == "vec3" && same_type(DataType, vec3)) ||
-		    (_dtype == "vec4" && same_type(DataType, vec4)) ||
-		    (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-		    (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-		    (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-		    (_dtype == "mat2" && same_type(DataType, mat2)) ||
-		    (_dtype == "mat3" && same_type(DataType, mat3)) ||
-		    (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		return_value = ((std::vector<DataType>*)vec)->at(i);
-		((std::vector<DataType>*)vec)->erase(((std::vector<DataType>*)vec)->begin()+i);
+		if(_dtype == "uint")
+		{
+			uint* pointer = (uint*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(uint, DataType, value, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "int")
+		{
+			int* pointer = (int*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(int, DataType, value, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "float")
+		{
+			float* pointer = (float*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(float, DataType, value, *pointer=);
+			data.apply();
+		}
+		else if(_dtype == "double")
+		{
+			double* pointer = (double*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			__HANDLE_ELEMENT(double, DataType, value, *pointer=);
+			data.apply();
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			void* pointer = (void*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			if(_dtype == "mat2")
+			{
+				memcpy(pointer, force_cast<mat2>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else if(_dtype == "mat3")
+			{
+				memcpy(pointer, force_cast<mat3>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else if(_dtype == "mat4")
+			{
+				memcpy(pointer, force_cast<mat4>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			else
+			{
+				memcpy(pointer, (void*)(&value), GLSL::built_in_types[_dtype].glsl_size);
+			}
+			data.apply();
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
 	else
 	{
-		throw glass::TypeError("Try to pop " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
+		if(_dtype == "uint")
+		{
+			std::vector<uint>* ptr_vec = (std::vector<uint>*)vec;
+			__INSERT_ELEMENT(uint, DataType, value);
+		}
+		else if(_dtype == "int")
+		{
+			std::vector<int>* ptr_vec = (std::vector<int>*)vec;
+			__INSERT_ELEMENT(int, DataType, value);
+		}
+		else if(_dtype == "float")
+		{
+			std::vector<float>* ptr_vec = (std::vector<float>*)vec;
+			__INSERT_ELEMENT(float, DataType, value);
+		}
+		else if(_dtype == "double")
+		{
+			std::vector<double>* ptr_vec = (std::vector<double>*)vec;
+			__INSERT_ELEMENT(double, DataType, value);
+		}
+		else if(__SAME_WITH_DTYPE(DataType, _dtype))
+		{
+			std::vector<DataType>* ptr_vec = (std::vector<DataType>*)vec;
+			ptr_vec->insert(ptr_vec->begin()+i, value);
+		}
+		else
+		{
+			throw glass::TypeError("Try to insert " + type_name(DataType) + " value to std::vector<" + _dtype + ">");
+		}
 	}
-
-	return return_value;
-}
-
-// template<class DataType>
-// DataType GLVector::pop(GLVector::const_iterator& it) // reviewed
-// {
-// 	int i = it - begin();
-// 	return pop<DataType>(i);
-// }
-
-// template<class DataType>
-// std::vector<DataType> GLVector::slice(GLVector::const_iterator& first, GLVector::const_iterator& last)
-// {
-// 	return slice<DataType>(first-begin(), last-begin());
-// }
-
-template<class DataType>
-std::vector<DataType> GLVector::slice(int pos_start, int pos_end)
-{
-	if((_dtype == "bool" && !same_type(DataType, bool)) ||
-	   (_dtype == "uint" && !same_type(DataType, uint)) ||
-	   (_dtype == "int" && !same_type(DataType, int)) ||
-	   (_dtype == "float" && !same_type(DataType, float)) ||
-	   (_dtype == "double" && !same_type(DataType, double)) ||
-	   (_dtype == "bvec2" && !same_type(DataType, bvec2)) ||
-	   (_dtype == "bvec3" && !same_type(DataType, bvec3)) ||
-	   (_dtype == "bvec4" && !same_type(DataType, bvec4)) ||
-	   (_dtype == "ivec2" && !same_type(DataType, ivec2)) ||
-	   (_dtype == "ivec3" && !same_type(DataType, ivec3)) ||
-	   (_dtype == "ivec4" && !same_type(DataType, ivec4)) ||
-	   (_dtype == "uvec2" && !same_type(DataType, uvec2)) ||
-	   (_dtype == "uvec3" && !same_type(DataType, uvec3)) ||
-	   (_dtype == "uvec4" && !same_type(DataType, uvec4)) ||
-	   (_dtype == "vec2" && !same_type(DataType, vec2)) ||
-	   (_dtype == "vec3" && !same_type(DataType, vec3)) ||
-	   (_dtype == "vec4" && !same_type(DataType, vec4)) ||
-	   (_dtype == "dvec2" && !same_type(DataType, dvec2)) ||
-	   (_dtype == "dvec3" && !same_type(DataType, dvec3)) ||
-	   (_dtype == "dvec4" && !same_type(DataType, dvec4)) ||
-	   (_dtype == "mat2" && !same_type(DataType, mat2)) ||
-	   (_dtype == "mat3" && !same_type(DataType, mat3)) ||
-	   (_dtype == "mat4" && !same_type(DataType, mat4)))
-	{
-		throw glass::TypeError("Try to get " + type_name(DataType) + " slice from std::vector<" + _dtype + ">");
-	}
-
-	if(empty())
-	{
-		return std::vector<DataType>();
-	}
-
-	int length = size();
-	if(pos_start < 0)
-	{
-		pos_start += length;
-	}
-	if(pos_end < 0)
-	{
-		pos_end += length;
-	}
-	if(pos_end <= pos_start)
-	{
-		return std::vector<DataType>();
-	}
-
-	int n = pos_end-pos_start;
-	std::vector<DataType> result(n);
-	for(int i = 0; i < n; i++)
-	{
-		if(_dtype == "bool") result[i] = force_cast<DataType>(at<bool>(i-pos_start));
-		else if(_dtype == "uint") result[i] = force_cast<DataType>(at<uint>(i-pos_start));
-		else if(_dtype == "int") result[i] = force_cast<DataType>(at<int>(i-pos_start));
-		else if(_dtype == "float") result[i] = force_cast<DataType>(at<float>(i-pos_start));
-		else if(_dtype == "double") result[i] = force_cast<DataType>(at<double>(i-pos_start));
-		else if(_dtype == "bvec2") result[i] = force_cast<DataType>(at<bvec2>(i-pos_start));
-		else if(_dtype == "bvec3") result[i] = force_cast<DataType>(at<bvec3>(i-pos_start));
-		else if(_dtype == "bvec4") result[i] = force_cast<DataType>(at<bvec4>(i-pos_start));
-		else if(_dtype == "ivec2") result[i] = force_cast<DataType>(at<ivec2>(i-pos_start));
-		else if(_dtype == "ivec3") result[i] = force_cast<DataType>(at<ivec3>(i-pos_start));
-		else if(_dtype == "ivec4") result[i] = force_cast<DataType>(at<ivec4>(i-pos_start));
-		else if(_dtype == "uvec2") result[i] = force_cast<DataType>(at<uvec2>(i-pos_start));
-		else if(_dtype == "uvec3") result[i] = force_cast<DataType>(at<uvec3>(i-pos_start));
-		else if(_dtype == "uvec4") result[i] = force_cast<DataType>(at<uvec4>(i-pos_start));
-		else if(_dtype == "vec2") result[i] = force_cast<DataType>(at<vec2>(i-pos_start));
-		else if(_dtype == "vec3") result[i] = force_cast<DataType>(at<vec3>(i-pos_start));
-		else if(_dtype == "vec4") result[i] = force_cast<DataType>(at<vec4>(i-pos_start));
-		else if(_dtype == "dvec2") result[i] = force_cast<DataType>(at<dvec2>(i-pos_start));
-		else if(_dtype == "dvec3") result[i] = force_cast<DataType>(at<dvec3>(i-pos_start));
-		else if(_dtype == "dvec4") result[i] = force_cast<DataType>(at<dvec4>(i-pos_start));
-		else if(_dtype == "mat2") result[i] = force_cast<DataType>(at<mat2>(i-pos_start));
-		else if(_dtype == "mat3") result[i] = force_cast<DataType>(at<mat3>(i-pos_start));
-		else if(_dtype == "mat4") result[i] = force_cast<DataType>(at<mat4>(i-pos_start));
-	}
-
-	return result;
 }
 
 template<class DataType>
-void GLVector::extend(const std::vector<DataType>& new_vec)
-{
-	insert<DataType>(size(), new_vec.begin(), new_vec.end());
-}
-
-template<class DataType>
-const DataType& GLVector::at(int i)const
+DataType GLVector::get(long long int i)
 {
 	if(empty())
 	{
 		throw glass::RuntimeError("Try to access value in empty std::vector");
 	}
 
-	int length = size();
+	size_t length = size();
 	if(i < 0)
 	{
 		i += length;
@@ -1303,116 +1168,75 @@ const DataType& GLVector::at(int i)const
 		throw glass::IndexError(i, 0, length-1);
 	}
 
-	if((_dtype == "uint" && same_type(DataType, uint)) ||
-	   (_dtype == "int" && same_type(DataType, int)) ||
-	   (_dtype == "float" && same_type(DataType, float)) ||
-	   (_dtype == "double" && same_type(DataType, double)) ||
-	   (_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-	   (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-	   (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-	   (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-	   (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-	   (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-	   (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-	   (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-	   (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-	   (_dtype == "vec2" && same_type(DataType, vec2)) ||
-	   (_dtype == "vec3" && same_type(DataType, vec3)) ||
-	   (_dtype == "vec4" && same_type(DataType, vec4)) ||
-	   (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-	   (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-	   (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-	   (_dtype == "mat2" && same_type(DataType, mat2)) ||
-	   (_dtype == "mat3" && same_type(DataType, mat3)) ||
-	   (_dtype == "mat4" && same_type(DataType, mat4)))
+	if(!__SAME_WITH_DTYPE(DataType, _dtype))
 	{
-		return force_cast<DataType>(((std::vector<DataType>*)vec)->at(i));
+		throw glass::TypeError("Try to access " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
 	}
-	else if(_dtype == "bool" && same_type(DataType, bool))
+	
+	if(using_VBO)
 	{
-		return force_cast<DataType>(((std::vector<byte>*)vec)->at(i));
+		DataType return_value;
+		unsigned char* dest_ptr = (unsigned char*)(&return_value);
+		unsigned char* src_ptr = (unsigned char*)data.ptr() + i * GLSL::built_in_types[_dtype].glsl_size;
+
+		if(_dtype == "int" || _dtype == "uint" || _dtype == "float" || _dtype == "double")
+		{
+			return_value = *((DataType*)src_ptr);
+		}
+		else if(_dtype == "mat2")
+		{
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec2"].glsl_size);
+			src_ptr += GLSL::built_in_types["vec2"].glsl_size;
+			dest_ptr += GLSL::built_in_types["vec2"].size;
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec2"].glsl_size);
+		}
+		else if(_dtype == "mat3")
+		{
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec3"].glsl_size);
+			src_ptr += GLSL::built_in_types["vec3"].glsl_size;
+			dest_ptr += GLSL::built_in_types["vec3"].size;
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec3"].glsl_size);
+			src_ptr += GLSL::built_in_types["vec3"].glsl_size;
+			dest_ptr += GLSL::built_in_types["vec3"].size;
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec3"].glsl_size);
+		}
+		else if(_dtype == "mat4")
+		{
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec4"].glsl_size);
+			src_ptr += GLSL::built_in_types["vec4"].glsl_size;
+			dest_ptr += GLSL::built_in_types["vec4"].size;
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec4"].glsl_size);
+			src_ptr += GLSL::built_in_types["vec4"].glsl_size;
+			dest_ptr += GLSL::built_in_types["vec4"].size;
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec4"].glsl_size);
+			src_ptr += GLSL::built_in_types["vec4"].glsl_size;
+			dest_ptr += GLSL::built_in_types["vec4"].size;
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types["vec4"].glsl_size);
+		}
+		else // vec
+		{
+			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types[_dtype].glsl_size);
+		}
+		data.apply();
+
+		return return_value;
 	}
 	else
 	{
-		throw glass::TypeError("Try to get " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
+		return ((std::vector<DataType>*)vec)->at(i);
 	}
 }
 
 template<class DataType>
-DataType& GLVector::at(int i)
+DataType GLVector::back()
 {
-	if(empty())
-	{
-		throw glass::RuntimeError("Try to access value in empty std::vector");
-	}
-
-	int length = size();
-	if(i < 0)
-	{
-		i += length;
-	}
-	if(i < 0 || i >= length)
-	{
-		throw glass::IndexError(i, 0, length-1);
-	}
-
-	if((_dtype == "uint" && same_type(DataType, uint)) ||
-	   (_dtype == "int" && same_type(DataType, int)) ||
-	   (_dtype == "float" && same_type(DataType, float)) ||
-	   (_dtype == "double" && same_type(DataType, double)) ||
-	   (_dtype == "bvec2" && same_type(DataType, bvec2)) ||
-	   (_dtype == "bvec3" && same_type(DataType, bvec3)) ||
-	   (_dtype == "bvec4" && same_type(DataType, bvec4)) ||
-	   (_dtype == "ivec2" && same_type(DataType, ivec2)) ||
-	   (_dtype == "ivec3" && same_type(DataType, ivec3)) ||
-	   (_dtype == "ivec4" && same_type(DataType, ivec4)) ||
-	   (_dtype == "uvec2" && same_type(DataType, uvec2)) ||
-	   (_dtype == "uvec3" && same_type(DataType, uvec3)) ||
-	   (_dtype == "uvec4" && same_type(DataType, uvec4)) ||
-	   (_dtype == "vec2" && same_type(DataType, vec2)) ||
-	   (_dtype == "vec3" && same_type(DataType, vec3)) ||
-	   (_dtype == "vec4" && same_type(DataType, vec4)) ||
-	   (_dtype == "dvec2" && same_type(DataType, dvec2)) ||
-	   (_dtype == "dvec3" && same_type(DataType, dvec3)) ||
-	   (_dtype == "dvec4" && same_type(DataType, dvec4)) ||
-	   (_dtype == "mat2" && same_type(DataType, mat2)) ||
-	   (_dtype == "mat3" && same_type(DataType, mat3)) ||
-	   (_dtype == "mat4" && same_type(DataType, mat4)))
-	{
-		return force_cast<DataType>((*((std::vector<DataType>*)vec))[i]);
-	}
-	else if(_dtype == "bool" && same_type(DataType, bool))
-	{
-		return force_cast<DataType>((*((std::vector<byte>*)vec))[i]);
-	}
-	else
-	{
-		throw glass::TypeError("Try to get " + type_name(DataType) + " value from std::vector<" + _dtype + ">");
-	}
+	return get<DataType>(-1);
 }
 
 template<class DataType>
-const DataType& GLVector::back()const
+DataType GLVector::front()
 {
-	return at<DataType>(-1);
-}
-
-template<class DataType>
-DataType& GLVector::back()
-{
-	return at<DataType>(-1);
-}
-
-template<class DataType>
-const DataType& GLVector::front()const
-{
-	return at<DataType>(0);
-}
-
-template<class DataType>
-DataType& GLVector::front()
-{
-	return at<DataType>(0);
+	return get<DataType>(0);
 }
 
 template<class DataType>
@@ -1420,14 +1244,10 @@ GLVector::operator std::vector<DataType>()const
 {
 	if(empty())
 	{
-		if(same_type(DataType, bool) ||
-		   same_type(DataType, uint) ||
+		if(same_type(DataType, uint) ||
 		   same_type(DataType, int) ||
 		   same_type(DataType, float) ||
 		   same_type(DataType, double) ||
-		   same_type(DataType, bvec2) ||
-		   same_type(DataType, bvec3) ||
-		   same_type(DataType, bvec4) ||
 		   same_type(DataType, ivec2) ||
 		   same_type(DataType, ivec3) ||
 		   same_type(DataType, ivec4) ||
@@ -1452,90 +1272,26 @@ GLVector::operator std::vector<DataType>()const
 		}
 	}
 
-	if((same_type(DataType, uint) && _dtype == "uint") ||
-	   (same_type(DataType, int) && _dtype == "int") ||
-	   (same_type(DataType, float) && _dtype == "float") ||
-	   (same_type(DataType, double) && _dtype == "double") ||
-	   (same_type(DataType, bvec2) && _dtype == "bvec2") ||
-	   (same_type(DataType, bvec3) && _dtype == "bvec3") ||
-	   (same_type(DataType, bvec4) && _dtype == "bvec4") ||
-	   (same_type(DataType, ivec2) && _dtype == "ivec2") ||
-	   (same_type(DataType, ivec3) && _dtype == "ivec3") ||
-	   (same_type(DataType, ivec4) && _dtype == "ivec4") ||
-	   (same_type(DataType, uvec2) && _dtype == "uvec2") ||
-	   (same_type(DataType, uvec3) && _dtype == "uvec3") ||
-	   (same_type(DataType, uvec4) && _dtype == "uvec4") ||
-	   (same_type(DataType, vec2) && _dtype == "vec2") ||
-	   (same_type(DataType, vec3) && _dtype == "vec3") ||
-	   (same_type(DataType, vec4) && _dtype == "vec4") ||
-	   (same_type(DataType, dvec2) && _dtype == "dvec2") ||
-	   (same_type(DataType, dvec3) && _dtype == "dvec3") ||
-	   (same_type(DataType, dvec4) && _dtype == "dvec4") ||
-	   (same_type(DataType, mat2) && _dtype == "mat2") ||
-	   (same_type(DataType, mat3) && _dtype == "mat3") ||
-	   (same_type(DataType, mat4) && _dtype == "mat4"))
-	{
-		return *((std::vector<DataType>*)vec);
-	}
-	else if(same_type(DataType, bool) && _dtype == "bool")
-	{
-		int length = size();
-		std::vector<bool> result(length);
-		std::vector<byte>* ptr_vec = (std::vector<byte>*)vec;
-		for(int i = 0; i < length; i++)
-		{
-			result[i] = (bool)((*ptr_vec)[i]);
-		}
-		return force_cast< std::vector<DataType> >(result);
-	}
-	else
+	if(!__SAME_WITH_DTYPE(DataType, _dtype))
 	{
 		throw glass::TypeError("Can not convert std::vector<" + _dtype + "> to std::vector<" + type_name(DataType) + ">");
 	}
-}
-
-template<class DataType>
-DataType* GLVector::ptr(int i)
-{
-	if(empty())
+	
+	if(using_VBO)
 	{
-		throw glass::RuntimeError("Try to access value pointer in empty std::vector");
-	}
+		int length = size();
+		std::vector<DataType> result(length);
+		for(int i = 0; i < length; i++)
+		{
+			result[i] = get<DataType>(i);
+		}
 
-	int length = size();
-	if(i < 0)
-	{
-		i += length;
+		return result;
 	}
-	if(i < 0 || i >= length)
+	else
 	{
-		throw glass::IndexError(i, 0, length-1);
+		return *((std::vector<DataType>*)vec);
 	}
-
-	if(_dtype == "bool") return (DataType*)(&(((std::vector<byte>*)vec)->at(i)));
-	else if(_dtype == "uint") return (DataType*)(&(((std::vector<uint>*)vec)->at(i)));
-	else if(_dtype == "int") return (DataType*)(&(((std::vector<int>*)vec)->at(i)));
-	else if(_dtype == "float") return (DataType*)(&(((std::vector<float>*)vec)->at(i)));
-	else if(_dtype == "double") return (DataType*)(&(((std::vector<double>*)vec)->at(i)));
-	else if(_dtype == "bvec2") return (DataType*)(&(((std::vector<bvec2>*)vec)->at(i)));
-	else if(_dtype == "bvec3") return (DataType*)(&(((std::vector<bvec3>*)vec)->at(i)));
-	else if(_dtype == "bvec4") return (DataType*)(&(((std::vector<bvec4>*)vec)->at(i)));
-	else if(_dtype == "ivec2") return (DataType*)(&(((std::vector<ivec2>*)vec)->at(i)));
-	else if(_dtype == "ivec3") return (DataType*)(&(((std::vector<ivec3>*)vec)->at(i)));
-	else if(_dtype == "ivec4") return (DataType*)(&(((std::vector<ivec4>*)vec)->at(i)));
-	else if(_dtype == "uvec2") return (DataType*)(&(((std::vector<uvec2>*)vec)->at(i)));
-	else if(_dtype == "uvec3") return (DataType*)(&(((std::vector<uvec3>*)vec)->at(i)));
-	else if(_dtype == "uvec4") return (DataType*)(&(((std::vector<uvec4>*)vec)->at(i)));
-	else if(_dtype == "vec2") return (DataType*)(&(((std::vector<vec2>*)vec)->at(i)));
-	else if(_dtype == "vec3") return (DataType*)(&(((std::vector<vec3>*)vec)->at(i)));
-	else if(_dtype == "vec4") return (DataType*)(&(((std::vector<vec4>*)vec)->at(i)));
-	else if(_dtype == "dvec2") return (DataType*)(&(((std::vector<dvec2>*)vec)->at(i)));
-	else if(_dtype == "dvec3") return (DataType*)(&(((std::vector<dvec3>*)vec)->at(i)));
-	else if(_dtype == "dvec4") return (DataType*)(&(((std::vector<dvec4>*)vec)->at(i)));
-	else if(_dtype == "mat2") return (DataType*)(&(((std::vector<mat2>*)vec)->at(i)));
-	else if(_dtype == "mat3") return (DataType*)(&(((std::vector<mat3>*)vec)->at(i)));
-	else if(_dtype == "mat4") return (DataType*)(&(((std::vector<mat4>*)vec)->at(i)));
-	else return (DataType*)NULL;
 }
 
 #endif
