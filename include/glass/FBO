@@ -199,10 +199,8 @@ void FBO::_Attachment::init(FBO* _parent, AttachmentType attachment_type, GLenum
 			parent->_unbind();
 			throw glass::MemoryError("Failed to allocate memory!");
 		}
-		if(same_type(FBufferType, sampler2D))
-		{
-			((sampler2D*)_buffer)->filter(GL_LINEAR);
-		}
+		((sampler2D*)_buffer)->filter(GL_LINEAR);
+		((sampler2D*)_buffer)->bind();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, id, GL_TEXTURE_2D, ((sampler2D*)_buffer)->id(), 0);
 	}
 	else if(same_type(FBufferType, samplerCube))
