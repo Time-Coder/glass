@@ -382,8 +382,8 @@ void width_adapt(uint width)
 uint sampler2D::generateMipmap()
 {
 	_bind();
-	// glGenerateMipmap(GL_TEXTURE_2D);
-	glGenerateTextureMipmap(id());
+	glGenerateMipmap(GL_TEXTURE_2D);
+	// glGenerateTextureMipmap(id());
 
 	int max_levels;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_levels);

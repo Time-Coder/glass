@@ -1,4 +1,4 @@
-#version 460 core
+#version 430 core
 
 out float luminance;
 in vec2 tex_coord;

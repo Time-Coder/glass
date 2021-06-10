@@ -1,4 +1,4 @@
-#version 460 core
+#version 430 core
 
 layout (location = 4) out vec3 skybox_color;
 
