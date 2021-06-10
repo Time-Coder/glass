@@ -8,9 +8,9 @@ layout (location = 2) in vec2 tex_coord;
 layout (location = 3) in vec3 tangent;
 layout (location = 4) in vec3 bitangent;
 
-// Instanced Array
-layout (location = 5) in mat4 model_mat;
-layout (location = 6) in mat4 normal_mat;
+// // Instanced Array
+// layout (location = 5) in mat4 model_mat;
+// layout (location = 6) in mat4 normal_mat;
 
 out VertexOut
 {
@@ -23,7 +23,7 @@ out VertexOut
 
 uniform Camera camera;
 uniform Model model;
-uniform Material material;
+// uniform Material material;
 
 void main()
 {

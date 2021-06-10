@@ -1,6 +1,6 @@
 #version 460 core
 
-#include "../common/utils.glsl"
+#include "../common/lighting/phong.glsl"
 
 out vec4 frag_color;
 in vec2 tex_coord;
@@ -17,8 +17,6 @@ uniform DirLight dir_light;
 uniform SpotLight spot_light;
 
 uniform Camera camera;
-
-#include "../common/lighting/Phong.glsl"
 
 Fragment createFragment()
 {

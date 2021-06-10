@@ -2,7 +2,7 @@
 
 in vec4 frag_pos;
 
-#include "../../Common/utils.glsl"
+#include "../../common/utils.glsl"
 
 uniform int type;
 uniform PointLight point_light;

@@ -139,6 +139,17 @@ void DirLight::setColor(float r, float g, float b)
 	__color = vec3(r, g, b);
 }
 
+float DirLight::brightness()const
+{
+	return __brightness;
+}
+
+void DirLight::setBrightness(float _brightness)
+{
+	__brightness = _brightness;
+	sync(__brightness);
+}
+
 void DirLight::open()
 {
 	is_open = true;

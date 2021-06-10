@@ -2,7 +2,7 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices=18) out;
 
-#include "../../Common/utils.glsl"
+#include "../../common/utils.glsl"
 
 uniform int type;
 uniform SpotLight spot_light;

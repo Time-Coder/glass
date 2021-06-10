@@ -20,6 +20,11 @@ include_directories(
 	third_party/glfw3.3.2/include
 )
 
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/shaders.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/glass/utils/shaders.h
+  COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/glsl && python generate_hardcode.py
+)
+
 aux_source_directory(src GLASS_SRCS)
 aux_source_directory(src/utils GLASS_SRCS_UTILS)
 aux_source_directory(src/utils/vec GLASS_SRCS_UTILS_VEC)
@@ -42,6 +47,8 @@ if(BUILD_SHARED_LIBS)
 		${GLASS_SRCS_UTILS}
 		${GLASS_SRCS_UTILS_VEC}
 		${GLASS_SRCS_UTILS_GLAD}
+		${CMAKE_CURRENT_SOURCE_DIR}/src/utils/shaders.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/include/glass/utils/shaders.h
 	)
 else()
 	add_library(glass STATIC
@@ -49,6 +56,8 @@ else()
 		${GLASS_SRCS_UTILS}
 		${GLASS_SRCS_UTILS_VEC}
 		${GLASS_SRCS_UTILS_GLAD}
+		${CMAKE_CURRENT_SOURCE_DIR}/src/utils/shaders.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/include/glass/utils/shaders.h
 	)
 endif()
 
@@ -59,7 +68,6 @@ target_link_libraries(glass
 )
 
 install(TARGETS glass
-        EXPORT glassTargets
         RUNTIME DESTINATION "bin"
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")

@@ -12,7 +12,7 @@ uniform float weights[5];
 
 void main()
 {
-	vec2 tex_offset = 1.0 / textureSize(color_map, 0); // gets size of single texel
+    vec2 tex_offset = 1.0 / textureSize(color_map, 0); // gets size of single texel
     vec3 result = texture(color_map, tex_coord).rgb * weights[0]; // current fragment's contribution
     if(horizontal)
     {
