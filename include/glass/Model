@@ -1,0 +1,162 @@
+#ifndef __MODEL__
+#define __MODEL__
+
+#include <iostream>
+#include <vector>
+#include <map>
+
+#include "glass/Material"
+#include "glass/Layout"
+
+class aiMesh;
+class aiScene;
+class aiNode;
+class aiMaterial;
+
+class Scene3D;
+class Shader;
+class Camera;
+class Model: public Uniform::Bindable
+{
+	// for glsl
+	mat4 __mat;
+	mat3 __normal_mat;
+	bool is_light = false;
+	Material __material;
+	// end
+
+	friend class Scene3D;
+	friend class Shader;
+
+private:
+	static std::map<std::string, Layout> layout_map;
+	static std::map<std::string, std::map<std::string, std::set<Model*> > > material_group;
+	std::string layout_key;
+	std::string material_key;
+	static uint n_models;
+
+	std::string model_name;
+	std::string file_name;
+
+	vec3 __position;
+	vec3 __origin; // 旋转中心在上级模型坐标系的坐标
+	vec3 __center; // 旋转中心在当前模型坐标系的坐标
+	vec3 __zoom = vec3(1, 1, 1);
+
+	double __yaw  = 0.0f, __pitch = 0.0f, __roll = 0.0f;
+
+	Camera* camera = NULL;
+	double __relative_pitch = 0.0f;
+
+	Model* parent = NULL;
+	std::map<std::string, Model> children;
+	std::string base_dir = ".";
+	bool is_visible = true;
+
+	mat4 self_mat();
+	void update_mat();
+	mat4 _mat();
+	mat3 _normal_mat();
+
+	void processMesh(aiMesh* mesh, const aiScene* scene);
+	void processNode(aiNode* node, const aiScene* scene);
+	void load_ambient_map(aiMaterial* ptr_material);
+	void load_diffuse_map(aiMaterial* ptr_material);
+	void load_specular_map(aiMaterial* ptr_material);
+	void load_bump_map(aiMaterial* ptr_material);
+	void load_normal_map(aiMaterial* ptr_material);
+	void update_material_group();
+
+public:
+	friend std::ostream& operator <<(std::ostream& out, const Model& model);
+
+	Model(const Model& model);
+	Model(Model* _parent = NULL);
+	Model(const std::string& model_name, Model* _parent = NULL);
+	~Model();
+
+	void load(const std::string& filename);
+	
+	Model& operator [](const std::string& model_name);
+	std::vector<std::string> keys();
+
+	mat4 mat()const;
+	mat3 normal_mat()const;
+	std::string name()const;
+	void rename(const std::string& _name);
+	std::string path()const;
+	Layout& layout();
+	GLVector& layout(uint location);
+	void setKey(const std::string& _key);
+	std::string key()const;
+	bool exists()const;
+	uint depth()const;
+
+	void reset();
+	void setCamera(Camera& _camera);
+	
+	void yaw(float dpsi); // 偏航
+	void pitch(float dtheta); // 俯仰
+	void roll(float dphi); // 滚转
+	float yaw()const; // 偏航
+	float pitch()const; // 俯仰
+	float roll()const; // 滚转
+	void yawTo(float _psi); // 偏航
+	void pitchTo(float _theta); // 俯仰
+	void rollTo(float _phi); // 滚转
+
+	void move(float dx, float dy, float dz);
+	void move(const vec3& v);
+	void moveTo(float x, float y, float z);
+	void moveTo(const vec3& v);
+	void moveX(float dx);
+	void moveXTo(float x);
+	void moveY(float dy);
+	void moveYTo(float y);
+	void moveZ(float dz);
+	void moveZTo(float z);
+	vec3 position()const;
+	void setPosition(float x, float y, float z);
+	void setPosition(const vec3& v);
+	vec3 origin()const;
+	void setOrigin(const vec3& v);
+	void setOrigin(float x, float y, float z);
+	vec3 center()const;
+	void setCenter(const vec3& v);
+	void setCenter(float x, float y, float z);
+	vec3 zoom()const;
+	void zoom(const vec3& v);
+	void zoomTo(const vec3& v);
+	void zoomTo(float sx, float sy, float sz);
+	void zoomX(float sx);
+	void zoomY(float sy);
+	void zoomZ(float sz);
+	void zoomXTo(float sx);
+	void zoomYTo(float sy);
+	void zoomZTo(float sz);
+
+	float relativePitch()const;
+	void relativePitch(float _pitch);
+	void relativePitchTo(float _pitch);
+
+	void setTexture(const std::string& filename, Material::TextureType type = Material::DIFFUSE, float height_factor = 0.1f, bool _inverse = false);
+	void setTexture(const sampler2D& sampler, Material::TextureType type = Material::DIFFUSE, float height_factor = 0.1f, bool _inverse = false);
+	void useTexture(Material::TextureType type, bool flag = true);
+	void setAsLight(bool flag = true);
+	bool isLight()const;
+	void setColor(const vec3& _color);
+	void setColor(float r, float g, float b);
+	void setMaskColor(const vec3& _color);
+	vec3 maskColor()const;
+	vec3 color()const;
+	Material material()const;
+	void setMaterial(const Material& _material);
+	bool empty()const;
+
+	void hide();
+	void show();
+	bool isVisible()const;
+	bool isHidden()const;
+};
+
+#endif

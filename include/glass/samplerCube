@@ -1,0 +1,133 @@
+#ifndef __SAMPLERCUBE__
+#define __SAMPLERCUBE__
+
+#include <vector>
+#include <set>
+#include <list>
+#include <map>
+
+#include "glass/common.h"
+#include "glass/vec"
+#include "glass/utils/image.h"
+
+class samplerCube
+{
+	struct Instance
+	{
+		uint id = 0;
+		
+		std::vector<GLenum> width = std::vector<GLenum>(6, 0);
+		std::vector<GLenum> height = std::vector<GLenum>(6, 0);
+		std::vector<GLenum> format = std::vector<GLenum>(6, GL_RGB);
+		std::vector<GLenum> dtype = std::vector<GLenum>(6, GL_UNSIGNED_BYTE);
+
+		uint s_wrap_type = GL_CLAMP_TO_EDGE;
+		uint t_wrap_type = GL_CLAMP_TO_EDGE;
+		uint r_wrap_type = GL_CLAMP_TO_EDGE;
+		uint min_filter_type = GL_LINEAR;
+		uint mag_filter_type = GL_LINEAR;
+		vec4 border_color;
+
+		bool is_applied = false;
+	};
+
+private:
+	static uint active_samplerCube;
+	static std::multiset<uint> existing_samplerCubes;
+	static std::list<Instance> existing_instances;
+	static std::map<std::string, Instance*> path_map;
+
+private:
+	Instance* instance = NULL;
+	bool has_path = false;
+
+private:
+	void _bind();
+	void init();
+	void del();
+	void destruct_all();
+
+public:
+	samplerCube();
+	samplerCube(uint __width, uint __height, uint __format = GL_RGB, uint __dtype = GL_UNSIGNED_BYTE);
+	samplerCube(const std::string& filename);
+	samplerCube(const Image& image);
+	samplerCube(const std::string& right, const std::string& left,
+	            const std::string& up   , const std::string& down,
+	            const std::string& back , const std::string& front);
+	samplerCube(const Image& right, const Image& left,
+	            const Image& up   , const Image& down,
+	            const Image& back , const Image& front);
+	samplerCube(std::vector<Image>& image);
+	samplerCube(const std::vector<std::string>& filename);
+	samplerCube(const samplerCube& sampler);
+	samplerCube(samplerCube&& sampler);
+	~samplerCube();
+	samplerCube& operator =(const samplerCube& sampler);
+	samplerCube& operator =(samplerCube&& sampler);
+	uint id()const;
+	bool isBind()const;
+	bool completed()const;
+	uint width(uint i = 0)const;
+	uint height(uint i = 0)const;
+	uint dtype(uint i = 0)const;
+	uint format(uint i = 0)const;
+
+	void bind();
+	void unbind()const;
+
+	void setImage(const std::string& filename);
+	void setImage(const Image& image);
+
+	void setImages(const std::vector<Image>& images);
+	void setImages(const std::vector<std::string>& filenames);
+
+	void setImages(const Image& right, const Image& left,
+		           const Image& up   , const Image& down,
+		           const Image& back , const Image& front);
+
+	void setImages(const std::string& right, const std::string& left,
+		           const std::string& up   , const std::string& down,
+		           const std::string& back , const std::string& front);
+
+	void setRightImage(const Image& image);
+	void setLeftImage(const Image& image);
+	void setUpImage(const Image& image);
+	void setDownImage(const Image& image);
+	void setFrontImage(const Image& image);
+	void setBackImage(const Image& image);
+
+	void setRightImage(const std::string& image);
+	void setLeftImage(const std::string& image);
+	void setUpImage(const std::string& image);
+	void setDownImage(const std::string& image);
+	void setFrontImage(const std::string& image);
+	void setBackImage(const std::string& image);
+
+	void malloc(uint _width, uint _height, uint _format = GL_RGB, uint _dtype = GL_UNSIGNED_BYTE);
+	void realloc(uint _width, uint _height);
+
+	void border_color(const vec4& color);
+	void border_color(const vec3& color);
+	vec4 border_color()const;
+
+	uint wrap_s()const;
+	uint wrap_t()const;
+	uint wrap_r()const;
+	void wrap_s(uint wrap_type);
+	void wrap_t(uint wrap_type);
+	void wrap_r(uint wrap_type);
+	void wrap(uint wrap_type_s, uint wrap_type_t = -1, uint wrap_type_r = -1);
+	// wrap_type can choose in
+	// [GL_REPEAT, GL_MIRRORED_REPEAT, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER]
+
+	uint filter_min()const;
+	uint filter_mag()const;
+	void filter_min(uint filter_type);
+	void filter_mag(uint filter_type);
+	void filter(uint filter_type_min, uint filter_type_mag = -1);
+	// filter_type can be choose in
+	// [GL_NEAREST, GL_LINEAR]
+};
+
+#endif

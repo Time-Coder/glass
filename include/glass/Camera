@@ -1,0 +1,131 @@
+#ifndef __CAMERA_H__
+#define __CAMERA_H__
+
+#include <vector>
+
+#include "glass/Uniform"
+#include "glass/SpotLight"
+#include "glass/mat"
+
+#define __PI__ 3.141592653589793
+
+class DirLight;
+class Camera: public Uniform::Bindable
+{
+	// for glsl
+	vec3 __position;
+	mat4 __mat;
+	mat4 __screen_mat;
+	mat4 __projection_mat;
+	mat4 __view_mat;
+	mat4 __rotation_mat;
+	float cut[5];
+	// end
+
+public:
+	SpotLight head_light;
+
+private:
+	float __yaw = 0.0f, __pitch = 0.0f, __roll = 0.0f;
+	float __screen_zoom_x = 1.0f, __screen_zoom_y = 1.0f;
+	float __screen_offset_x = 0.0, __screen_offset_y = 0.0;
+
+	double __z_near = 0.1f;
+	double __z_far = 100.0f;
+	double __fov = __PI__/4;
+
+	uint __screen_width = 800;
+	uint __screen_height = 600;
+
+	double __aspect;
+	double tan_fov2;
+	mat4 inv_view_mat;
+
+	std::vector<DirLight*> dir_lights;
+
+private:
+	void update_screen_mat();
+	void update_projection_mat();
+	void update_view_mat();
+	void update_rotation_mat();
+	void update_mat();
+	void update_dir_lights_mat();
+	void update_cut();
+	mat4 getLightMat(DirLight* dir_light, double cut1, double cut2);
+
+public:
+	vec3 position()const;
+	void setPosition(const vec3& v);
+	void setPosition(float x, float y, float z);
+	mat4 mat()const;
+	mat4 screen_mat()const;
+	mat4 projection_mat()const;
+	mat4 view_mat()const;
+	mat4 rotation_mat()const;
+	vec2 screenOffset()const;
+	vec2 screenZoom()const;
+	
+public:
+	Camera(uint _screen_width = 800, uint _screen_height = 600, double _z_near = 0.1f, double _z_far = 100.0f, double _fov = __PI__/4);
+	uint screenWidth()const;
+	uint screenHeight()const;
+	double aspect()const;
+	double zNear()const;
+	double zFar()const;
+	double fov()const;
+
+	void addDirLight(DirLight& dir_light);
+	void screenResize(uint width, uint height);
+	void setZNear(double _z_near);
+	void setZFar(double _z_far);
+	void setFov(double _fov);
+
+	void move(float dx, float dy, float dz);
+	void move(const vec3& v);
+	void moveTo(float x, float y, float z);
+	void moveTo(const vec3& v);
+	void moveX(float dx);
+	void moveXTo(float x);
+	void moveY(float dy);
+	void moveYTo(float y);
+	void moveZ(float dz);
+	void moveZTo(float z);
+
+	void screenOffset(float dx, float dy);
+	void screenZoom(float s);
+	void screenZoom(float sx, float sy);
+
+	void reset();
+
+	void moveForward(float d);
+	void moveBack(float d);
+	void moveLeft(float d);
+	void moveRight(float d);
+	void moveUp(float d);
+	void moveDown(float d);
+
+	void yaw(float dpsi); // 偏航
+	void pitch(float dtheta); // 俯仰
+	void roll(float dphi); // 滚转
+
+	float yaw()const; // 偏航
+	float pitch()const; // 俯仰
+	float roll()const; // 滚转
+
+	void yawTo(float _psi); // 偏航
+	void pitchTo(float _theta); // 俯仰
+	void rollTo(float _phi); // 滚转
+
+	void lookAt(float _x, float _y, float _z);
+	void lookAt(const vec3& target);
+	vec4 projection(const vec4& vec)const;
+
+	vec3 left()const;
+	vec3 right()const;
+	vec3 front()const;
+	vec3 back()const;
+	vec3 up()const;
+	vec3 down()const;
+};
+
+#endif

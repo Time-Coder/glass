@@ -1,0 +1,91 @@
+#ifndef __SCENE__
+#define __SCENE__
+
+#include "glass/GLFigure"
+#include "glass/Model"
+#include "glass/Shader"
+#include "glass/FBO"
+#include "glass/PointLight"
+#include "glass/DirLight"
+#include "glass/SpotLight"
+#include "glass/Camera"
+
+class Scene3D: public GLFigure
+{
+	samplerCube skybox_map;
+
+	std::map<std::string, Shader> shader;
+	std::map<std::string, FBO> fbo;
+	std::map<std::string, std::vector<FBO> > fbos;
+	std::map<std::string, Model> model;
+
+	float gauss_weights[5];
+	bool can_move = true;
+	bool using_HDR = false;
+
+public:
+	std::map<std::string, Model> models;
+	std::map<std::string, PointLight> point_lights;
+	std::map<std::string, DirLight> dir_lights;
+	std::map<std::string, SpotLight> spot_lights;
+	Camera camera;
+
+protected:
+	virtual void prepare();
+	virtual void draw();
+	virtual void onChangeSize(int width, int height);
+	virtual void onMouseMove();
+	virtual void onKeyRepeat(const std::string& key);
+
+private:
+	template<class DataType>
+	std::string getValidName(const std::string& name, const std::map<std::string, DataType>& object_map);
+	bool lights_shape_not_empty();
+	bool models_not_empty();
+
+	void init_skybox();
+	void init_shadering_gbuffer();
+	void init_shadering_blur();
+	void init_shadering_merge();
+	void init_shadering_HDR();
+	void init_shadering_lighting();
+	void init_shadering_point_light_shadow();
+	void init_shadering_dir_light_shadow();
+
+public:
+	Scene3D(int width = 800, int height = 600, const std::string& name = "Figure", const vec4& color = vec4(0.1569, 0.1608, 0.1373, 1.0)):
+	GLFigure(width, height, name, color) {}
+
+	std::string addModel(const vec3& position, const Model& model, std::string name = "");
+	std::string addModel(const Model& model, std::string name = "");
+	std::string addDirLight(const DirLight& dir_light, std::string name = "");
+	std::string addPointLight(const vec3& position, const PointLight& point_light, std::string name = "");
+	std::string addPointLight(const PointLight& point_light, std::string name = "");
+	void setSkyBox(const std::string& filename);
+	void setSkyBoxUp(const std::string& filename);
+	void setSkyBoxDown(const std::string& filename);
+	void setSkyBoxLeft(const std::string& filename);
+	void setSkyBoxRight(const std::string& filename);
+	void setSkyBoxFront(const std::string& filename);
+	void setSkyBoxBack(const std::string& filename);
+	void useHDR(bool flag = true);
+	bool usingHDR()const;
+};
+
+template<class DataType>
+std::string Scene3D::getValidName(const std::string& name, const std::map<std::string, DataType>& object_map)
+{
+	std::string final_name = name;
+
+	int i = 0;
+	do
+	{
+		final_name = name + str::str(i);
+		i++;
+	}
+	while(object_map.count(final_name) > 0);
+
+	return final_name;
+}
+
+#endif

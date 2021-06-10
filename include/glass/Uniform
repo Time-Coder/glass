@@ -1,0 +1,659 @@
+#ifndef __UNIFORM__
+#define __UNIFORM__
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include <list>
+
+#include "glass/utils/type.h"
+#include "glass/utils/exceptions.h"
+
+typedef unsigned int uint;
+
+class Shader;
+class UBO;
+struct bvec2;
+struct bvec3;
+struct bvec4;
+struct ivec2;
+struct ivec3;
+struct ivec4;
+struct uvec2;
+struct uvec3;
+struct uvec4;
+struct vec2;
+struct vec3;
+struct vec4;
+struct dvec2;
+struct dvec3;
+struct dvec4;
+class mat2;
+class mat3;
+class mat4;
+class sampler2D;
+class samplerCube;
+
+class Uniform
+{
+	friend class Shader;
+	friend class UBO;
+	Shader* parent = NULL;
+	bool need_refresh = true;
+	
+public:
+	struct Variable
+	{
+		std::string type;
+		std::string name;
+		uint size = 0;
+		uint offset = 0;
+		uint align_size = 0;
+		uint padding_size = 0;
+		int location = -1;
+		uint texture_unit = 0;
+
+		std::vector<std::string> atoms;
+
+		Variable();
+		Variable(const std::string& _name);
+		Variable(const std::string& _type, const std::string& _name);
+	};
+
+	struct Struct
+	{
+		std::string name;
+		std::vector<Variable> members;
+		uint size = 0;
+		uint align_size = 0;
+
+		uint offset = 0;
+		uint host_size = 0;
+		uint host_align_size = 0;
+		unsigned long long host_hash = 0;
+
+		friend std::ostream& operator <<(std::ostream& out, const Struct& structure);
+		void clear();
+	};
+
+	struct Block
+	{
+		// Uniform* parent = NULL;
+		std::string name;
+		std::string instance_name;
+		int size = 0;
+		int index = -1;
+		uint binding_point = 0;
+		std::vector<Variable> members;
+
+		Block();
+		Block(const std::string& _name, const std::string& _instance_name);
+		// Block(Uniform* _parent, const std::string& _name = "", const std::string& _instance_name = "");
+		
+		bool empty()const;
+		bool contains(const std::string& member_name)const;
+		Variable& operator [](const std::string& member_name);
+		const Variable& operator [](const std::string& member_name)const;
+	};
+	friend class Block;
+
+	struct BlockMap
+	{
+		Uniform* parent = NULL;
+		struct Reference
+		{
+			Uniform* parent = NULL;
+			std::string name;
+
+			Reference() {}
+			Reference(Uniform* _parent, const std::string& _name);
+
+			Uniform::Block* instance()const;
+			uint size()const;
+			std::string instance_name()const;
+			int index()const;
+			uint binding_point()const;
+
+			void bind(uint point);
+			void bind(const UBO& ubo);
+			void unbind();
+			bool contains(const std::string& member_name)const;
+			bool empty()const;
+			bool operator ==(const Reference& block);
+			bool operator !=(const Reference& block);
+			bool operator <=(const Reference& block);
+			bool operator >=(const Reference& block);
+			Variable& operator [](const std::string& member_name);
+			const Variable& operator [](const std::string& member_name)const;
+
+			friend std::ostream& operator <<(std::ostream& out, const Block& block);
+		};
+
+		BlockMap(Uniform* _parent): parent(_parent) {}
+		Reference operator [](const std::string& name);
+	};
+
+	class Bindable;
+	class Reference
+	{
+		friend class Bindable;
+
+		Uniform* parent = NULL;
+		std::string name;
+
+	public:
+		Reference(Uniform* _parent, const std::string& _name);
+
+		std::string type()const;
+		uint size()const;
+		int location()const;
+		uint texture_unit()const;
+
+		template<class DataType>
+		void operator =(const DataType& value);
+
+		Reference operator [](const std::string& sub_name)const;
+		Reference operator [](uint index)const;
+
+		bool operator ==(const Reference& ref)const;
+		bool operator !=(const Reference& ref)const;
+		
+		template<class DataType>
+		void bind(DataType& var);
+
+		template<class DataType>
+		void unbind(DataType& var)const;
+	};
+
+	class Bindable
+	{
+		std::list<Reference> refs;
+
+	public:
+		const static uint offset;
+
+	public:
+		void sync();
+
+		template<class DataType>
+		void sync(DataType& member);
+
+		void bind(Reference& ref);
+		void unbind(const Reference& ref);
+	};
+
+private:
+	std::map<std::string, Variable> original_uniform_map;
+	std::map<std::string, Variable> uniform_map;
+
+	std::map<std::string, Block> original_uniform_block_map;
+	std::map<std::string, Block> uniform_block_map;
+
+	std::map<std::string, Struct> defined_structs;
+	std::vector<std::string> __parent_names;
+
+private:
+	void please_define(const std::string& type);
+	void find_uniforms(const std::string& code);
+	void find_uniform_blocks(const std::string& code);
+	void find_structs(const std::string& code);
+	void resolve_all_uniforms();
+	void resolve_all_uniform_blocks();
+	void resolve_one_uniform(const std::string& name);
+	void resolve_one_uniform_block_member(const std::string& block_name, const std::string& member_name);
+	void analyse_structs();
+	void refresh();
+	bool is_atom(const std::string& name);
+	uint size_of(std::string type);
+	uint align_size_of(std::string type);
+	uint offset_of(std::string type);
+
+public:
+	Uniform(Shader* _parent);
+	Uniform(Shader* _parent, const Uniform& uniform);
+	Uniform(Shader* _parent, Uniform&& uniform);
+	Uniform& operator =(const Uniform& uniform);
+	Uniform& operator =(Uniform&& uniform);
+
+	Reference operator [](const std::string& name);
+
+	bool contains(const std::string& name)const;
+
+	template<class DataType>
+	void define();
+
+	int location(const std::string& name);
+	
+	template<class DataType>
+	void set(const std::string& name, const DataType& value);
+
+	void set_atom(const std::string& name, void* ptr_value);
+
+	template<class DataType>
+	void set_atom(const std::string& name, const DataType& value);
+	
+	void set_bool(const std::string& name, bool value);
+	void set_uint(const std::string& name, uint value);
+	void set_int(const std::string& name, int value);
+	void set_float(const std::string& name, float value);
+	void set_double(const std::string& name, double value);
+	void set_bvec2(const std::string& name, const bvec2& value);
+	void set_bvec3(const std::string& name, const bvec3& value);
+	void set_bvec4(const std::string& name, const bvec4& value);
+	void set_ivec2(const std::string& name, const ivec2& value);
+	void set_ivec3(const std::string& name, const ivec3& value);
+	void set_ivec4(const std::string& name, const ivec4& value);
+	void set_uvec2(const std::string& name, const uvec2& value);
+	void set_uvec3(const std::string& name, const uvec3& value);
+	void set_uvec4(const std::string& name, const uvec4& value);
+	void set_vec2(const std::string& name, const vec2& value);
+	void set_vec3(const std::string& name, const vec3& value);
+	void set_vec4(const std::string& name, const vec4& value);
+	void set_dvec2(const std::string& name, const dvec2& value);
+	void set_dvec3(const std::string& name, const dvec3& value);
+	void set_dvec4(const std::string& name, const dvec4& value);
+	void set_mat2(const std::string& name, mat2& value);
+	void set_mat3(const std::string& name, mat3& value);
+	void set_mat4(const std::string& name, mat4& value);
+	void set_sampler2D(const std::string& name, sampler2D& value);
+	void set_sampler2D(const std::string& name, uint texture_id);
+	void set_samplerCube(const std::string& name, samplerCube& value);
+	void set_samplerCube(const std::string& name, uint texture_id);
+};
+
+template<class DataType>
+void Uniform::Reference::bind(DataType& var)
+{
+	if(!(std::is_base_of<Uniform::Bindable, DataType>::value))
+	{
+		throw glass::TypeError(type_name(DataType) + " is not bindable!");
+	}
+	*this = var;
+	Uniform::Bindable* ptr_var = &var;
+	ptr_var->bind(*this);
+}
+
+template<class DataType>
+void Uniform::Reference::unbind(DataType& var)const
+{
+	if(!(std::is_base_of<Uniform::Bindable, DataType>::value))
+	{
+		return;
+	}
+	Uniform::Bindable* ptr_var = &var;
+	ptr_var->unbind(*this);
+}
+
+template<class DataType>
+void Uniform::Reference::operator =(const DataType& value)
+{
+	parent->set(name, value);
+}
+
+template<class DataType>
+void Uniform::Bindable::sync(DataType& member)
+{
+	if((void*)this == (void*)(&member))
+	{
+		sync();
+		return;
+	}
+
+	int offset_start = (unsigned char*)(&member) - (unsigned char*)this - Bindable::offset;
+	if(offset_start < 0)
+	{
+		throw glass::RuntimeError("sync variable cannot be access by 'this' pointer.");
+	}
+	std::string type = type_name(DataType);
+
+	for(auto it = refs.begin(); it != refs.end(); it++)
+	{
+		int offset_end = offset_start + it->parent->size_of(type);
+
+		int current_offset = 0;
+		int i_start = 0, i_end = 0;
+		int last_size = 0;
+		int n_atoms = it->parent->uniform_map[it->name].atoms.size();
+		while(current_offset < offset_start)
+		{
+			std::string child_name = it->parent->uniform_map[it->name].atoms[i_start];
+			last_size = (it->parent->uniform_map[child_name].size + it->parent->uniform_map[child_name].padding_size);
+			current_offset += last_size;
+			i_start++;
+			if(i_start >= n_atoms && current_offset < offset_start)
+			{
+				throw glass::RuntimeError("sync variable is not a child of glsl varialble " + it->name);
+			}
+		}
+		if(current_offset > offset_start)
+		{
+			current_offset -= last_size;
+			i_start--;
+		}
+		i_end = i_start;
+
+		while(current_offset < offset_end)
+		{
+			std::string child_name = it->parent->uniform_map[it->name].atoms[i_end];
+			last_size = (it->parent->uniform_map[child_name].size + it->parent->uniform_map[child_name].padding_size);
+			current_offset += last_size;
+			i_end++;
+			if(i_end >= n_atoms && current_offset < offset_end)
+			{
+				i_end = n_atoms - 1;
+				break;
+			}
+		}
+		if(current_offset >= offset_end)
+		{
+			i_end--;
+		}
+
+		unsigned char* ptr = (unsigned char*)(&member);
+		for(int i = i_start; i <= i_end; i++)
+		{
+			std::string child_name = it->parent->uniform_map[it->name].atoms[i];
+
+			ptr += it->parent->uniform_map[child_name].offset;
+			it->parent->set_atom(child_name, (void*)ptr);
+			ptr += it->parent->uniform_map[child_name].size + it->parent->uniform_map[child_name].padding_size;
+		}
+	}
+}
+
+template<class DataType>
+void Uniform::set(const std::string& name, const DataType& value)
+{
+	refresh();
+	if(uniform_map.count(name) == 0)
+	{
+		throw glass::KeyError("Uniform variable " + name + " is not defined in GLSL code!");
+	}
+
+	if(is_atom(name))
+	{
+		set_atom(name, value);
+		return;
+	}
+
+	std::string type = uniform_map[name].type;
+	if(type != type_name(DataType))
+	{
+		throw glass::TypeError("Cannot convert " + type_name(DataType) + " to " + type);
+	}
+	please_define(type);
+
+	if(defined_structs.count(type))
+	{
+		unsigned long long host_hash = defined_structs[type].host_hash;
+		if(host_hash != 0 && typeid(DataType).hash_code() != host_hash)
+		{
+			throw glass::TypeError("Cannot convert " + type_name(DataType) + " to " + type);
+		}
+	}
+
+	if(sizeof(DataType) < uniform_map[name].size)
+	{
+		throw glass::TypeError("Error when setting " + type + " uniform variable " + name + ":\nCannot convert " + type_name(DataType) + " to " + type + ".");
+	}
+
+	unsigned char* ptr = (unsigned char*)(&(value));
+	if(std::is_base_of<Bindable, DataType>::value &&
+	   (defined_structs.count(type) == 0 ||
+	   	defined_structs[type].host_hash == 0) )
+	{
+		ptr += Bindable::offset;
+	}
+	for(std::string atom : uniform_map[name].atoms)
+	{
+		ptr += uniform_map[atom].offset;
+		set_atom(atom, (void*)(ptr));
+		ptr += uniform_map[atom].size + uniform_map[atom].padding_size;
+	}
+}
+
+template<class DataType>
+void Uniform::define()
+{
+	std::string type = type_name(DataType);
+	
+	if(defined_structs[type].host_hash == typeid(DataType).hash_code())
+	{
+		return;
+	}
+
+	if(std::is_base_of<Bindable, DataType>::value)
+	{
+		defined_structs[type].offset = Bindable::offset;
+	}
+
+	defined_structs[type].host_size = sizeof(DataType);
+	if(defined_structs[type].host_size < defined_structs[type].size)
+	{
+		defined_structs[type].host_size = 0;
+		throw glass::TypeError("Cannot convert host struct " + type_name(DataType) + " to GLSL struct " + type + ":\nhost struct's size should be larger than GLSL struct's.");
+	}
+
+	defined_structs[type].host_align_size = alignof(DataType);
+	if(defined_structs[type].host_align_size < defined_structs[type].align_size)
+	{
+		defined_structs[type].host_align_size = 0;
+		throw glass::TypeError("Cannot convert host struct " + type_name(DataType) + " to GLSL struct " + type + ":\nhost struct's align size should be larger than GLSL struct's.");
+	}
+
+	defined_structs[type].host_hash = typeid(DataType).hash_code();
+
+	need_refresh = true;
+	// refresh();
+}
+
+#define __SET_ALL(TYPE) \
+if(same_type(DataType, std::_Bit_reference)) set_##TYPE(name, (bool)force_cast<std::_Bit_reference>(value));\
+else if(same_type(DataType, bool)) set_##TYPE(name, force_cast<bool>(value));\
+else if(same_type(DataType, short)) set_##TYPE(name, force_cast<short>(value));\
+else if(same_type(DataType, unsigned short)) set_##TYPE(name, force_cast<unsigned short>(value));\
+else if(same_type(DataType, int)) set_##TYPE(name, force_cast<int>(value));\
+else if(same_type(DataType, unsigned int)) set_##TYPE(name, force_cast<unsigned int>(value));\
+else if(same_type(DataType, long)) set_##TYPE(name, force_cast<long>(value));\
+else if(same_type(DataType, unsigned long)) set_##TYPE(name, force_cast<unsigned long>(value));\
+else if(same_type(DataType, long long)) set_##TYPE(name, force_cast<long long>(value));\
+else if(same_type(DataType, unsigned long long)) set_##TYPE(name, force_cast<unsigned long long>(value));\
+else if(same_type(DataType, float)) set_##TYPE(name, force_cast<float>(value));\
+else if(same_type(DataType, double)) set_##TYPE(name, force_cast<double>(value));\
+else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to " + #TYPE)
+
+#define __SET_ATOM_GENERAL_CODE \
+if(type == "bool") __SET_ALL(bool);\
+else if(type == "uint") __SET_ALL(uint);\
+else if(type == "int") __SET_ALL(int);\
+else if(type == "float") __SET_ALL(float);\
+else if(type == "double") __SET_ALL(double);\
+else if(type == "bvec2")\
+{\
+	if(same_type(DataType, bvec2)) set_bvec2(name,         force_cast<bvec2>(value));\
+	else if(same_type(DataType, ivec2)) set_bvec2(name, (bvec2)(force_cast<ivec2>(value)));\
+	else if(same_type(DataType, uvec2)) set_bvec2(name, (bvec2)(force_cast<uvec2>(value)));\
+	else if(same_type(DataType,  vec2)) set_bvec2(name, (bvec2)(force_cast< vec2>(value)));\
+	else if(same_type(DataType, dvec2)) set_bvec2(name, (bvec2)(force_cast<dvec2>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to bvec2.");\
+}\
+else if(type == "bvec3")\
+{\
+	if(same_type(DataType, bvec3)) set_bvec3(name,         force_cast<bvec3>(value));\
+	else if(same_type(DataType, ivec3)) set_bvec3(name, (bvec3)(force_cast<ivec3>(value)));\
+	else if(same_type(DataType, uvec3)) set_bvec3(name, (bvec3)(force_cast<uvec3>(value)));\
+	else if(same_type(DataType,  vec3)) set_bvec3(name, (bvec3)(force_cast< vec3>(value)));\
+	else if(same_type(DataType, dvec3)) set_bvec3(name, (bvec3)(force_cast<dvec3>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to bvec3.");\
+}\
+else if(type == "bvec4")\
+{\
+	if(same_type(DataType, bvec4)) set_bvec4(name,         force_cast<bvec4>(value));\
+	else if(same_type(DataType, ivec4)) set_bvec4(name, (bvec4)(force_cast<ivec4>(value)));\
+	else if(same_type(DataType, uvec4)) set_bvec4(name, (bvec4)(force_cast<uvec4>(value)));\
+	else if(same_type(DataType,  vec4)) set_bvec4(name, (bvec4)(force_cast< vec4>(value)));\
+	else if(same_type(DataType, dvec4)) set_bvec4(name, (bvec4)(force_cast<dvec4>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to bvec4.");\
+}\
+else if(type == "ivec2")\
+{\
+	if(same_type(DataType, bvec2)) set_ivec2(name, (ivec2)(force_cast<bvec2>(value)));\
+	else if(same_type(DataType, ivec2)) set_ivec2(name,         force_cast<ivec2>(value));\
+	else if(same_type(DataType, uvec2)) set_ivec2(name, (ivec2)(force_cast<uvec2>(value)));\
+	else if(same_type(DataType,  vec2)) set_ivec2(name, (ivec2)(force_cast< vec2>(value)));\
+	else if(same_type(DataType, dvec2)) set_ivec2(name, (ivec2)(force_cast<dvec2>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to ivec2.");\
+}\
+else if(type == "ivec3")\
+{\
+	if(same_type(DataType, bvec3)) set_ivec3(name, (ivec3)(force_cast<bvec3>(value)));\
+	else if(same_type(DataType, ivec3)) set_ivec3(name,         force_cast<ivec3>(value));\
+	else if(same_type(DataType, uvec3)) set_ivec3(name, (ivec3)(force_cast<uvec3>(value)));\
+	else if(same_type(DataType,  vec3)) set_ivec3(name, (ivec3)(force_cast< vec3>(value)));\
+	else if(same_type(DataType, dvec3)) set_ivec3(name, (ivec3)(force_cast<dvec3>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to ivec3.");\
+}\
+else if(type == "ivec4")\
+{\
+	if(same_type(DataType, bvec4)) set_ivec4(name, (ivec4)(force_cast<bvec4>(value)));\
+	else if(same_type(DataType, ivec4)) set_ivec4(name,         force_cast<ivec4>(value));\
+	else if(same_type(DataType, uvec4)) set_ivec4(name, (ivec4)(force_cast<uvec4>(value)));\
+	else if(same_type(DataType,  vec4)) set_ivec4(name, (ivec4)(force_cast< vec4>(value)));\
+	else if(same_type(DataType, dvec4)) set_ivec4(name, (ivec4)(force_cast<dvec4>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to ivec4.");\
+}\
+else if(type == "uvec2")\
+{\
+	if(same_type(DataType, bvec2)) set_uvec2(name, (uvec2)(force_cast<bvec2>(value)));\
+	else if(same_type(DataType, ivec2)) set_uvec2(name, (uvec2)(force_cast<ivec2>(value)));\
+	else if(same_type(DataType, uvec2)) set_uvec2(name,         force_cast<uvec2>(value));\
+	else if(same_type(DataType,  vec2)) set_uvec2(name, (uvec2)(force_cast< vec2>(value)));\
+	else if(same_type(DataType, dvec2)) set_uvec2(name, (uvec2)(force_cast<dvec2>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to uvec2.");\
+}\
+else if(type == "uvec3")\
+{\
+	if(same_type(DataType, bvec3)) set_uvec3(name, (uvec3)(force_cast<bvec3>(value)));\
+	else if(same_type(DataType, ivec3)) set_uvec3(name, (uvec3)(force_cast<ivec3>(value)));\
+	else if(same_type(DataType, uvec3)) set_uvec3(name,         force_cast<uvec3>(value));\
+	else if(same_type(DataType,  vec3)) set_uvec3(name, (uvec3)(force_cast< vec3>(value)));\
+	else if(same_type(DataType, dvec3)) set_uvec3(name, (uvec3)(force_cast<dvec3>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to uvec3.");\
+}\
+else if(type == "uvec4")\
+{\
+	if(same_type(DataType, bvec4)) set_uvec4(name, (uvec4)(force_cast<bvec4>(value)));\
+	else if(same_type(DataType, ivec4)) set_uvec4(name, (uvec4)(force_cast<ivec4>(value)));\
+	else if(same_type(DataType, uvec4)) set_uvec4(name,         force_cast<uvec4>(value));\
+	else if(same_type(DataType,  vec4)) set_uvec4(name, (uvec4)(force_cast< vec4>(value)));\
+	else if(same_type(DataType, dvec4)) set_uvec4(name, (uvec4)(force_cast<dvec4>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to uvec4.");\
+}\
+else if(type == "vec2")\
+{\
+	if(same_type(DataType, bvec2)) set_vec2(name, (vec2)(force_cast<bvec2>(value)));\
+	else if(same_type(DataType, ivec2)) set_vec2(name, (vec2)(force_cast<ivec2>(value)));\
+	else if(same_type(DataType, uvec2)) set_vec2(name, (vec2)(force_cast<uvec2>(value)));\
+	else if(same_type(DataType,  vec2)) set_vec2(name,        force_cast< vec2>(value));\
+	else if(same_type(DataType, dvec2)) set_vec2(name, (vec2)(force_cast<dvec2>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to vec2.");\
+}\
+else if(type == "vec3")\
+{\
+	if(same_type(DataType, bvec3)) set_vec3(name, (vec3)(force_cast<bvec3>(value)));\
+	else if(same_type(DataType, ivec3)) set_vec3(name, (vec3)(force_cast<ivec3>(value)));\
+	else if(same_type(DataType, uvec3)) set_vec3(name, (vec3)(force_cast<uvec3>(value)));\
+	else if(same_type(DataType,  vec3)) set_vec3(name,        force_cast< vec3>(value));\
+	else if(same_type(DataType, dvec3)) set_vec3(name, (vec3)(force_cast<dvec3>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to vec3.");\
+}\
+else if(type == "vec4")\
+{\
+	if(same_type(DataType, bvec4)) set_vec4(name, (vec4)(force_cast<bvec4>(value)));\
+	else if(same_type(DataType, ivec4)) set_vec4(name, (vec4)(force_cast<ivec4>(value)));\
+	else if(same_type(DataType, uvec4)) set_vec4(name, (vec4)(force_cast<uvec4>(value)));\
+	else if(same_type(DataType,  vec4)) set_vec4(name,        force_cast< vec4>(value));\
+	else if(same_type(DataType, dvec4)) set_vec4(name, (vec4)(force_cast<dvec4>(value)));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to vec4.");\
+}\
+else if(type == "dvec2")\
+{\
+	if(same_type(DataType, bvec2)) set_dvec2(name, (dvec2)(force_cast<bvec2>(value)));\
+	else if(same_type(DataType, ivec2)) set_dvec2(name, (dvec2)(force_cast<ivec2>(value)));\
+	else if(same_type(DataType, uvec2)) set_dvec2(name, (dvec2)(force_cast<uvec2>(value)));\
+	else if(same_type(DataType,  vec2)) set_dvec2(name, (dvec2)(force_cast< vec2>(value)));\
+	else if(same_type(DataType, dvec2)) set_dvec2(name,         force_cast<dvec2>(value));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to dvec2.");\
+}\
+else if(type == "dvec3")\
+{\
+	if(same_type(DataType, bvec3)) set_dvec3(name, (dvec3)(force_cast<bvec3>(value)));\
+	else if(same_type(DataType, ivec3)) set_dvec3(name, (dvec3)(force_cast<ivec3>(value)));\
+	else if(same_type(DataType, uvec3)) set_dvec3(name, (dvec3)(force_cast<uvec3>(value)));\
+	else if(same_type(DataType,  vec3)) set_dvec3(name, (dvec3)(force_cast< vec3>(value)));\
+	else if(same_type(DataType, dvec3)) set_dvec3(name,         force_cast<dvec3>(value));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to dvec3.");\
+}\
+else if(type == "dvec4")\
+{\
+	if(same_type(DataType, bvec4)) set_dvec4(name, (dvec4)(force_cast<bvec4>(value)));\
+	else if(same_type(DataType, ivec4)) set_dvec4(name, (dvec4)(force_cast<ivec4>(value)));\
+	else if(same_type(DataType, uvec4)) set_dvec4(name, (dvec4)(force_cast<uvec4>(value)));\
+	else if(same_type(DataType,  vec4)) set_dvec4(name, (dvec4)(force_cast< vec4>(value)));\
+	else if(same_type(DataType, dvec4)) set_dvec4(name,         force_cast<dvec4>(value));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to dvec4.");\
+}\
+else if(type == "mat2")\
+{\
+	if(same_type(DataType, mat2)) set_mat2(name, force_cast<mat2>(value));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to mat2.");\
+}\
+else if(type == "mat3")\
+{\
+	if(same_type(DataType, mat3)) set_mat3(name, force_cast<mat3>(value));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to mat3.");\
+}\
+else if(type == "mat4")\
+{\
+	if(same_type(DataType, mat4)) set_mat4(name, force_cast<mat4>(value));\
+	else throw glass::TypeError("Cannot convert " + type_name(DataType) + " to mat4.");\
+}
+
+template<class DataType>
+void Uniform::set_atom(const std::string& name, const DataType& value)
+{
+	if(uniform_map.count(name) == 0)
+	{
+		throw glass::KeyError("Uniform variable " + name + " is not defined in GLSL code!");
+	}
+
+	std::string type = uniform_map[name].type;
+
+	__SET_ATOM_GENERAL_CODE
+	else if(type == "sampler2D")
+	{
+		if(same_type(DataType, sampler2D)) set_sampler2D(name, force_cast<sampler2D>(value));
+		else if(same_type(DataType, bool)) set_sampler2D(name, (uint)(force_cast<bool>(value)));
+		else if(same_type(DataType, int)) set_sampler2D(name, (uint)(force_cast<int>(value)));
+		else if(same_type(DataType, uint)) set_sampler2D(name, force_cast<uint>(value));
+		else if(same_type(DataType, float)) set_sampler2D(name, (uint)(force_cast<float>(value)));
+		else if(same_type(DataType, double)) set_sampler2D(name, (uint)(force_cast<double>(value)));
+		else throw glass::TypeError("Error when setting sampler2D uniform variable " + name + ":\nCannot convert " + type_name(DataType) + " to sampler2D.");
+	}
+	else if(type == "samplerCube")
+	{
+		if(same_type(DataType, samplerCube)) set_samplerCube(name, force_cast<samplerCube>(value));
+		else if(same_type(DataType, bool)) set_samplerCube(name, (uint)(force_cast<bool>(value)));
+		else if(same_type(DataType, int)) set_samplerCube(name, (uint)(force_cast<int>(value)));
+		else if(same_type(DataType, uint)) set_samplerCube(name, force_cast<uint>(value));
+		else if(same_type(DataType, float)) set_samplerCube(name, (uint)(force_cast<float>(value)));
+		else if(same_type(DataType, double)) set_samplerCube(name, (uint)(force_cast<double>(value)));
+		else throw glass::TypeError("Error when setting samplerCube uniform variable " + name + ":\nCannot convert " + type_name(DataType) + " to samplerCube.");
+	}
+	else
+	{
+		throw glass::TypeError("Uniform variable " + name + " is not an atom variable.");
+	}
+}
+
+#endif

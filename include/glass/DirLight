@@ -1,0 +1,77 @@
+#ifndef __DIRLIGHT__
+#define __DIRLIGHT__
+
+#include "glass/Uniform"
+#include "glass/sampler2D"
+#include "glass/mat"
+
+class Scene3D;
+class DirLight: public Uniform::Bindable
+{
+	// for glsl
+	vec3 __color = vec3(1.0f, 1.0f, 1.0f);
+	float __brightness = 1.0f;
+	
+	vec3 __direction = vec3(0.0f, 0.0f, -1.0f);
+
+	bool __using_shadow = false; // for Camera to update
+	mat4 __mat[4]; // for Camera to update
+
+public:
+	sampler2D depth_map[4];
+	// end
+
+	friend class Camera;
+	friend class Scene3D;
+
+private:
+	float __yaw = 0.0f, __pitch = 0.0f;
+	mat4 __direction_mat; // for Camera to use
+	bool binded_camera = false;
+	bool is_open = true;
+
+private:
+	void update_internal();
+
+public:
+	const static uint frame_width;
+	const static uint frame_height;
+
+public:
+	DirLight();
+	vec3 direction()const;
+	void setDirection(float x, float y, float z);
+	void setDirection(const vec3& _direction);
+
+	void yaw(float dpsi); // 偏航
+	void pitch(float dtheta); // 俯仰
+
+	float yaw()const; // 偏航
+	float pitch()const; // 俯仰
+
+	void yawTo(float _psi); // 偏航
+	void pitchTo(float _theta); // 俯仰
+
+	mat4& mat(uint i);
+
+	bool usingShadow()const;
+	bool bindedCamera()const;
+	void useShadow(bool flag = true);
+
+	void bind(uint i);
+	void unbind(uint i);
+
+	vec3 color()const;
+	void setColor(const vec3& _color);
+	void setColor(float r, float g, float b);
+
+	float brightness()const;
+	void setBrightness(float _brightness);
+
+	void open();
+	void close();
+	bool isOpen()const;
+	bool isClose()const;
+};
+
+#endif

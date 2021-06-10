@@ -1,0 +1,5 @@
+build
+dist
+*.sublime-*
+src/utils/shaders.cpp
+include/glass/utils/shaders.h
