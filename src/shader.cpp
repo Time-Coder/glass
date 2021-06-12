@@ -585,6 +585,14 @@ void Shader::link()
 	uniform.refresh();
 
 	linked = true;
+
+	for(auto it = uniform.uniform_map.begin(); it != uniform.uniform_map.end(); it++)
+	{
+		if(it->second.type == "sampler2D")
+		{
+			uniform[it->second.name] = sampler2D::blackSampler();
+		}
+	}
 }
 
 void Shader::use()const

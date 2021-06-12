@@ -30,6 +30,23 @@ int step(double x)
 	return x > 0 ? 1 : 0;
 }
 
+void Scene3D::init_debug()
+{
+	if(shader.count("debug"))
+	{
+		return;
+	}
+
+	shader["debug"].compile(Shader::VERTEX, glass::debug_vertex_shader);
+	shader["debug"].compile(Shader::FRAGMENT, glass::debug_fragment_shader);
+	shader["debug"].link();
+
+	if(model.count("plane") == 0)
+	{
+		model["plane"] = glass::plane();
+	}
+}
+
 void Scene3D::init_skybox()
 {
 	if(shader.count("skybox"))
@@ -274,6 +291,8 @@ void Scene3D::draw()
 	bool has_model = models_not_empty();
 	bool has_light_shape = lights_shape_not_empty();
 	bool has_skybox = skybox_map.completed();
+
+	init_debug();
 
 	if(!has_model && !has_light_shape && !has_skybox)
 	{

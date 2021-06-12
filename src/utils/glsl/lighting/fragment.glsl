@@ -24,19 +24,7 @@ Fragment createFragment()
 
     vec4 position_shininess = texture(gbuffer_position_shininess, tex_coord);
     frag.position = position_shininess.xyz;
-    // frag.pos_light = frag_in.pos_light.xyz/frag_in.pos_light.w;
-
-    // frag.tex_coord = frag_in.tex_coord.st/frag_in.tex_coord.q;
-    // if(model.material.using_depth_map)
-    // {
-    //     frag.tex_coord = parallax_mapping(frag.tex_coord, model.material, frag_in.to_camera_tangent);
-    // }
-
     frag.normal = normalize(texture(gbuffer_normal, tex_coord).xyz);
-    // if(model.material.using_normal_map)
-    // {
-    //     frag.normal = normalize(frag_in.normalTBN * (2*texture(model.material.normal_map, frag.tex_coord).xyz-1));
-    // }
 
     vec4 diffuse_specular = texture0(gbuffer_diffuse_specular, tex_coord);
     frag.diffuse_color = diffuse_specular.rgb;

@@ -11,6 +11,20 @@ uint sampler2D::active_sampler2D = 0;
 multiset<uint> sampler2D::existing_sampler2Ds;
 list<sampler2D::Instance> sampler2D::existing_instances;
 map<string, sampler2D::Instance*> sampler2D::path_map;
+sampler2D* sampler2D::black_sampler = NULL;
+
+sampler2D& sampler2D::blackSampler()
+{
+	if(black_sampler == NULL)
+	{
+		black_sampler = new sampler2D(1, 1);
+		if(black_sampler == NULL)
+		{
+			throw glass::MemoryError("Failed to allocate memory!");
+		}
+	}
+	return *black_sampler;
+}
 
 void sampler2D::destruct_all()
 {
