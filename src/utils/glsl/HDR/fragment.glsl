@@ -4,6 +4,7 @@ out vec4 frag_color;
 in vec2 tex_coord;
 
 uniform sampler2D luminance_texture;
+uniform sampler2D _;
 uniform sampler2D frame_image;
 
 void main()

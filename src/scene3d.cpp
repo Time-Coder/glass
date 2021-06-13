@@ -152,7 +152,7 @@ void Scene3D::init_shadering_HDR()
 
 	int luminance_width = 256;
 	int i = 0;
-	while(luminance_width > 0)
+	while(luminance_width >= 2)
 	{
 		fbos["luminance"].push_back(FBO(width(), height(), i == 0 ? 1024 : luminance_width, i == 0 ? 1024 : luminance_width));
 		if(i == 0)
@@ -409,7 +409,6 @@ void Scene3D::draw()
 					}
 
 					fbos["dir_light_shadow"][i].unbind();
-					it->second.depth_map[i] = fbos["dir_light_shadow"][i].depth<sampler2D>();
 				}
 			}
 
@@ -418,6 +417,10 @@ void Scene3D::draw()
 
 			fbos["lighting"][step(index_lighting)].bind();
 			shader["lighting"].uniform["dir_light"] = it->second;
+			shader["lighting"].uniform["dir_light_depth_map_zero"] = fbos["dir_light_shadow"][0].depth<sampler2D>();
+			shader["lighting"].uniform["dir_light_depth_map_one"] = fbos["dir_light_shadow"][1].depth<sampler2D>();
+			shader["lighting"].uniform["dir_light_depth_map_two"] = fbos["dir_light_shadow"][2].depth<sampler2D>();
+			shader["lighting"].uniform["dir_light_depth_map_three"] = fbos["dir_light_shadow"][3].depth<sampler2D>();
 			shader["lighting"].draw(model["plane"]);
 			fbos["lighting"][step(index_lighting)].unbind();
 		}
@@ -629,8 +632,8 @@ void Scene3D::draw()
 			fbos["luminance"][i].unbind();
 		}
 		
-		shader["HDR"].uniform["frame_image"] = fbos["luminance"][0].color<sampler2D>();
 		shader["HDR"].uniform["luminance_texture"] = fbos["luminance"].back().color<sampler2D>();
+		shader["HDR"].uniform["frame_image"] = fbos["luminance"][0].color<sampler2D>();
 		shader["HDR"].draw(model["plane"]);
 	}
 }

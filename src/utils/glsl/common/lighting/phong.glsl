@@ -3,12 +3,14 @@
 
 #include "../fragment_utils.glsl"
 
-// GLSL's bug: use array[level] will not work
+// GLSL's limit: use array[level] will not work
 // So write this macro
 #define ARRAY_ACCESS(array, index) \
-((index) == 0 ? array[0] : \
-((index) == 1 ? array[1] : \
-((index) == 2 ? array[2] : array[3])))
+((index) == 0 ? (array[0]) : \
+((index) == 1 ? (array[1]) : \
+((index) == 2 ? (array[2]) : (array[3]))))
+
+#define SAMPLES_COUNT 20
 
 float getCSMLevel(Fragment frag, Camera camera)
 {
@@ -29,34 +31,66 @@ float getCSMLevel(Fragment frag, Camera camera)
     }
 }
 
+float getClosestDepth(int level, vec2 tex_coord)
+{
+    float closest_depth;
+    switch(level)
+    {
+    case 0:
+        closest_depth = texture(dir_light_depth_map_zero, tex_coord).r;
+        break;
+    case 1:
+        closest_depth = texture(dir_light_depth_map_one, tex_coord).r;
+        break;
+    case 2:
+        closest_depth = texture(dir_light_depth_map_two, tex_coord).r;
+        break;
+    default:
+        closest_depth = texture(dir_light_depth_map_three, tex_coord).r;
+        break;
+    }
+    return closest_depth;
+}
+
+vec2 getTexelSize(int level)
+{
+    vec2 texel_size;
+    switch(level)
+    {
+    case 0:
+        texel_size = 1.0 / textureSize(dir_light_depth_map_zero, 0);
+        break;
+    case 1:
+        texel_size = 1.0 / textureSize(dir_light_depth_map_one, 0);
+        break;
+    case 2:
+        texel_size = 1.0 / textureSize(dir_light_depth_map_two, 0);
+        break;
+    case 3:
+        texel_size = 1.0 / textureSize(dir_light_depth_map_three, 0);
+        break;
+    }
+    return texel_size;
+}
+
 float _dirLightShadow(DirLight light, Fragment frag, int level, int half_width)
 {
     vec4 pos_lightspace4 = ARRAY_ACCESS(light.mat, level) * vec4(frag.position, 1.0);
-    vec3 pos_lightspace = pos_lightspace4.xyz / pos_lightspace4.w;
+    vec3 pos_lightspace = 0.5*(pos_lightspace4.xyz / pos_lightspace4.w) + 0.5;
 
-    pos_lightspace = 0.5 * pos_lightspace + 0.5;
-    if(pos_lightspace.z > 1)
-    {
-        return 1;
-    }
-
+    float current_depth = pos_lightspace.z;
     float bias = max(0.005 * (1.0 + dot(normalize(frag.normal), normalize(light.direction))), 0.002);
-    // float closest_depth = texture(ARRAY_ACCESS(light.depth_map, level), pos_lightspace.xy).r;
-    // float shadow = (bias + closest_depth - pos_lightspace.z > 0 ? 1.0 : 0.0);
-    // float shadow = soft_step(bias + closest_depth - pos_lightspace.z + 0.1, 0.1);
-    // float shadow = step(bias + closest_depth - pos_lightspace.z);
-    // return shadow;
 
-    vec2 texel_size = 1.0 / textureSize(ARRAY_ACCESS(light.depth_map, level), 0);
+    vec2 texel_size = getTexelSize(level);
     float weight_sum = 0.0;
     float shadow = 0.0;
     for(int x = -half_width; x <= half_width; x++)
     {
         for(int y = -half_width; y <= half_width; y++)
         {
-            float closest_depth = texture(ARRAY_ACCESS(light.depth_map, level), pos_lightspace.xy + vec2(x, y) * texel_size).r;
+            float closest_depth = getClosestDepth(level, pos_lightspace.xy + vec2(x, y) * texel_size);
             weight_sum += 1;
-            shadow += ((pos_lightspace.z - bias) > closest_depth ? 0.0 : 1.0);        
+            shadow += ((current_depth - bias > closest_depth && current_depth < 1) ? 0.0 : 1.0);        
         }
     }
 
@@ -77,15 +111,11 @@ float dirLightShadow(DirLight light, Fragment frag, Camera camera, int half_widt
     return shadow;
 }
 
-#define SAMPLES_COUNT 20
-
 #define POINT_LIGHT_SHADOW_CODE(light, frag) \
 {\
     float z_far = light.radius;\
     vec3 light_dir = frag.position - light.position;\
-    \
     float current_depth = length(light_dir);\
-    \
     float bias = 0.15;\
     float radius = (1.0 + (current_depth / z_far)) / 25.0;\
     vec3 directions[SAMPLES_COUNT] = vec3[]\
@@ -96,7 +126,6 @@ float dirLightShadow(DirLight light, Fragment frag, Camera camera, int half_widt
        vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),\
        vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)\
     );\
-    \
     float shadow = 0;\
     for(int i = 0; i < SAMPLES_COUNT; i++)\
     {\

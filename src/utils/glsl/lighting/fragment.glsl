@@ -1,6 +1,6 @@
 #version 430 core
 
-#include "../common/lighting/phong.glsl"
+#include "../common/utils.glsl"
 
 out vec4 frag_color;
 in vec2 tex_coord;
@@ -14,7 +14,13 @@ uniform sampler2D gbuffer_normal;
 
 uniform PointLight point_light;
 uniform DirLight dir_light;
+uniform sampler2D dir_light_depth_map_zero;
+uniform sampler2D dir_light_depth_map_one;
+uniform sampler2D dir_light_depth_map_two;
+uniform sampler2D dir_light_depth_map_three;
 uniform SpotLight spot_light;
+
+#include "../common/lighting/phong.glsl"
 
 uniform Camera camera;
 
@@ -45,7 +51,7 @@ void main()
         frag_color3 = 0.1 * frag.diffuse_color;
         break;
 
-    case 1: // shadering direction light
+    case 1: // shadering directional light
         frag_color3 = texture0(base_image, tex_coord).rgb + PhongDirLight(frag, dir_light, camera);
         break;
 

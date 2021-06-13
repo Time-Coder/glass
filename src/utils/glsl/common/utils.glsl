@@ -29,7 +29,7 @@ struct DirLight
     // for shadow
     bool using_shadow;
     mat4 mat[4];
-    sampler2D depth_map[4];
+    sampler2D _[4];
 };
 
 struct SpotLight
