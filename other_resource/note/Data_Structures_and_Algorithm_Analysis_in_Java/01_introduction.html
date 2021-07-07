@@ -1,0 +1,389 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+.stick, .stick-hover, .stick-clicked
+{
+    background-image: url("D:/Python385/Lib/site-packages/md2html/plugins_offline/icons/stick.png");
+}
+</style>
+
+<!-- icon -->
+<link rel="Shortcut Icon" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/icons/note_book.png" type="image/x-icon" />
+
+<!-- code style -->
+<link rel="stylesheet" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/highlight/atom-one-light.css">
+
+<!-- layout style -->
+<link rel="stylesheet" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/outer.css">
+
+<!-- elements style -->
+<link rel="stylesheet" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/inner.css">
+
+<!-- code highlight -->
+<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/highlight/highlight.pack.js"></script>
+<script>hljs.highlightAll();</script>
+<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/jquery.min.js"></script>
+
+<script type="text/javascript" src="D:/Python385/Lib/site-packages/md2html/plugins_offline/intereactive.js"></script>
+<!-- <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js'></script> -->
+<script type='text/javascript' src='D:/Python385/Lib/site-packages/md2html/plugins_offline/MathJax-2.7.1/MathJax.js'></script>
+<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/MathJax_config.js"></script>
+
+<title>引论</title>
+</head>
+<body>
+<div id="all">
+<div id="content-index"><ul class="index">
+<li><div class="item-arrow"></div><a href="#section-1">1&nbsp;&nbsp;经典问题</a></li>
+<li><div class="item-arrow"></div><a href="#section-2">2&nbsp;&nbsp;数学知识</a>
+<ul class="index">
+<li><div class="item-arrow"></div><a href="#section-2-1">2.1&nbsp;&nbsp;基本公式</a></li>
+<li><div class="item-arrow"></div><a href="#section-2-2">2.2&nbsp;&nbsp;证明方法</a></li>
+</ul>
+</li>
+<li><div class="item-arrow"></div><a href="#section-3">3&nbsp;&nbsp;递归简论</a></li>
+<li><div class="item-arrow"></div><a href="#section-4">4&nbsp;&nbsp;Java 特性</a></li>
+<li><div class="item-arrow"></div><a href="#section-5">5&nbsp;&nbsp;习题</a></li>
+</ul>
+    <!-- index navigation -->
+</div>
+<div id="content-container">
+<div id="content">
+<article class="markdown-body"><h1 id="title">引论</h1>
+<h1 id="section-1" class="h-title" >1&nbsp;&nbsp&nbsp;经典问题</h1>
+<ul>
+<li>
+<script type="math/tex">k</script> 选择问题：<script type="math/tex">N</script> 个数，选择其中的第 <script type="math/tex">k</script> 大者。其有两种直观的实现方法：<ul>
+<li>递减顺序排序，返回第 <script type="math/tex">k</script> 个位置的数。代码见 <a href="Code/k_selection/src.html/KSelector.java.html">KSelector/sort_select1</a></li>
+<li>读入前 <script type="math/tex">k</script> 个数到数组，以递减的顺序排序这 <script type="math/tex">k</script> 个数；随后逐个读入剩余的数，如果它小于数组中第 <script type="math/tex">k</script> 个数，则忽略之；否则插入到正确的位置上，这将挤掉数组中的第 <script type="math/tex">k</script> 个数。代码见 <a href="Code/k_selection/src.html/KSelector.java.html">KSelector/sort_select2</a></li>
+</ul>
+</li>
+<li>字谜游戏</li>
+</ul>
+<h1 id="section-2" class="h-title" >2&nbsp;&nbsp&nbsp;数学知识</h1>
+<h2 id="section-2-1" class="h-title" >2.1&nbsp;&nbsp&nbsp;基本公式</h2>
+<ul>
+<li><strong>指数运算</strong>：<ul>
+<li>
+<script type="math/tex">x^ax^b = x^{a+b}</script>
+</li>
+<li>
+<script type="math/tex">\dfrac{x^a}{x^b} = x^{a-b}</script>
+</li>
+<li>
+<script type="math/tex">\left(x^a\right)^b = x^{ab}</script>
+</li>
+</ul>
+</li>
+<li><strong>对数运算</strong>：<ul>
+<li>
+<script type="math/tex">a^{\log_ax} = x</script>
+</li>
+<li>
+<script type="math/tex">\log_a(xy) = \log_ax + \log_ay</script>
+</li>
+<li>
+<script type="math/tex">\log_a\dfrac{x}{y} = \log_ax-\log_ay</script>
+</li>
+<li>
+<script type="math/tex">\log_ax^n = n\log_ax</script>
+</li>
+<li>
+<script type="math/tex">\log_ab \cdot \log_ba = 1</script>
+</li>
+<li>
+<script type="math/tex">\log_ab = \dfrac{\log_cb}{\log_ca}</script>
+</li>
+</ul>
+</li>
+<li><strong>级数运算</strong>：<ul>
+<li>前 <script type="math/tex">n</script> 项和（设 <script type="math/tex">a \neq 1</script>）：<ul>
+<li>
+<script type="math/tex">\sum\limits_{i=1}^n i = \dfrac{n(n+1)}{2}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^n a^i = \dfrac{1 - a^{n+1}}{1 - a}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=1}^n ia^i = \dfrac{a}{(a-1)^2}\left(na^{n+1}-(n+1)a^n+1\right)</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}</script>
+</li>
+</ul>
+</li>
+<li>前 <script type="math/tex">n</script> 项和在正无穷处的等价：<ul>
+<li>
+<script type="math/tex">\forall k > -1, \sum\limits_{i=1}^n i^k \sim \dfrac{n^{k+1}}{k+1}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=1}^n \dfrac{1}{i} \sim \ln n</script>
+</li>
+</ul>
+</li>
+<li>级数和（设 <script type="math/tex">a < 1</script>）：<ul>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty} a^i = \dfrac{1}{1 - a}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=1}^{\infty} ia^i = \dfrac{a}{(a-1)^2}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=1}^{\infty} \dfrac{1}{i^2} = \dfrac{\pi^2}{6}</script>
+</li>
+<li>
+<script type="math/tex">\forall k > 1, \sum\limits_{i=1}^{\infty} \dfrac{1}{i^k}</script> 为常数</li>
+<li>
+<script type="math/tex">\lim\limits_{n\rightarrow\infty}\left(\sum\limits_{i=1}^n\dfrac{1}{i}-\ln n\right) = \gamma \approx 0.57721566</script>（欧拉数）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>模运算</strong>：<ul>
+<li>设 <script type="math/tex">a, b, n \in \mathbb{R}</script>，记 <script type="math/tex">a = b[n]</script> 当且仅当 <script type="math/tex">\exists k \in \mathbb{Z}</script> 满足 <script type="math/tex">a = b + kn</script>
+</li>
+<li>设 <script type="math/tex">a, b, n \in \mathbb{R}</script> 且有 <script type="math/tex">a = b[n]</script>，则
+<script type="math/tex; mode=display">
+\begin{aligned}
+& \forall c \in \mathbb{R}, a+c = (b+c)[n]\\
+& \forall c \in \mathbb{Z}, ac = (bc)[n]
+\end{aligned}
+</script>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="section-2-2" class="h-title" >2.2&nbsp;&nbsp&nbsp;证明方法</h2>
+<ul>
+<li><strong>第一类数学归纳法</strong><br/>
+例：求证：<script type="math/tex">\forall n \in \mathbb{N}^*, \sum\limits_{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}</script>
+<blockquote>
+<p><strong>证明</strong>：<script type="math/tex">\forall n \in \mathbb{N}^*</script>，定义布尔值函数 <script type="math/tex">\mathcal{P}(n) = \left(\sum\limits_{i=1}^n i^2 == \dfrac{n(n+1)(2n+1)}{6}\right)</script>
+</p>
+<ul>
+<li>
+<script type="math/tex">\mathcal{P}(1) = \mbox{True}</script> 的证明：<br/>
+    由于 <script type="math/tex">\sum\limits_{i=1}^1 i^2 = 1</script> 且 <script type="math/tex">\dfrac{1\times(1+1)(2\times 1+1)}{6} = 1</script><br/>
+    故当 <script type="math/tex">n = 1</script> 时，\sum\limits_{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}
+    故 <script type="math/tex">\mathcal{P}(1) = \mbox{True}</script>
+</li>
+<li>设 <script type="math/tex">k \in \mathbb{N}^*</script>，假设 <script type="math/tex">\mathcal{P}(k) = \mbox{True}</script>。在假设条件下 <script type="math/tex">\mathcal{P}(k+1) = \mbox{True}</script> 的证明：
+    由于
+<script type="math/tex; mode=display">
+\begin{aligned}
+\sum\limits_{i=1}^{k+1} i^2 & = \sum\limits_{i=1}^{k} i^2 + (k+1)^2 \\
+                            & = \dfrac{k(k+1)(2k+1)}{6} + (k+1)^2 \\
+                            & = \dfrac{(k+1)(k+2)(2k+3)}{6} \\
+                            & = \dfrac{(k+1)(k+2)\left(2(k+1)+1\right)}{6}
+\end{aligned}
+</script>
+    故 <script type="math/tex">\mathcal{P}(k+1) = \mbox{True}</script>
+</li>
+</ul>
+<p>由第一类数学归纳法得：<script type="math/tex">\forall n \in \mathbb{N}^*, \mathcal{P}(n) = \mbox{True}</script>，<br/>
+即 <script type="math/tex">\forall n \in \mathbb{N}^*, \sum\limits_{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}</script><br/>
+证毕。</p>
+</blockquote>
+</li>
+<li><strong>第二类数学归纳法</strong><br/>
+例：我们递归的定义数列 <script type="math/tex">(F_n)_{n \in \mathbb{N}}</script>：
+<script type="math/tex; mode=display">
+\left\{
+\begin{aligned}
+& F_0 = 1\\
+& F_1 = 1\\
+& \forall n \in \mathbb{N}, F_{n+2} = F_{n+1} + F_{n}
+\end{aligned}
+\right.
+</script>
+求证：<script type="math/tex">\forall n \in \mathbb{N}^{*}, F_n < \left(\dfrac{5}{3}\right)^n</script>
+<blockquote>
+<p><strong>证明</strong>：<script type="math/tex">\forall n \in \mathbb{N}^{*}</script>，定义布尔值函数 <script type="math/tex">\mathcal{P}(n) = \left(F_n < \left(\dfrac{5}{3}\right)^n\right)</script>
+</p>
+<ul>
+<li>
+<script type="math/tex">\mathcal{P}(1) = \mbox{True}</script> 的证明：</br>
+    由于 <script type="math/tex">F_1 = 1</script> 且 <script type="math/tex">\left(\dfrac{5}{3}\right)^1 = \dfrac{5}{3} > 1</script><br/>
+    故 <script type="math/tex">F_1 < \left(\dfrac{5}{3}\right)^1</script><br/>
+    故 <script type="math/tex">\mathcal{P}(1) = \mbox{True}</script>
+</li>
+<li>设 <script type="math/tex">k \in \mathbb{N}^*\backslash\{1\}</script>，假设 <script type="math/tex">\forall i \in [\![1, k]\!], \mathcal{P}(i) = \mbox{True}</script>。在假设条件下 <script type="math/tex">\mathcal{P}(k+1) = \mbox{True}</script> 的证明：<br/>
+    根据假设，<script type="math/tex">\mathcal{P}(k) = \mbox{True}, \mathcal{P}(k-1) = \mbox{True}</script>，即：
+<script type="math/tex; mode=display">
+\left\{
+\begin{aligned}
+& F_k < \left(\dfrac{5}{3}\right)^k\\
+& F_{k-1} < \left(\dfrac{5}{3}\right)^{k-1}
+\end{aligned}
+\right.
+</script>
+    故
+<script type="math/tex; mode=display">
+\begin{aligned}
+F_{k+1} & = F_k + F_{k-1} \\
+        & < \left(\dfrac{5}{3}\right)^k + \left(\dfrac{5}{3}\right)^{k-1} \\
+        & = \dfrac{24}{25}\left(\dfrac{5}{3}\right)^{k+1} \\
+        & < \left(\dfrac{5}{3}\right)^{k+1}
+\end{aligned}
+</script>
+    故 <script type="math/tex">\mathcal(k+1) = \mbox{True}</script>
+</li>
+</ul>
+<p>根据第二类数学归纳法可得：<script type="math/tex">\forall n \in \mathbb{N}^{*}, \mathcal{P}(n) = \mbox{True}</script>。<br/>
+即：<script type="math/tex">\forall n \in \mathbb{N}^{*}, F_n < \left(\dfrac{5}{3}\right)^n</script><br/>
+证毕。</p>
+</blockquote>
+</li>
+<li><strong>反证法</strong><br/>
+例：求证：存在无穷多个素数。<blockquote>
+<p><strong>证明</strong>：假设结论不成立，即存在有限个素数。<br/>
+设一共有 <script type="math/tex">n_0</script> 个素数。将所有素数从小到大排列得到的素数列记为 <script type="math/tex">\left(P_n\right)_{n\in[\![1, n_0]\!]}</script><br/>
+则 <script type="math/tex">P_{n_0}</script> 为最大的素数<br/>
+考虑自然数 <script type="math/tex">N = P_1P_2 \cdots P_{n_0} + 1</script><br/>
+显然 <script type="math/tex">N > P_{n_0}</script><br/>
+故 <script type="math/tex">N</script> 不是素数。<br/>
+另一方面，用所有的素数 <script type="math/tex">P_1, P_2, \cdots, P_{n_0}</script> 去除 <script type="math/tex">N</script>，都不能整除，会有余数 <script type="math/tex">1</script><br/>
+故 <script type="math/tex">N</script> 是素数。<br/>
+矛盾！<br/>
+故假设不成立。<br/>
+故确实存在无穷多个素数。</p>
+</blockquote>
+</li>
+</ul>
+<h1 id="section-3" class="h-title" >3&nbsp;&nbsp&nbsp;递归简论</h1>
+<p>递归的基本准则：
+1. 基准情形（base case）：必须要存在一种情形，不需要递归就可以求解
+2. 不断推进（making progress）：计算非基准情形时，递归调用一定要朝着基准情形推进
+3. 设计法则（design rule）：在设计递归时，要假设每次递归调用都能按照期望运行并返回正确的结果
+4. 合成效益法则（compound interest rule）：切勿在不同的递归调用中计算同一个实例（影响效率而不影响正确性）
+例如递归求解斐波那契数列的算法是不好的，违反了第四条：</p>
+<pre><code class="language-java">public static double Fibonacci(int n)
+{
+    if(n &lt;= 1)
+        return 1;
+    return Fibonacci(n-1) + Fibonacci(n-2);
+} 
+</code></pre>
+<h1 id="section-4" class="h-title" >4&nbsp;&nbsp&nbsp;Java 特性</h1>
+<p>略</p>
+<h1 id="section-5" class="h-title" >5&nbsp;&nbsp&nbsp;习题</h1>
+<ol>
+<li>编写一个程序解决选择问题。令 <script type="math/tex">k = \lfloor\frac{n}{2}\rfloor</script>，画图显示程序对不同规模输入的运行时间。<br/>
+程序见 <a href="Code/k_selection/src.html/KSelector.java.html">KSelector/sort_select2</a><br/>
+不同规模输入的运行时间图见下图<br/>
+<img alt="不同规模输入的 k 选择问题求解时间" src="Figures/time_elaspe.png" /></li>
+<li>编写一个求解字谜游戏问题的程序。</li>
+<li>证明下列公式：<ol>
+<li>
+<script type="math/tex">\forall x > 0, \log_2x < x</script>
+<blockquote>
+<p><strong>证明</strong>：<script type="math/tex">\forall x > 0</script>，定义 <script type="math/tex">f(x) = x-\log_2x</script>
+<br />
+则 <script type="math/tex">\forall x > 0, f'(x) = 1-\dfrac{1}{x\ln 2} = \dfrac{x-\log_2\mathrm{e}}{x}</script>
+<br />
+故 <script type="math/tex">f</script> 在 <script type="math/tex">\left[0, \log_2\mathrm{e}\right]</script> 上递减，在 <script type="math/tex">[\log_2\mathrm{e}, +\infty]</script> 上递增。<br />
+故 <script type="math/tex">f</script> 的最小值为 <script type="math/tex">f(\log_2\mathrm{e}) = \log_2\mathrm{e}-\log_2\left(\log_2\mathrm{e}\right)</script>
+<br />
+由于 <script type="math/tex">\mathrm{e} > 2, \log_2e < 2</script> 且 <script type="math/tex">\log_2x</script> 为增函数，<br />
+故 <script type="math/tex">\log_2\mathrm{e} > \log_2\left(\log_2\mathrm{e}\right)</script>
+<br />
+故 <script type="math/tex">\forall x > 0, f(x) \geqslant \log_2e-\log_2\left(\log_2e\right) > 0</script>
+<br />
+故 <script type="math/tex">\forall x > 0, \log_2x < x</script>
+</p>
+</blockquote>
+</li>
+</ol>
+</li>
+<li>
+<p>计算下列各和：</p>
+<ol>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{1}{4^i}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{i}{4^i}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{i^2}{4^i}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{i^n}{4^i}</script>
+</li>
+</ol>
+<p>解：</p>
+<ol>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{1}{4^i} = \dfrac{1}{1-\dfrac{1}{4}} = \dfrac{4}{3}</script>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{i}{4^i} = \dfrac{\frac{1}{4}}{\left(1-\frac{1}{4}\right)^2} = \dfrac{4}{9}</script>
+</li>
+<li>
+<blockquote>
+<p>记 <script type="math/tex">S(x) = \sum\limits_{i=0}^{\infty}i^2x^i</script>，记 <script type="math/tex">f_i(x) = x^{i+2}</script>
+<br />
+则
+<script type="math/tex; mode=display">
+\left\{
+\begin{aligned}
+& f_i'(x) = (i+2)x^{i+1}\\
+& f_i''(x) = (i^2+3i+2)x^i
+\end{aligned}
+\right.
+</script>
+故
+<script type="math/tex; mode=display">
+\begin{aligned}
+\sum_{i=0}^{\infty}f_i''(x) & = \sum_{i=0}^{\infty}\left(i^2x^i + 3ix^i + 2x^i\right)\\
+                       & = \sum_{i=0}^{\infty}i^2x^i + 3\sum_{i=0}^{\infty}ix^i + 2\sum_{i=0}^{\infty}x^i\\
+                       & = S(x) + \dfrac{3x}{(x-1)^2} + 2\dfrac{1}{1-x}\\
+                       & = S(x) + \dfrac{x + 2}{(x-1)^2}
+\end{aligned}
+</script>
+另一方面，由于
+<script type="math/tex; mode=display">
+\sum\limits_{i=0}^{\infty}f_i(x) = \dfrac{x^2}{1-x}
+</script>
+故
+<script type="math/tex; mode=display">
+\sum\limits_{i=0}^{\infty}f_i'(x) = \dfrac{2x-x^2}{(1-x)^2}
+</script>
+故
+<script type="math/tex; mode=display">
+\sum\limits_{i=0}^{\infty}f_i''(x) = \dfrac{2}{(1-x)^3} = S(x) + \dfrac{x + 2}{(x-1)^2}
+</script>
+故
+<script type="math/tex; mode=display">
+S(x) = \dfrac{2}{(1-x)^3} - \dfrac{x + 2}{(x-1)^2} = \dfrac{x(x+1)}{(1-x)^3}
+</script>
+原式 <script type="math/tex">= S\left(\dfrac{1}{4}\right) = \dfrac{20}{27}</script>
+</p>
+</blockquote>
+</li>
+<li>
+<script type="math/tex">\sum\limits_{i=0}^{\infty}\dfrac{i^n}{4^i} = \mathrm{Li}_{-n}\left(\dfrac{1}{4}\right)</script>
+</li>
+<li>求 <script type="math/tex">\sum\limits_{i = \lfloor n/2 \rfloor}^n\dfrac{1}{i}</script> 在正无穷处的等价<blockquote>
+<p><strong>解</strong>：
+<script type="math/tex; mode=display">
+\begin{aligned}
+\sum_{i = \lfloor n/2 \rfloor}^n\dfrac{1}{i} & = \sum_{i = 0}^{n}\dfrac{1}{i} - \sum_{i = 0}^{\lfloor n/2 \rfloor-1}\dfrac{1}{i}\\
+                                 & \sim \ln n - \ln\left(\lfloor n/2 \rfloor-1\right)\\
+                                 & = \ln\left(\dfrac{n}{\lfloor n/2 \rfloor-1}\right)\\
+                                 & \sim \ln 2 
+\end{aligned}
+</script>
+</p>
+</blockquote>
+</li>
+</ol>
+</li>
+</ol>
+    <!-- main content -->
+</article>
+</div>
+</div>
+</div>
+</body>
+</html>

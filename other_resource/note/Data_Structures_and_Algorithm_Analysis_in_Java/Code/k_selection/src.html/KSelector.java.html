@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>KSelector.java</title>
+	<style type="text/css">
+*
+{
+	margin: 0;
+	padding: 0;
+}
+
+code
+{
+	font-family: Consolas-with-Yahei, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+	font-size: 18px;
+}
+	</style>
+	<link rel="stylesheet" type="text/css" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/highlight/monokai-sublime.css">
+	<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/highlight/highlight.pack.js"></script>
+	<script>hljs.highlightAll();</script>
+</head>
+<body><pre><code class="language-java">import java.util.ArrayList;
+
+public class KSelector
+{
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;DataType extends Comparable&gt; DataType sort_select1(ArrayList&lt;DataType&gt; array, int k)
+    {
+        ArrayList&lt;DataType&gt; local_array = (ArrayList&lt;DataType&gt;)(array.clone());
+        bubble_sort(local_array, 0, local_array.size());
+        return local_array.get(k);
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;DataType extends Comparable&gt; DataType sort_select2(ArrayList&lt;DataType&gt; array, int k)
+    {
+        ArrayList&lt;DataType&gt; local_array = (ArrayList&lt;DataType&gt;)(array.clone());
+        bubble_sort(local_array, 0, k+1);
+        for(int i = k+1; i &lt; local_array.size(); i++)
+        {
+            for(int j = 0; j &lt;= k; j++)
+            {
+                if(local_array.get(i).compareTo(local_array.get(j)) &gt; 0)
+                {
+                    for(int l = k; l &gt;= j+1; l--)
+                    {
+                        local_array.set(l, local_array.get(l-1));
+                    }
+                    local_array.set(j, local_array.get(i));
+                    break;
+                }
+            }
+        }
+
+        return local_array.get(k);
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;DataType extends Comparable&gt; void bubble_sort(ArrayList&lt;DataType&gt; array, int begin, int end)
+    {
+        for(int i = end-2; i &gt;= begin; i--)
+        {
+            for(int j = begin; j &lt;= i; j++)
+            {
+                if(array.get(j).compareTo(array.get(j+1)) &lt; 0)
+                {
+                    DataType temp = array.get(j);
+                    array.set(j, array.get(j+1));
+                    array.set(j+1, temp);
+                }
+            }
+        }
+    }
+}
+</code></pre>
+</body>
+</html>

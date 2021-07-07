@@ -1,0 +1,424 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+.stick, .stick-hover, .stick-clicked
+{
+    background-image: url("D:/Python385/Lib/site-packages/md2html/plugins_offline/icons/stick.png");
+}
+</style>
+
+<!-- icon -->
+<link rel="Shortcut Icon" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/icons/note_book.png" type="image/x-icon" />
+
+<!-- code style -->
+<link rel="stylesheet" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/highlight/atom-one-light.css">
+
+<!-- layout style -->
+<link rel="stylesheet" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/outer.css">
+
+<!-- elements style -->
+<link rel="stylesheet" href="D:/Python385/Lib/site-packages/md2html/plugins_offline/inner.css">
+
+<!-- code highlight -->
+<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/highlight/highlight.pack.js"></script>
+<script>hljs.highlightAll();</script>
+<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/jquery.min.js"></script>
+
+<script type="text/javascript" src="D:/Python385/Lib/site-packages/md2html/plugins_offline/intereactive.js"></script>
+<!-- <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js'></script> -->
+<script type='text/javascript' src='D:/Python385/Lib/site-packages/md2html/plugins_offline/MathJax-2.7.1/MathJax.js'></script>
+<script src="D:/Python385/Lib/site-packages/md2html/plugins_offline/MathJax_config.js"></script>
+
+<title>MySQL</title>
+</head>
+<body>
+<div id="all">
+<div id="content-index"><ul class="index">
+<li><div class="item-arrow"></div><a href="#section-1">1&nbsp;&nbsp;配置 MySQL</a></li>
+<li><div class="item-arrow"></div><a href="#section-2">2&nbsp;&nbsp;查询外的所有操作</a></li>
+<li><div class="item-arrow"></div><a href="#section-3">3&nbsp;&nbsp;查询</a>
+<ul class="index">
+<li><div class="item-arrow"></div><a href="#section-3-1">3.1&nbsp;&nbsp;单表查询</a>
+<ul class="index">
+<li><div class="item-arrow"></div><a href="#section-3-1-1">3.1.1&nbsp;&nbsp;聚合</a></li>
+</ul>
+</li>
+<li><div class="item-arrow"></div><a href="#section-3-2">3.2&nbsp;&nbsp;联表查询</a>
+<ul class="index">
+<li><div class="item-arrow"></div><a href="#section-3-2-1">3.2.1&nbsp;&nbsp;上下拼接</a></li>
+<li><div class="item-arrow"></div><a href="#section-3-2-2">3.2.2&nbsp;&nbsp;左右拼接</a>
+<ul class="index">
+<li><div class="item-arrow"></div><a href="#section-3-2-2-1">3.2.2.1&nbsp;&nbsp;交叉连接</a></li>
+<li><div class="item-arrow"></div><a href="#section-3-2-2-2">3.2.2.2&nbsp;&nbsp;内连接</a></li>
+<li><div class="item-arrow"></div><a href="#section-3-2-2-3">3.2.2.3&nbsp;&nbsp;外连接</a>
+<ul class="index">
+<li><div class="item-arrow"></div><a href="#section-3-2-2-3-1">3.2.2.3.1&nbsp;&nbsp;左连接</a></li>
+<li><div class="item-arrow"></div><a href="#section-3-2-2-3-2">3.2.2.3.2&nbsp;&nbsp;右连接</a></li>
+<li><div class="item-arrow"></div><a href="#section-3-2-2-3-3">3.2.2.3.3&nbsp;&nbsp;全连接</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><div class="item-arrow"></div><a href="#section-4">4&nbsp;&nbsp;索引</a></li>
+<li><div class="item-arrow"></div><a href="#section-5">5&nbsp;&nbsp;事务</a></li>
+<li><div class="item-arrow"></div><a href="#section-6">6&nbsp;&nbsp;触发器</a></li>
+<li><div class="item-arrow"></div><a href="#section-7">7&nbsp;&nbsp;存储过程</a></li>
+<li><div class="item-arrow"></div><a href="#section-8">8&nbsp;&nbsp;函数</a></li>
+</ul>
+    <!-- index navigation -->
+</div>
+<div id="content-container">
+<div id="content">
+<article class="markdown-body"><h1 id="title">MySQL</h1>
+<h1 id="section-1" class="h-title" >1&nbsp;&nbsp&nbsp;配置 MySQL</h1>
+<p>在安装 MySQL 后，无法直接启动 MySQL，还需进行配置、安装服务、初始化、启动服务、连接服务等操作。具体步骤如下：</p>
+<ol>
+<li>将 <code>MySQL/install/path/bin</code> 添加到环境变量 <code>PATH</code></li>
+<li>进行配置：在 <code>MySQL/install/path</code> 下新建一个 <code>my.ini</code> 文件，里面填入如下内容：
+<div class="highlight"><pre><span></span><code><span class="k">[mysql]</span>
+<span class="na">default-character-set</span> <span class="o">=</span> <span class="s">utf8</span>
+
+<span class="k">[mysqld]</span>
+<span class="na">port</span> <span class="o">=</span> <span class="s">3306</span>
+<span class="na">basedir</span> <span class="o">=</span> <span class="s">&quot;MySQL/install/path&quot;</span>
+<span class="na">datadir</span> <span class="o">=</span> <span class="s">&quot;MySQL/install/path/data&quot;</span>
+<span class="na">max_connections</span> <span class="o">=</span> <span class="s">200</span>
+<span class="na">character-set-server</span> <span class="o">=</span> <span class="s">utf8</span>
+<span class="na">default-storage-engine</span> <span class="o">=</span> <span class="s">INNODB</span>
+</code></pre></div></li>
+<li>安装服务、初始化、启动服务：打开 cmd 分别执行如下命令：<br />
+<div class="highlight"><pre><span></span><code>mysqld --install
+mysqld --initialize
+net start mysql
+</code></pre></div></li>
+<li>连接服务：运行 <code>mysql -uroot -p</code> 后提示你输入密码，初始密码在 <code>MySQL/install/path/data/computer_name.err</code> 中类似下面的一行中找到：<br />
+<div class="highlight"><pre><span></span><code>2021-03-21T09:32:19.155308Z 6 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: random_password
+</code></pre></div></li>
+<li>修改密码：连接成功后，输入 <code>exit</code> 断开连接，并运行命令 <code>mysqladmin -u root -p password new_password</code> 将初始密码修改为 <code>new_password</code></li>
+<li>重新连接：cmd 运行 <code>mysql -uroot -p</code> 后输入你的新密码即可。</li>
+</ol>
+<h1 id="section-2" class="h-title" >2&nbsp;&nbsp&nbsp;查询外的所有操作</h1>
+<ul>
+<li>查看已存在的用户：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="k">host</span><span class="p">,</span> <span class="k">user</span>
+<span class="k">FROM</span> <span class="k">user</span><span class="p">;</span>
+</code></pre></div></li>
+<li>添加新用户：<br />
+<div class="highlight"><pre><span></span><code><span class="k">INSERT</span> <span class="k">INTO</span> <span class="k">user</span><span class="p">(</span><span class="k">host</span><span class="p">,</span> <span class="k">user</span><span class="p">,</span> <span class="n">password</span><span class="p">[,</span> <span class="n">priv1</span><span class="p">,</span> <span class="n">priv2</span><span class="p">,</span> <span class="p">...])</span>
+<span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;host_name&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;your_password&#39;</span><span class="p">[,</span> <span class="s1">&#39;Y/N&#39;</span><span class="p">,</span> <span class="s1">&#39;Y/N&#39;</span><span class="p">,</span> <span class="p">...]);</span>
+</code></pre></div>
+其中 <code>'Y/N'</code> 请替换为 <code>'Y'</code> 或 <code>'N'</code>，代表是否有这项权限；而 <code>priv</code> 可以为：<ul>
+<li><code>Select_priv</code>：查询权限</li>
+<li><code>Insert_priv</code>：插入记录权限</li>
+<li><code>Update_priv</code>：更改记录权限</li>
+<li><code>Delete_priv</code>：删除记录权限</li>
+<li><code>Create_priv</code>：创建新表权限</li>
+<li><code>Drop_priv</code>：删除表权限</li>
+<li><code>Reload_priv</code>：</li>
+<li><code>Shutdown_priv</code>：关闭 MySQL 服务的权限</li>
+<li><code>Process_priv</code></li>
+<li><code>File_priv</code></li>
+<li><code>Grant_priv</code>：为其他用户分配权限的权限</li>
+<li><code>References_priv</code></li>
+<li><code>Index_priv</code></li>
+<li><code>Alter_priv</code>：添加删除更改列的权限</li>
+</ul>
+</li>
+<li>删除用户：
+<div class="highlight"><pre><span></span><code><span class="k">DELETE</span> <span class="k">FROM</span> <span class="k">user</span> <span class="k">WHERE</span> <span class="k">user</span> <span class="o">=</span> <span class="s1">&#39;user_name&#39;</span><span class="p">;</span>
+</code></pre></div></li>
+<li>查看 MySQL 下的所有数据库：
+<div class="highlight"><pre><span></span><code><span class="k">SHOW</span> <span class="n">DATABASES</span><span class="p">;</span>
+</code></pre></div></li>
+<li>开始使用某一个数据库：
+<div class="highlight"><pre><span></span><code><span class="n">USE</span> <span class="n">database_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>查看当前数据库下的所有表：
+<div class="highlight"><pre><span></span><code><span class="k">SHOW</span> <span class="n">TABLES</span><span class="p">;</span>
+</code></pre></div></li>
+<li>查看某个表的全部内容：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="k">table_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>查看某个表的所有列的属性：
+<div class="highlight"><pre><span></span><code><span class="k">SHOW</span> <span class="n">COLUMNS</span> <span class="k">FROM</span> <span class="k">table_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>创建数据库：
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">database_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>删除数据库：
+<div class="highlight"><pre><span></span><code><span class="k">DROP</span> <span class="k">DATABASE</span> <span class="n">database_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>创建表：
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> <span class="k">table_name</span>
+<span class="p">(</span>
+    <span class="n">column_name1</span> <span class="n">type1</span><span class="p">(</span><span class="n">size1</span><span class="p">)</span> <span class="n">constrain1</span><span class="p">,</span>
+    <span class="n">column_name2</span> <span class="n">type2</span><span class="p">(</span><span class="n">size2</span><span class="p">)</span> <span class="n">constrain2</span><span class="p">,</span>
+    <span class="p">...,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">(</span><span class="n">column_name1</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+其中：<ul>
+<li><code>type</code> 为数据类型</li>
+<li><code>size</code> 为指定数据占有的字节数</li>
+<li><code>constrain</code> 为约束，约束可以是如下值：<ul>
+<li><code>NOT NULL</code>：插入行时不能不填这列</li>
+<li><code>UNIQUE</code>：这列的值在整张表中必须唯一</li>
+<li><code>AUTO_INCREMENT</code>：插入时如果不填这列，这列的值会自增</li>
+<li><code>DEFAULT value</code>：插入时如果不填这列，这列的值就为 <code>value</code></li>
+</ul>
+</li>
+<li><code>PRIMARY KEY</code> 指定主键，相当于给列加上 <code>NOT NULL</code> 和 <code>UNIQUE</code> 约束。</li>
+</ul>
+</li>
+<li>删除表：
+<div class="highlight"><pre><span></span><code><span class="k">DROP</span> <span class="n">TABEL</span> <span class="k">table_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>添加列
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span>
+<span class="k">ADD</span> <span class="k">column_name</span> <span class="k">type</span><span class="p">(</span><span class="k">size</span><span class="p">)</span> <span class="n">constrain</span><span class="p">;</span>
+</code></pre></div></li>
+<li>删除列
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span>
+<span class="k">DROP</span> <span class="k">column_name</span><span class="p">;</span>
+</code></pre></div></li>
+<li>修改列名称和属性
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span>
+<span class="n">CHANGE</span> <span class="n">old_column_name</span> <span class="n">new_column_name</span> <span class="k">type</span><span class="p">(</span><span class="k">size</span><span class="p">)</span> <span class="n">constrain</span><span class="p">;</span>
+</code></pre></div></li>
+<li>添加行：<br />
+插入一行数据时可以提供完整的列信息，如下所示：
+<div class="highlight"><pre><span></span><code><span class="k">INSERT</span> <span class="k">INTO</span> <span class="k">table_name</span>
+<span class="k">VALUES</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">data3</span><span class="p">);</span>
+</code></pre></div>
+也可以仅提供指定列数据，如下所示：
+<div class="highlight"><pre><span></span><code><span class="k">INSERT</span> <span class="k">INTO</span> <span class="k">table_name</span> <span class="p">(</span><span class="n">column_name1</span><span class="p">,</span> <span class="n">column_name2</span><span class="p">,</span> <span class="n">column_name3</span><span class="p">)</span>
+<span class="k">VALUES</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">data3</span><span class="p">);</span>
+</code></pre></div>
+当插入一条重复的记录时，忽略之的方法是：
+<div class="highlight"><pre><span></span><code><span class="k">INSERT</span> <span class="k">IGNORE</span> <span class="k">INTO</span> <span class="k">table_name</span> <span class="p">(</span><span class="n">column_name1</span><span class="p">,</span> <span class="n">column_name2</span><span class="p">,</span> <span class="n">column_name3</span><span class="p">)</span>
+<span class="k">VALUES</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">data3</span><span class="p">);</span>
+</code></pre></div></li>
+<li>删除行
+<div class="highlight"><pre><span></span><code><span class="k">DELETE</span> <span class="k">FROM</span> <span class="k">table_name</span>
+<span class="k">WHERE</span> <span class="n">condition</span><span class="p">;</span>
+</code></pre></div>
+如果没有提供 <code>WHERE condition</code> 则表中所有行均会被删除。</li>
+<li>修改行内容
+<div class="highlight"><pre><span></span><code><span class="k">UPDATE</span> <span class="k">table_name</span>
+<span class="k">SET</span> <span class="n">column_name1</span> <span class="o">=</span> <span class="n">value1</span><span class="p">,</span> <span class="n">column_name2</span> <span class="o">=</span> <span class="n">value2</span>
+<span class="k">WHERE</span> <span class="n">condition</span><span class="p">;</span>
+</code></pre></div>
+如果没有提供 <code>WHERE condition</code> 则所有行均会被更新。</li>
+</ul>
+<blockquote>
+<p><strong>注意</strong>：</p>
+<ol>
+<li>数据库名、表名、列名等用户定义的信息，在存储时大写字母均会被转为小写。所以请不要采用驼峰命名法。</li>
+<li>字符串类型的值用单引号。</li>
+</ol>
+</blockquote>
+<h1 id="section-3" class="h-title" >3&nbsp;&nbsp&nbsp;查询</h1>
+<h2 id="section-3-1" class="h-title" >3.1&nbsp;&nbsp&nbsp;单表查询</h2>
+<ul>
+<li>查看某个表的全部内容：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="k">table</span><span class="p">;</span>
+</code></pre></div></li>
+<li>从表中选出指定列：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="n">column1</span><span class="p">,</span> <span class="n">column2</span>
+<span class="k">FROM</span> <span class="k">table</span><span class="p">;</span>
+</code></pre></div></li>
+<li>从表中选出指定列以及满足条件的行：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="n">column1</span><span class="p">,</span> <span class="n">column2</span>
+<span class="k">FROM</span> <span class="k">table</span>
+<span class="k">WHERE</span> <span class="n">condition</span><span class="p">;</span>
+</code></pre></div>
+其中 <code>condition</code> 中可用的操作符有：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;操作符&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>value1 = value2</code></td>
+<td>检测 <code>value1</code> 是否等于 <code>value2</code>，如果相等返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>value1 &lt;&gt; value2</code></td>
+<td>检测 <code>value1</code> 是否不等于 <code>value2</code>，如果不相等返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>value1 &gt; value2</code></td>
+<td>检测 <code>value1</code> 是否大于 <code>value2</code>， 如果大于则返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>value1 &lt; value2</code></td>
+<td>检测 <code>value1</code> 是否小于 <code>value2</code>，如果小于则返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>value1 &gt;= value2</code></td>
+<td>检测 <code>value1</code> 是否大于等于 <code>value2</code>，如果是则返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>value1 &lt;= value2</code></td>
+<td>检测 <code>value2</code> 是否小于等于 <code>value2</code>，如果是则返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>str1 LIKE str2</code></td>
+<td>检测字符串 <code>str1</code> 是否与字符串 <code>str2</code> 相似，如果相似则返回 <code>true</code>。<br/>在使用 <code>LIKE</code> 时，字符串 <code>str2</code> 中可以包含一些通配符：<br/><code>_</code> 代表可以匹配任意单个字符，<br/><code>%</code> 代表可以匹配任意个任意字符。</td>
+</tr>
+<tr>
+<td><code>value1 BETWEEN value2 AND value3</code></td>
+<td>检测 <code>value1</code> 是否在 <code>value2</code> 和 <code>value3</code> 之间，如果是则返回 <code>true</code>。</td>
+</tr>
+<tr>
+<td><code>value IN (value1, value2, ...)</code></td>
+<td>检测 <code>value</code> 是否是 <code>(value1, value2, ...)</code> 的其中之一，如果是则返回 <code>true</code>。</td>
+</tr>
+<tr>
+<td><code>condition1 AND condition2</code></td>
+<td>逻辑与，当条件 <code>condition1</code> 和条件 <code>condition2</code> 都满足时返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>condition1 OR condition2</code></td>
+<td>逻辑或，当条件 <code>constrain1</code> 和条件 <code>constrain2</code> 有一个满足就返回 <code>true</code></td>
+</tr>
+<tr>
+<td><code>NOT condition</code></td>
+<td>逻辑非，当条件 <code>condition</code> 不满足时返回 <code>true</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>去除查询结果中重复的行
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="k">table</span>
+<span class="k">WHERE</span> <span class="n">condition</span>
+</code></pre></div></li>
+<li>只显示查询结果的前 <code>N</code> 行
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="k">table</span>
+<span class="k">WHERE</span> <span class="n">condition</span>
+<span class="k">LIMIT</span> <span class="n">N</span>
+</code></pre></div></li>
+<li>查询后对行排序
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="n">column1</span><span class="p">,</span> <span class="n">column2</span>
+<span class="k">FROM</span> <span class="k">table</span>
+<span class="k">WHERE</span> <span class="n">condition</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">column1</span><span class="p">,</span> <span class="n">column2</span> <span class="k">DESC</span>
+</code></pre></div>
+将对查询结果中的行按 <code>column1</code> 升序排序，<code>column1</code> 相同的，将按 <code>column2</code> 降序排序。</li>
+</ul>
+<h3 id="section-3-1-1" class="h-title" >3.1.1&nbsp;&nbsp&nbsp;聚合</h3>
+<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="n">aggregate_function</span><span class="p">(</span><span class="k">column</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="k">table_name</span>
+<span class="k">WHERE</span> <span class="n">condition</span>
+</code></pre></div>
+将得到某列的统计信息，即统计所有满足条件 <code>condition</code> 的行中的 <code>column</code> 变成一个值，在结果中便只会得到一行。其中 <code>aggregate_function</code> 有：</p>
+<ul>
+<li><code>COUNT</code>：计算满足条件的记录共几行；</li>
+<li><code>SUM</code>：在所有满足条件的记录中，对该列求和；</li>
+<li><code>AVG</code>：在所有满足条件的记录中，对该列求平均值；</li>
+<li><code>MAX</code>：在所有满足条件的记录中，该列值最大的；</li>
+<li><code>MIN</code>：在所有满足条件的记录中，该列值最小的；</li>
+</ul>
+<p>可以说，聚合函数把筛选出来的所有行聚合成了一行。</p>
+<p>当我们不想把所有行聚合成一行，而是想把某些行聚合成一行，另一些行聚合成另外一行，这样分组聚合，怎么办？可以添加 <code>GROUP BY</code> 来实现：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="n">column1</span><span class="p">,</span> <span class="n">aggregate_function</span><span class="p">(</span><span class="n">column2</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="k">table_name</span>
+<span class="k">WHERE</span> <span class="n">condition</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">column1</span>
+</code></pre></div>
+这时 <code>column1</code> 相同的行被聚合成一行，<code>column1</code> 相同的另外一些行又被聚合成了另外一行，实现了分组聚合的目的。</p>
+<p>可以说，分组聚合后会得到好多行数据。</p>
+<p>当我们想再次筛选分组聚合后的行呢？（在 <code>WHERE</code> 处筛不掉的，因为 <code>WHERE</code> 只能看聚合前的单行数据是否满足条件，而我们现在想筛由多行数据聚合后的记录）可以添加 <code>HAVING</code> 来实现：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="n">column1</span><span class="p">,</span> <span class="n">aggregate_function1</span><span class="p">(</span><span class="n">column2</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="k">table_name</span>
+<span class="k">WHERE</span> <span class="n">condition</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">column1</span>
+<span class="k">HAVING</span> <span class="n">aggregate_function2</span><span class="p">(</span><span class="n">column2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span>
+</code></pre></div>
+这就又筛选掉了聚合后的一些行。</p>
+<h2 id="section-3-2" class="h-title" >3.2&nbsp;&nbsp&nbsp;联表查询</h2>
+<h3 id="section-3-2-1" class="h-title" >3.2.1&nbsp;&nbsp&nbsp;上下拼接</h3>
+<p>如果从两张表中查询的结果具有相同的列名和列数据类型，可将两次查询结果上下拼接：
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">table1</span>
+<span class="k">WHERE</span> <span class="n">condition1</span>
+<span class="k">UNION</span>
+<span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">table2</span>
+<span class="k">WHERE</span> <span class="n">condition2</span>
+</code></pre></div>
+直接使用 <code>UNION</code> 会过滤掉重复的行。可以使用 <code>UNION ALL</code> 使之保留重复行
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">table1</span>
+<span class="k">WHERE</span> <span class="n">condition1</span>
+<span class="k">UNION</span> <span class="k">ALL</span>
+<span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">table2</span>
+<span class="k">WHERE</span> <span class="n">condition2</span>
+</code></pre></div></p>
+<h3 id="section-3-2-2" class="h-title" >3.2.2&nbsp;&nbsp&nbsp;左右拼接</h3>
+<h4 id="section-3-2-2-1" class="h-title" >3.2.2.1&nbsp;&nbsp&nbsp;交叉连接</h4>
+<p>如果要使 <code>FROM</code> 后的表为两张表的笛卡尔积，直接用逗号 <code>,</code> 隔开两张表即可。
+<div class="highlight"><pre><span></span><code><span class="p">...</span>
+<span class="k">FROM</span> <span class="n">table1</span><span class="p">,</span> <span class="n">table2</span>
+<span class="k">WHERE</span> <span class="n">table1</span><span class="p">.</span><span class="n">column1</span> <span class="o">=</span> <span class="n">table2</span><span class="p">.</span><span class="n">column2</span> <span class="k">AND</span> <span class="n">other_condition</span>
+<span class="p">...</span>
+</code></pre></div>
+这样的连接称为交叉连接。</p>
+<h4 id="section-3-2-2-2" class="h-title" >3.2.2.2&nbsp;&nbsp&nbsp;内连接</h4>
+<p>交叉连接的效率极低，因为 <code>table1, table2</code> 将返回一张行数过多的表，其行数是 <code>table1</code> 的行数与 <code>table2</code> 的行数之积。随后从这张大表中选择满足条件的行。这是不明智的选择。内连接则可以实现不生成完整的笛卡尔积，只拼接满足条件的行，然后把这些行组成一张表。与上面代码内容等价的内连接方案是：
+<div class="highlight"><pre><span></span><code><span class="p">...</span>
+<span class="k">FROM</span> <span class="n">table1</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="n">table2</span>
+<span class="k">ON</span> <span class="n">table1</span><span class="p">.</span><span class="n">column1</span> <span class="o">=</span> <span class="n">table2</span><span class="p">.</span><span class="n">column2</span>
+<span class="k">WHERE</span> <span class="n">other_condition</span>
+<span class="p">...</span>
+</code></pre></div>
+虽然效果等价，但大大提高了查询速度，减少了内存占用。</p>
+<h4 id="section-3-2-2-3" class="h-title" >3.2.2.3&nbsp;&nbsp&nbsp;外连接</h4>
+<h5 id="section-3-2-2-3-1" class="h-title" >3.2.2.3.1&nbsp;&nbsp&nbsp;左连接</h5>
+<p>左连接的意思是，首先显示左边的表，随后把右表中满足连接条件的的行拼到左表对应的行上。左表中缺失的那些列填 <code>NULL</code>
+<div class="highlight"><pre><span></span><code><span class="p">...</span>
+<span class="k">FROM</span> <span class="n">table1</span> <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">table2</span>
+<span class="k">ON</span> <span class="n">table1</span><span class="p">.</span><span class="n">column1</span> <span class="o">=</span> <span class="n">table2</span><span class="p">.</span><span class="n">column2</span>
+<span class="k">WHERE</span> <span class="n">other_condition</span>
+<span class="p">...</span>
+</code></pre></div></p>
+<h5 id="section-3-2-2-3-2" class="h-title" >3.2.2.3.2&nbsp;&nbsp&nbsp;右连接</h5>
+<p>右连接的意思是，首先显示右边的表，随后把左表中满足连接条件的的行拼到右表对应的行上。右表中缺失的那些列填 <code>NULL</code>
+<div class="highlight"><pre><span></span><code><span class="p">...</span>
+<span class="k">FROM</span> <span class="n">table1</span> <span class="k">RIGHT</span> <span class="k">JOIN</span> <span class="n">table2</span>
+<span class="k">ON</span> <span class="n">table1</span><span class="p">.</span><span class="n">column1</span> <span class="o">=</span> <span class="n">table2</span><span class="p">.</span><span class="n">column2</span>
+<span class="k">WHERE</span> <span class="n">other_condition</span>
+<span class="p">...</span>
+</code></pre></div></p>
+<h5 id="section-3-2-2-3-3" class="h-title" >3.2.2.3.3&nbsp;&nbsp&nbsp;全连接</h5>
+<p>全连接的意思是，首先显示左右两张表，随后把左右表中满足连接条件的行拼在一起。左右表中缺失的那些列填 <code>NULL</code>
+<div class="highlight"><pre><span></span><code><span class="p">...</span>
+<span class="k">FROM</span> <span class="n">table1</span> <span class="k">FULL</span> <span class="k">JOIN</span> <span class="n">table2</span>
+<span class="k">ON</span> <span class="n">table1</span><span class="p">.</span><span class="n">column1</span> <span class="o">=</span> <span class="n">table2</span><span class="p">.</span><span class="n">column2</span>
+<span class="k">WHERE</span> <span class="n">other_condition</span>
+<span class="p">...</span>
+</code></pre></div></p>
+<h1 id="section-4" class="h-title" >4&nbsp;&nbsp&nbsp;索引</h1>
+<h1 id="section-5" class="h-title" >5&nbsp;&nbsp&nbsp;事务</h1>
+<h1 id="section-6" class="h-title" >6&nbsp;&nbsp&nbsp;触发器</h1>
+<h1 id="section-7" class="h-title" >7&nbsp;&nbsp&nbsp;存储过程</h1>
+<h1 id="section-8" class="h-title" >8&nbsp;&nbsp&nbsp;函数</h1>
+    <!-- main content -->
+</article>
+</div>
+</div>
+</div>
+</body>
+</html>
