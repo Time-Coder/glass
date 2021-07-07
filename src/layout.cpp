@@ -50,7 +50,7 @@ void Layout::apply()
 		data_size += common_length * GLSL::built_in_types[it->second.dtype()].glsl_size;
 	}
 	vbo.malloc(data_size);
-	byte* ptr = (byte*)(vbo.ptr());
+	byte* ptr = (byte*)(vbo.mapBuffer());
 
 	for(auto it = defined_layouts.begin(); it != defined_layouts.end(); it++)
 	{
@@ -67,7 +67,7 @@ void Layout::apply()
 			    dtype == "ivec2" || dtype == "ivec3" || dtype == "ivec4" ||
 			    dtype == "bvec2" || dtype == "bvec3" || dtype == "bvec4")
 		{
-			for(int i = 0; i < common_length; i++)
+            for(uint i = 0; i < common_length; i++)
 			{
 				memcpy((void*)ptr, it->second.ptr(i), GLSL::built_in_types[dtype].glsl_size);
 				ptr += GLSL::built_in_types[dtype].glsl_size;
@@ -75,7 +75,7 @@ void Layout::apply()
 		}
 		else if(dtype == "mat2")
 		{
-			for(int i = 0; i < common_length; i++)
+            for(uint i = 0; i < common_length; i++)
 			{
 				mat2* ptr_mat2 = (mat2*)(it->second.ptr(i));
 				memcpy((void*)ptr, (void*)(&((*ptr_mat2)[0])), 2*sizeof(float));
@@ -86,7 +86,7 @@ void Layout::apply()
 		}
 		else if(dtype == "mat3")
 		{
-			for(int i = 0; i < common_length; i++)
+            for(uint i = 0; i < common_length; i++)
 			{
 				mat3* ptr_mat3 = (mat3*)(it->second.ptr(i));
 				memcpy((void*)ptr, (void*)(&((*ptr_mat3)[0])), 3*sizeof(float));
@@ -99,7 +99,7 @@ void Layout::apply()
 		}
 		else if(dtype == "mat4")
 		{
-			for(int i = 0; i < common_length; i++)
+            for(uint i = 0; i < common_length; i++)
 			{
 				mat4* ptr_mat4 = (mat4*)(it->second.ptr(i));
 				memcpy((void*)ptr, (void*)(&((*ptr_mat4)[0])), 4*sizeof(float));
@@ -113,7 +113,7 @@ void Layout::apply()
 			}
 		}
 	}
-	vbo.apply();
+	vbo.unMapBuffer();
 
 	uint offset = 0;
 	for(auto it = defined_layouts.begin(); it != defined_layouts.end(); it++)

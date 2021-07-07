@@ -12,7 +12,7 @@ VBO::VBO(VBO&& vbo) : BO(move(vbo)) {}
 
 VBO& VBO::operator =(const VBO& vbo)
 {
-	if(this != &vbo && _id != vbo._id)
+	if(this != &vbo && self != vbo.self)
 	{
 		return static_cast<VBO&>(BO::operator=(vbo));
 	}

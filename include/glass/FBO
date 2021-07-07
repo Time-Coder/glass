@@ -8,8 +8,13 @@
 #include "glass/samplerCube"
 #include "glass/utils/exceptions.h"
 
-struct FBO: public BO
+#ifdef USE_QT
+class QOpenGLWidget;
+#endif
+
+class FBO: public BO
 {
+public:
 	enum AttachmentType
 	{
 		COLOR,
@@ -72,6 +77,9 @@ private:
 		std::vector<_Attachment> color_attachments;
 		_Attachment* depth_attachment = NULL;
 		_Attachment* stencil_attachment = NULL;
+#ifdef USE_QT
+        QOpenGLWidget* device = NULL;
+#endif
 
 		bool is_applied = false;
 		bool auto_clear = true;
@@ -87,8 +95,6 @@ private:
 		~FBO_Instance();
 	};
 
-	static std::unordered_map<uint, FBO_Instance> existing_FBOs;
-
 private:
 	void init();
 	void del();
@@ -102,23 +108,26 @@ public:
 		uint __buffer_width = 0, uint __buffer_height = 0);
 	FBO(const FBO& fbo);
 	FBO(FBO&& fbo);
-	~FBO();
+	virtual ~FBO();
 
 	FBO& operator =(const FBO& fbo);
 	FBO& operator =(FBO&& fbo);
 
-	uint screenWidth()const;
-	uint screenHeight()const;
-	uint bufferWidth()const;
-	uint bufferHeight()const;
+	uint screenWidth();
+	uint screenHeight();
+	uint bufferWidth();
+	uint bufferHeight();
 	void resize(uint width, uint height);
 	void screenResize(uint width, uint height);
 	void bufferResize(uint width, uint height);
 	void autoClear(bool flag);
 	void autoResize(bool flag);
+#ifdef USE_QT
+	void setPaintDevice(QOpenGLWidget* device);
+#endif
 
 	void bind();
-	void unbind()const;
+	void unbind();
 	uint status();
 	bool completed();
 	void clear();
@@ -157,7 +166,7 @@ void FBO::_Attachment::init(FBO* _parent, AttachmentType attachment_type, GLenum
 	
 	switch(attachment_type)
 	{
-	case FBO::COLOR: id = GL_COLOR_ATTACHMENT0 + FBO::existing_FBOs[parent->_id].color_attachments.size() - 1; break;
+	case FBO::COLOR: id = GL_COLOR_ATTACHMENT0 + parent->userData<FBO_Instance>()->color_attachments.size() - 1; break;
 	case FBO::DEPTH: id = GL_DEPTH_ATTACHMENT; break;
 	case FBO::STENCIL: id = GL_STENCIL_ATTACHMENT; break;
 	case FBO::DEPTH_STENCIL: id = GL_DEPTH_STENCIL_ATTACHMENT; break;
@@ -259,56 +268,56 @@ void FBO::attach(const FBO::Attachment<FBufferType>& attachment)
 	{
 		case FBO::COLOR:
 		{
-			uint i = existing_FBOs[_id].color_attachments.size();
+			uint i = userData<FBO_Instance>()->color_attachments.size();
 			const std::string& name = "color_attachment" + str::str(i);
-			existing_FBOs[_id].color_attachments.push_back(_Attachment(name));
-			existing_FBOs[_id].color_attachments.back().init<FBufferType>(this, FBO::COLOR, attachment.format, attachment.dtype);
-			existing_FBOs[_id].clear_value |= GL_COLOR_BUFFER_BIT;
+			userData<FBO_Instance>()->color_attachments.push_back(_Attachment(name));
+			userData<FBO_Instance>()->color_attachments.back().init<FBufferType>(this, FBO::COLOR, attachment.format, attachment.dtype);
+			userData<FBO_Instance>()->clear_value |= GL_COLOR_BUFFER_BIT;
 			break;
 		}
 		case FBO::DEPTH:
 		{
-			if(existing_FBOs[_id].depth_attachment != NULL)
+			if(userData<FBO_Instance>()->depth_attachment != NULL)
 			{
-				throw glass::RuntimeError("FBO " + str::str(_id) + " has already attached depth attachment.");
+				throw glass::RuntimeError("FBO " + str::str(id()) + " has already attached depth attachment.");
 			}
-			existing_FBOs[_id].depth_attachment = new _Attachment("depth_attachment");
-			if(existing_FBOs[_id].depth_attachment == NULL)
+			userData<FBO_Instance>()->depth_attachment = new _Attachment("depth_attachment");
+			if(userData<FBO_Instance>()->depth_attachment == NULL)
 			{
 				throw glass::MemoryError("Failed to allocate memory!");
 			}
-			existing_FBOs[_id].depth_attachment->init<FBufferType>(this, FBO::DEPTH, attachment.format, attachment.dtype);
-			existing_FBOs[_id].clear_value |= GL_DEPTH_BUFFER_BIT;
+			userData<FBO_Instance>()->depth_attachment->init<FBufferType>(this, FBO::DEPTH, attachment.format, attachment.dtype);
+			userData<FBO_Instance>()->clear_value |= GL_DEPTH_BUFFER_BIT;
 			break;
 		}
 		case FBO::STENCIL:
 		{
-			if(existing_FBOs[_id].stencil_attachment != NULL || (existing_FBOs[_id].depth_attachment != NULL && existing_FBOs[_id].depth_attachment->type == FBO::DEPTH_STENCIL))
+			if(userData<FBO_Instance>()->stencil_attachment != NULL || (userData<FBO_Instance>()->depth_attachment != NULL && userData<FBO_Instance>()->depth_attachment->type == FBO::DEPTH_STENCIL))
 			{
-				throw glass::RuntimeError("FBO " + str::str(_id) + " has already attached stencil attachment.");
+				throw glass::RuntimeError("FBO " + str::str(id()) + " has already attached stencil attachment.");
 			}
-			existing_FBOs[_id].stencil_attachment = new _Attachment("stencil_attachment");
-			if(existing_FBOs[_id].stencil_attachment == NULL)
+			userData<FBO_Instance>()->stencil_attachment = new _Attachment("stencil_attachment");
+			if(userData<FBO_Instance>()->stencil_attachment == NULL)
 			{
 				throw glass::MemoryError("Failed to allocate memory!");
 			}
-			existing_FBOs[_id].stencil_attachment->init<FBufferType>(this, FBO::STENCIL, attachment.format, attachment.dtype);
-			existing_FBOs[_id].clear_value |= GL_STENCIL_BUFFER_BIT;
+			userData<FBO_Instance>()->stencil_attachment->init<FBufferType>(this, FBO::STENCIL, attachment.format, attachment.dtype);
+			userData<FBO_Instance>()->clear_value |= GL_STENCIL_BUFFER_BIT;
 			break;
 		}
 		case FBO::DEPTH_STENCIL:
 		{
-			if(existing_FBOs[_id].depth_attachment != NULL || existing_FBOs[_id].stencil_attachment != NULL)
+			if(userData<FBO_Instance>()->depth_attachment != NULL || userData<FBO_Instance>()->stencil_attachment != NULL)
 			{
-				throw glass::RuntimeError("FBO " + str::str(_id) + " has already attached depth and/or stencil attachment.");
+				throw glass::RuntimeError("FBO " + str::str(id()) + " has already attached depth and/or stencil attachment.");
 			}
-			existing_FBOs[_id].depth_attachment = new _Attachment("depth_stencil_attachment");
-			if(existing_FBOs[_id].depth_attachment == NULL)
+			userData<FBO_Instance>()->depth_attachment = new _Attachment("depth_stencil_attachment");
+			if(userData<FBO_Instance>()->depth_attachment == NULL)
 			{
 				throw glass::MemoryError("Failed to allocate memory!");
 			}
-			existing_FBOs[_id].depth_attachment->init<FBufferType>(this, FBO::DEPTH_STENCIL, attachment.format, attachment.dtype);
-			existing_FBOs[_id].clear_value |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			userData<FBO_Instance>()->depth_attachment->init<FBufferType>(this, FBO::DEPTH_STENCIL, attachment.format, attachment.dtype);
+			userData<FBO_Instance>()->clear_value |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 			break;
 		}
 	}
@@ -321,14 +330,14 @@ void FBO::attach(const std::string& name, const FBO::Attachment<FBufferType>& at
 	_bind();
 	if(attachment.type == FBO::COLOR)
 	{
-		if(vector_find(existing_FBOs[_id].color_attachments, name) != -1)
+		if(vector_find(userData<FBO_Instance>()->color_attachments, name) != -1)
 		{
 			throw glass::RuntimeError("Attachment point " + name + " has already been attached.");
 		}
 
-		existing_FBOs[_id].color_attachments.push_back(_Attachment(name));
-		existing_FBOs[_id].color_attachments.back().init<FBufferType>(this, FBO::COLOR, attachment.format, attachment.dtype);
-		existing_FBOs[_id].clear_value |= GL_COLOR_BUFFER_BIT;
+		userData<FBO_Instance>()->color_attachments.push_back(_Attachment(name));
+		userData<FBO_Instance>()->color_attachments.back().init<FBufferType>(this, FBO::COLOR, attachment.format, attachment.dtype);
+		userData<FBO_Instance>()->clear_value |= GL_COLOR_BUFFER_BIT;
 	}
 	else
 	{
@@ -341,7 +350,7 @@ void FBO::attach(const std::string& name, const FBO::Attachment<FBufferType>& at
 template<class FBufferType>
 FBufferType& FBO::color(const std::string& name)
 {
-	int i = vector_find(existing_FBOs[_id].color_attachments, name);
+	int i = vector_find(userData<FBO_Instance>()->color_attachments, name);
 	if(i == -1)
 	{
 		throw glass::KeyError("Color buffer " + name + " is not exist.");
@@ -352,23 +361,23 @@ FBufferType& FBO::color(const std::string& name)
 	    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	    glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
 	    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		Image image(existing_FBOs[_id].screen_height, existing_FBOs[_id].screen_width, 3);
-		glReadPixels(0, 0, existing_FBOs[_id].screen_width, existing_FBOs[_id].screen_height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
-		existing_FBOs[_id].temp_image = image.flip_y();
-		return force_cast<FBufferType>(existing_FBOs[_id].temp_image);
+		Image image(userData<FBO_Instance>()->screen_height, userData<FBO_Instance>()->screen_width, 3);
+		glReadPixels(0, 0, userData<FBO_Instance>()->screen_width, userData<FBO_Instance>()->screen_height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+		userData<FBO_Instance>()->temp_image = image.flip_y();
+		return force_cast<FBufferType>(userData<FBO_Instance>()->temp_image);
 	}
 	else
 	{
-		return existing_FBOs[_id].color_attachments[i].buffer<FBufferType>();
+		return userData<FBO_Instance>()->color_attachments[i].buffer<FBufferType>();
 	}
 }
 
 template<class FBufferType>
 FBufferType& FBO::color(uint n)
 {
-	if(n >= existing_FBOs[_id].color_attachments.size())
+	if(n >= userData<FBO_Instance>()->color_attachments.size())
 	{
-		throw glass::IndexError(n, 0, existing_FBOs[_id].color_attachments.size()-1);
+		throw glass::IndexError(n, 0, userData<FBO_Instance>()->color_attachments.size()-1);
 	}
 
 	if(same_type(FBufferType, Image))
@@ -376,53 +385,53 @@ FBufferType& FBO::color(uint n)
 	    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	    glReadBuffer(GL_COLOR_ATTACHMENT0 + n);
 	    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		Image image(existing_FBOs[_id].screen_height, existing_FBOs[_id].screen_width, 3);
-		glReadPixels(0, 0, existing_FBOs[_id].screen_width, existing_FBOs[_id].screen_height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
-		existing_FBOs[_id].temp_image = image.flip_y();
-		return force_cast<FBufferType>(existing_FBOs[_id].temp_image);
+		Image image(userData<FBO_Instance>()->screen_height, userData<FBO_Instance>()->screen_width, 3);
+		glReadPixels(0, 0, userData<FBO_Instance>()->screen_width, userData<FBO_Instance>()->screen_height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+		userData<FBO_Instance>()->temp_image = image.flip_y();
+		return force_cast<FBufferType>(userData<FBO_Instance>()->temp_image);
 	}
 	else
 	{
-		return existing_FBOs[_id].color_attachments[n].buffer<FBufferType>();
+		return userData<FBO_Instance>()->color_attachments[n].buffer<FBufferType>();
 	}
 }
 
 template<class FBufferType>
 FBufferType& FBO::depth()
 {
-	if(existing_FBOs[_id].depth_attachment == NULL)
+	if(userData<FBO_Instance>()->depth_attachment == NULL)
 	{
 		throw glass::RuntimeError("Depth buffer is not attached");
 	}
-	if(existing_FBOs[_id].depth_attachment->type != FBO::DEPTH)
+	if(userData<FBO_Instance>()->depth_attachment->type != FBO::DEPTH)
 	{
 		throw glass::RuntimeError("Depth buffer is compact with stencil buffer.\nPlease use depth_stencil to access it.");
 	}
-	return existing_FBOs[_id].depth_attachment->buffer<FBufferType>();
+	return userData<FBO_Instance>()->depth_attachment->buffer<FBufferType>();
 }
 
 template<class FBufferType>
 FBufferType& FBO::stencil()
 {
-	if(existing_FBOs[_id].depth_attachment == NULL && existing_FBOs[_id].stencil_attachment == NULL)
+	if(userData<FBO_Instance>()->depth_attachment == NULL && userData<FBO_Instance>()->stencil_attachment == NULL)
 	{
 		throw glass::RuntimeError("Stencil buffer is not attached");
 	}
-	if(existing_FBOs[_id].depth_attachment != NULL && existing_FBOs[_id].depth_attachment->type == FBO::DEPTH_STENCIL)
+	if(userData<FBO_Instance>()->depth_attachment != NULL && userData<FBO_Instance>()->depth_attachment->type == FBO::DEPTH_STENCIL)
 	{
 		throw glass::RuntimeError("Stencil buffer is compact with depth buffer.\nPlease use depth_stencil to access it.");
 	}
-	return existing_FBOs[_id].stencil_attachment->buffer<FBufferType>();
+	return userData<FBO_Instance>()->stencil_attachment->buffer<FBufferType>();
 }
 
 template<class FBufferType>
 FBufferType& FBO::depth_stencil()
 {
-	if(existing_FBOs[_id].depth_attachment == NULL || existing_FBOs[_id].depth_attachment->type != FBO::DEPTH_STENCIL)
+	if(userData<FBO_Instance>()->depth_attachment == NULL || userData<FBO_Instance>()->depth_attachment->type != FBO::DEPTH_STENCIL)
 	{
 		throw glass::RuntimeError("Depth_Stencil buffer is not attached");
 	}
-	return existing_FBOs[_id].depth_attachment->buffer<FBufferType>();
+	return userData<FBO_Instance>()->depth_attachment->buffer<FBufferType>();
 }
 
 #endif

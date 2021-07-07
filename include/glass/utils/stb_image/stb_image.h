@@ -4099,7 +4099,7 @@ static int glass_stbi__zhuffman_decode_slowpath(glass_stbi__zbuf *a, glass_stbi_
    if (s >= 16) return -1; // invalid code!
    // code size is s, so:
    b = (k >> (16-s)) - z->firstcode[s] + z->firstsymbol[s];
-   if (b >= sizeof (z->size)) return -1; // some data was corrupt somewhere!
+   if ((long long unsigned int)b >= sizeof (z->size)) return -1; // some data was corrupt somewhere!
    if (z->size[b] != s) return -1;  // was originally an assert, but report failure instead.
    a->code_buffer >>= s;
    a->num_bits -= s;
@@ -6753,8 +6753,8 @@ static void *glass_stbi__load_gif_main(glass_stbi__context *s, int **delays, int
       glass_stbi_uc *two_back = 0;
       glass_stbi__gif g;
       int stride;
-      int out_size = 0;
-      int delays_size = 0;
+      // int out_size = 0;
+      // int delays_size = 0;
       memset(&g, 0, sizeof(g));
       if (delays) {
          *delays = 0;
@@ -6771,7 +6771,8 @@ static void *glass_stbi__load_gif_main(glass_stbi__context *s, int **delays, int
             stride = g.w * g.h * 4;
 
             if (out) {
-               void *tmp = (glass_stbi_uc*) STBI_REALLOC_SIZED( out, out_size, layers * stride );
+               // void *tmp = (glass_stbi_uc*) STBI_REALLOC_SIZED( out, out_size, layers * stride );
+               void *tmp = (glass_stbi_uc*) STBI_REALLOC( out, layers * stride );
                if (NULL == tmp) {
                   STBI_FREE(g.out);
                   STBI_FREE(g.history);
@@ -6780,19 +6781,20 @@ static void *glass_stbi__load_gif_main(glass_stbi__context *s, int **delays, int
                }
                else {
                    out = (glass_stbi_uc*) tmp;
-                   out_size = layers * stride;
+                   // out_size = layers * stride;
                }
 
                if (delays) {
-                  *delays = (int*) STBI_REALLOC_SIZED( *delays, delays_size, sizeof(int) * layers );
-                  delays_size = layers * sizeof(int);
+                  // *delays = (int*) STBI_REALLOC_SIZED( *delays, delays_size, sizeof(int) * layers );
+                   *delays = (int*) STBI_REALLOC( *delays, sizeof(int) * layers );
+                  // delays_size = layers * sizeof(int);
                }
             } else {
                out = (glass_stbi_uc*)glass_stbi__malloc( layers * stride );
-               out_size = layers * stride;
+               // out_size = layers * stride;
                if (delays) {
                   *delays = (int*) glass_stbi__malloc( layers * sizeof(int) );
-                  delays_size = layers * sizeof(int);
+                  // delays_size = layers * sizeof(int);
                }
             }
             memcpy( out + ((layers - 1) * stride), u, stride );

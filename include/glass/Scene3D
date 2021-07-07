@@ -1,7 +1,7 @@
 #ifndef __SCENE__
 #define __SCENE__
 
-#include "glass/GLFigure"
+#include "glass/GlassWindow"
 #include "glass/Model"
 #include "glass/Shader"
 #include "glass/FBO"
@@ -11,9 +11,10 @@
 #include "glass/Camera"
 #include "glass/utils/geometry.h"
 
-class Scene3D: public GLFigure
+class Scene3D: public GlassWindow
 {
 	samplerCube skybox_map;
+    sampler2D test_image;
 
 	std::map<std::string, Shader> shader;
 	std::map<std::string, FBO> fbo;
@@ -55,8 +56,13 @@ private:
 	void init_shadering_dir_light_shadow();
 
 public:
+#ifndef USE_QT
 	Scene3D(int width = 800, int height = 600, const std::string& name = "Figure", const vec4& color = vec4(0.1569, 0.1608, 0.1373, 1.0)):
-	GLFigure(width, height, name, color) {}
+    GlassWindow(width, height, name, color) {}
+#else
+    Scene3D(QWidget* parent = nullptr, int width = 800, int height = 600, const std::string& name = "Figure", const vec4& color = vec4(0.1569, 0.1608, 0.1373, 1.0)):
+    GlassWindow(parent, width, height, name, color) {}
+#endif
 
 	std::string addModel(const vec3& position, const Model& model, std::string name = "");
 	std::string addModel(const Model& model, std::string name = "");

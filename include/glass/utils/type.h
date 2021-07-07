@@ -38,7 +38,7 @@ std::string __type_name()
 #endif
 
     int pos_brace = tname.find("[");
-    if(pos_brace != std::string::npos && pos_brace != 0 && tname[pos_brace-1] == ' ')
+    if((size_t)pos_brace != std::string::npos && pos_brace != 0 && tname[pos_brace-1] == ' ')
     {
         tname = tname.substr(0,pos_brace-1) + tname.substr(pos_brace);
     }

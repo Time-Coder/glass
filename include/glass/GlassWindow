@@ -1,0 +1,225 @@
+#ifndef __FIGURE_H__
+#define __FIGURE_H__
+
+#include <iostream>
+
+#include "glass/common.h"
+#include "glass/utils/tictoc.h"
+#include "glass/vec"
+
+#ifdef USE_QT
+#include <QObject>
+#include <QWidget>
+#include <QOpenGLWidget>
+#include <QIcon>
+#endif
+
+typedef unsigned int uint;
+
+#ifndef USE_QT
+struct GLFWwindow;
+#else
+class QMouseEvent;
+#endif
+
+class Image;
+
+#ifndef USE_QT
+class GlassWindow
+#else
+class GlassWindow: public QOpenGLWidget
+#endif
+{
+#ifdef USE_QT
+    Q_OBJECT
+#endif
+
+	struct Constructor
+	{
+		friend class GlassWindow;
+		Constructor();
+		~Constructor();
+	};
+	static Constructor constructor;
+
+protected:
+	std::string __name = "Figure";
+#ifndef USE_QT
+	int __width = 800;
+	int __height = 600;
+#endif
+	bool __auto_clear = true;
+	vec4 __color = vec4(0.1569, 0.1608, 0.1373, 1.0);
+#ifndef USE_QT
+	GLFWwindow* __window = NULL;
+#endif
+
+    static GlassWindow* current;
+	static std::map<uint, std::string> key_map;
+public:
+    static bool is_glad_init;
+
+private:
+	Timer timer;
+    Scheduler scheduler_mouse;
+    Scheduler scheduler_wheel;
+    double __base_x = 0;
+    double __base_y = 0;
+    double __current_x = 0.0;
+    double __current_y = 0.0;
+    double __current_t = 0.0;
+    double __last_x = -1.0;
+    double __last_y = -1.0;
+    double __last_t = -1.0;
+    double __last_left_press_x = -1.0;
+    double __last_left_press_y = -1.0;
+    double __last_left_release_x = -1.0;
+    double __last_left_release_y = -1.0;
+    double __last_right_press_x = -1.0;
+    double __last_right_press_y = -1.0;
+    double __last_right_release_x = -1.0;
+    double __last_right_release_y = -1.0;
+    double __last_middle_press_x = -1.0;
+    double __last_middle_press_y = -1.0;
+    double __last_middle_release_x = -1.0;
+    double __last_middle_release_y = -1.0;
+    bool left_pressed = false;
+    bool middle_pressed = false;
+    bool right_pressed = false;
+    double left_press_time = 0.0;
+    double right_press_time = 0.0;
+    double middle_press_time = 0.0;
+    double left_click_time = 0.0;
+    double right_click_time = 0.0;
+    double middle_click_time = 0.0;
+    bool mouse_stoped = true;
+    bool wheel_stoped = true;
+    bool is_move_bound_detecting = false;
+    bool is_scroll_bound_detecting = false;
+    bool is_cursor_hiden = false;
+
+protected:
+	static void glad_init();
+
+#ifndef USE_QT
+    static void mouse_position_callback(GLFWwindow* _window, double x, double y);
+    static void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
+    static void __change_size_callback(GLFWwindow* _window, int width, int height);
+    static void mouse_enter_leave_callback(GLFWwindow* _window, int flag);
+    static void __scroll_callback(GLFWwindow* _window, double xoffset, double yoffset);
+    static void __keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+#else
+    virtual void mouseMoveEvent(QMouseEvent* event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void resizeGL(int width, int height);
+//    virtual void enterEvent(QEvent* event);
+    virtual void leaveEvent(QEvent* event);
+    virtual void wheelEvent(QWheelEvent *event);
+    virtual void keyPressEvent(QKeyEvent* event);
+    virtual void keyReleaseEvent(QKeyEvent *event);
+#endif
+
+    static void __mouse_stop_move_callback();
+    static void __wheel_stop_scroll_callback();
+
+	int current_x();
+	int current_y();
+	double current_t();
+	int last_x();
+	int last_y();
+	double last_t();
+	int dx();
+	int dy();
+	double dt();
+	double fps();
+	int last_left_press_x();
+	int last_left_press_y();
+	int last_left_release_x();
+	int last_left_release_y();
+	int last_right_press_x();
+	int last_right_press_y();
+	int last_right_release_x();
+	int last_right_release_y();
+	int last_middle_press_x();
+	int last_middle_press_y();
+	int last_middle_release_x();
+	int last_middle_release_y();
+	bool is_left_pressed();
+	bool is_middle_pressed();
+	bool is_right_pressed();
+
+	virtual void onKeyPress(const std::string& key);
+	virtual void onKeyRelease(const std::string& key);
+	virtual void onKeyRepeat(const std::string& key);
+	virtual void onDrag();
+	virtual void onRightDrag();
+	virtual void onMiddleDrag();
+	virtual void onMouseLeave();
+	virtual void onMouseEnter();
+	virtual void onMouseStartMove();
+	virtual void onMouseMove();
+	virtual void onMouseStopMove();
+	virtual void onDoubleClick();
+	virtual void onRightDoubleClick();
+	virtual void onMiddleDoubleClick();
+	virtual void onClick();
+	virtual void onRightClick();
+	virtual void onMiddleClick();
+	virtual void onLeftPress();
+	virtual void onRightPress();
+	virtual void onMiddlePress();
+	virtual void onLeftRelease();
+	virtual void onRightRelease();
+	virtual void onMiddleRelease();
+    virtual void onWheelStartScroll();
+    virtual void onWheelScroll(int scroll_step);
+    virtual void onWheelStopScroll();
+	virtual void onChangeSize(int width, int height);
+
+public:
+#ifndef USE_QT
+	GlassWindow(int width = 800, int height = 600, const std::string& name = "Figure", const vec4& color = vec4(0.1569, 0.1608, 0.1373, 1.0));
+	GlassWindow(GlassWindow&& figure);
+#else
+    GlassWindow(QWidget* parent_widget = nullptr, int width = -1, int height = -1, const std::string& name = "Figure", const vec4& color = vec4(0.1569, 0.1608, 0.1373, 1.0));
+#endif
+
+#ifndef USE_QT
+	virtual ~GlassWindow();
+    GLFWwindow* window();
+#endif
+
+	void autoClear(bool flag);
+	bool autoClear();
+#ifndef USE_QT
+	uint width()const;
+	uint height()const;
+#endif
+	virtual void prepare();
+	virtual void draw();
+
+#ifndef USE_QT
+	void show();
+#else
+    virtual void initializeGL();
+    virtual void paintGL();
+#endif
+
+#ifndef USE_QT
+	void setIcon(const Image& image);
+#else
+    void setIcon(const QIcon& image);
+#endif
+
+	void setIcon(const std::string& filename);
+	void hideCursor();
+	void showCursor();
+
+#ifdef USE_QT
+signals:
+    void initialized();
+#endif
+};
+
+#endif

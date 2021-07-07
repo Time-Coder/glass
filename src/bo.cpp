@@ -6,113 +6,143 @@
 
 using namespace std;
 
-unordered_map<BO::BufferType, unordered_map<uint, BO::Instance> > BO::existing_BOs;
 unordered_map<BO::BufferType, uint> BO::active_BO;
+
+bool BO::empty()const
+{
+	return (self == NULL || self->id == 0 || self->n_sources == 0);
+}
+
+BO::Instance* BO::instance()
+{
+	if(self == NULL)
+	{
+		self = new Instance();
+		if(self == NULL)
+		{
+			throw glass::RuntimeError("Failed to allocate memory!");
+		}
+		self->n_sources++;
+	}
+
+	return self;
+}
 
 void BO::init()
 {
-	if(_id == 0)
+	if(instance()->id == 0)
 	{
-		switch(_buffer_type)
+		switch(buffer_type)
 		{
-			case VERTEX:
-			case ELEMENT:
-			case UNIFORM:
-				glGenBuffers(1, &_id);
-				break;
-			case FRAME:
-				glGenFramebuffers(1, &_id);
-				break;
-			case RENDER:
-				glGenRenderbuffers(1, &_id);
-				break;
+		case VERTEX:
+		case ELEMENT:
+		case UNIFORM:
+			glGenBuffers(1, &(instance()->id));
+			break;
+		case FRAME:
+			glGenFramebuffers(1, &(instance()->id));
+			break;
+		case RENDER:
+			glGenRenderbuffers(1, &(instance()->id));
+			break;
 		}
 		
-		if(_id == 0)
+		if(instance()->id == 0)
 		{
 			throw glass::RuntimeError("Failed to create " + type_str());
 		}
 	#ifdef _DEBUG
-		cout << "constructing " << type_str() << " " << _id << endl;
+		cout << "constructing " << type_str() << " " << instance->id << endl;
 	#endif
-		existing_BOs[_buffer_type][_id].n_sources++;
 	}
-	else if(existing_BOs[_buffer_type].count(_id) == 0 || existing_BOs[_buffer_type][_id].n_sources == 0)
+	else if(instance()->n_sources == 0)
 	{
-		throw glass::RuntimeError(type_str() + " " + str::str(_id) + " has already been destructed.");
+		throw glass::DeveloperError(type_str() + " " + str::str(id()) + " has already been destructed.");
 	}
 }
 
 void BO::del()
 {
-	if(existing_BOs[_buffer_type].count(_id) == 0 || existing_BOs[_buffer_type][_id].n_sources == 0)
+	if(self == NULL)
 	{
-		_id = 0;
 		return;
 	}
 
-	uint count = existing_BOs[_buffer_type][_id].n_sources;
-	if(count > 0)
-	{
-		existing_BOs[_buffer_type][_id].n_sources--;
-		if(count == 1)
+	if(instance()->id == 0)
+	{		
+		if(instance()->n_sources > 0)
 		{
-		#ifdef _DEBUG
-			cout << "destructing " << type_str() << " " << _id << endl;
-		#endif
-			unbind();
-			existing_BOs[_buffer_type].erase(_id);
-			switch(_buffer_type)
-			{
-				case VERTEX:
-				case ELEMENT:
-				case UNIFORM:
-					glDeleteBuffers(1, &_id);
-					break;
-				case FRAME:
-					glDeleteFramebuffers(1, &_id);
-					break;
-				case RENDER:
-					glDeleteRenderbuffers(1, &_id);
-					break;
-			}
+			instance()->n_sources--;
 		}
+
+		if(instance()->n_sources == 0)
+		{
+			delete self;
+		}
+
+		self = NULL;
+		return;
 	}
-	_id = 0;
+
+	instance()->n_sources--;
+	if(instance()->n_sources == 0) // Not empty: id != 0
+	{
+	#ifdef _DEBUG
+		cout << "destructing " << type_str() << " " << instance->id << endl;
+	#endif
+		unbind();
+		switch(buffer_type)
+		{
+			case VERTEX:
+			case ELEMENT:
+			case UNIFORM:
+				glDeleteBuffers(1, &(instance()->id));
+				break;
+			case FRAME:
+				glDeleteFramebuffers(1, &(instance()->id));
+				break;
+			case RENDER:
+				glDeleteRenderbuffers(1, &(instance()->id));
+				break;
+		}
+		delete self;
+	}
+
+	self = NULL;
 }
 
 BO::BO(BufferType _type):
-_buffer_type(_type) {}
+buffer_type(_type) {}
 
-BO::BO(const BO& bo) :
-_id(bo._id),
-_buffer_type(bo._buffer_type)
+BO::BO(const BO& bo):
+buffer_type(bo.buffer_type),
+self(bo.self)
 {
-	if(existing_BOs[_buffer_type].count(_id) && existing_BOs[_buffer_type][_id].n_sources > 0)
+	if(self != NULL)
 	{
-		existing_BOs[_buffer_type][_id].n_sources++;
+		self->n_sources++;
 	}
 }
 
 BO::BO(BO&& bo) :
-_id(move(bo._id)),
-_buffer_type(move(bo._buffer_type))
+buffer_type(move(bo.buffer_type)),
+self(move(bo.self))
 {
-	bo._id = 0;
+	bo.self = NULL;
 }
 
 BO& BO::operator =(const BO& bo)
 {
-	if(this != &bo && _id != bo._id)
+	if(this != &bo && self != bo.self)
 	{
 		del();
 
-		_id = bo._id;
-		_buffer_type = bo._buffer_type;
+		self = bo.self;
+		buffer_type = bo.buffer_type;
 
-		if(existing_BOs[_buffer_type].count(_id) && existing_BOs[_buffer_type][_id].n_sources > 0)
+		if(self != NULL)
 		{
-			existing_BOs[_buffer_type][_id].n_sources++;
+			self->n_sources++;
 		}
 	}
 	return *this;
@@ -122,15 +152,15 @@ BO& BO::operator =(BO&& bo)
 {
 	if(this != &bo)
 	{
-		if(_id != bo._id)
+		if(self != bo.self)
 		{
 			del();
 		}
 
-		_id = move(bo._id);
-		_buffer_type = move(bo._buffer_type);
+		self = move(bo.self);
+		buffer_type = move(bo.buffer_type);
 
-		bo._id = 0;
+		bo.self = NULL;
 	}
 	return *this;
 }
@@ -142,89 +172,82 @@ BO::~BO()
 
 bool BO::isBind()const
 {
-	return (_id != 0 && 
-		    existing_BOs[_buffer_type].count(_id) && existing_BOs[_buffer_type][_id].n_sources > 0 && 
-		    active_BO[_buffer_type] == _id);
+	return (!empty() && active_BO[buffer_type] == self->id);
 }
 
 uint BO::n_sources()const
 {
-	if(_id == 0)
-	{
-		return 0;
-	}
-
-	return existing_BOs[_buffer_type].count(_id) ? existing_BOs[_buffer_type][_id].n_sources : 0;
+	return empty() ? 0 : self->n_sources;
 }
 
 void BO::bind()
 {
+	bool should_apply_malloc = (id() == 0 && size() != 0);
+
 	init();
-	switch(_buffer_type)
+	switch(buffer_type)
 	{
-		case VERTEX:
-		case ELEMENT:
-		case UNIFORM:
-			glBindBuffer(_buffer_type, _id);
-			break;
-		case FRAME:
-			glBindFramebuffer(_buffer_type, _id);
-			break;
-		case RENDER:
-			glBindRenderbuffer(_buffer_type, _id);
-			break;
+	case VERTEX:
+	case ELEMENT:
+	case UNIFORM:
+		glBindBuffer(buffer_type, instance()->id);
+		break;
+	case FRAME:
+		glBindFramebuffer(buffer_type, instance()->id);
+		break;
+	case RENDER:
+		glBindRenderbuffer(buffer_type, instance()->id);
+		break;
 	}
 	
-	active_BO[_buffer_type] = _id;
+	active_BO[buffer_type] = instance()->id;
+	if(should_apply_malloc)
+	{
+		glBufferData(buffer_type, instance()->size, NULL, instance()->mem_type);
+	}
 }
 
 void BO::unbind()const
 {
-	if(active_BO.count(_buffer_type) && active_BO[_buffer_type] == _id)
+	if(active_BO.count(buffer_type) && active_BO[buffer_type] == id())
 	{
-		switch(_buffer_type)
+		switch(buffer_type)
 		{
-			case VERTEX:
-			case ELEMENT:
-			case UNIFORM:
-				glBindBuffer(_buffer_type, 0);
-				break;
-			case FRAME:
-				glBindFramebuffer(_buffer_type, 0);
-				break;
-			case RENDER:
-				glBindRenderbuffer(_buffer_type, 0);
-				break;
+		case VERTEX:
+		case ELEMENT:
+		case UNIFORM:
+			glBindBuffer(buffer_type, 0);
+			break;
+		case FRAME:
+			glBindFramebuffer(buffer_type, 0);
+			break;
+		case RENDER:
+			glBindRenderbuffer(buffer_type, 0);
+			break;
 		}
 
-		active_BO[_buffer_type] = 0;
+		active_BO[buffer_type] = 0;
 	}
-}
-
-bool BO::empty()const
-{
-	return (_id == 0 || existing_BOs[_buffer_type].count(_id) == 0 || 
-		    existing_BOs[_buffer_type][_id].n_sources == 0 || existing_BOs[_buffer_type][_id].size == 0);
 }
 
 size_t BO::size()const
 {
-	return (existing_BOs[_buffer_type].count(_id) ? existing_BOs[_buffer_type][_id].size : 0);
+	return empty() ? 0 : self->size;
 }
 
 uint BO::id()const
 {
-	return _id;
+	return empty() ? 0 : self->id;
 }
 
 BO::BufferType BO::type()const
 {
-	return _buffer_type;
+	return buffer_type;
 }
 
 string BO::type_str()const
 {
-	switch(_buffer_type)
+	switch(buffer_type)
 	{
 		case VERTEX: return "VBO";
 		case ELEMENT: return "EBO";
@@ -237,20 +260,19 @@ string BO::type_str()const
 
 BO::MemoryType BO::memType()const
 {
-	if(_id == 0 || existing_BOs[_buffer_type].count(_id) == 0)
-	{
-		return STATIC;
-	}
-
-	return existing_BOs[_buffer_type][_id].mem_type;
+	return (empty() ? STATIC : self->mem_type);
 }
 
 void BO::malloc(size_t n_bytes, MemoryType mem_type)
 {
-	bind();
-	glBufferData(_buffer_type, n_bytes, NULL, mem_type);
-	existing_BOs[_buffer_type][_id].size = n_bytes;
-	existing_BOs[_buffer_type][_id].mem_type = mem_type;
+	if(id() != 0)
+	{
+		bind();
+		glBufferData(buffer_type, n_bytes, NULL, mem_type);
+	}
+
+	instance()->size = n_bytes;
+	instance()->mem_type = mem_type;
 }
 
 void BO::realloc(size_t n_bytes, MemoryType mem_type)
@@ -268,67 +290,28 @@ void BO::realloc(size_t n_bytes, MemoryType mem_type)
 		throw glass::MemoryError("Failed to allocate memory!");
 	}
 	
-	void* pointer = this->ptr();
+	void* pointer = this->mapBuffer();
 	::memcpy(data_temp, pointer, data_size);
-	this->apply();
+	this->unMapBuffer();
 	this->malloc(n_bytes, mem_type);
-	pointer = this->ptr();
+	pointer = this->mapBuffer();
 	::memcpy(pointer, data_temp, data_size);
-	this->apply();
+	this->unMapBuffer();
 	::free(data_temp);
 }
 
 void BO::calloc(size_t n_elements, size_t sizeof_element, MemoryType mem_type)
 {
 	size_t n_bytes = n_elements * sizeof_element;
-
-	bind();
-	glBufferData(_buffer_type, n_bytes, NULL, mem_type);
-	existing_BOs[_buffer_type][_id].size = n_bytes;
-	existing_BOs[_buffer_type][_id].mem_type = mem_type;
+	malloc(n_bytes, mem_type);
 }
 
 void BO::memcpy(void* ptr_value, size_t n_bytes, MemoryType mem_type)
 {
 	bind();
-	glBufferData(_buffer_type, n_bytes, ptr_value, mem_type);
-	existing_BOs[_buffer_type][_id].size = n_bytes;
-	existing_BOs[_buffer_type][_id].mem_type = mem_type;
-}
-
-void BO::copyFrom(BO bo)
-{
-	if(size() == 0 || bo.size() == 0)
-	{
-		return;
-	}
-
-	bool self_is_bind = isBind();
-	bool source_is_bind = bo.isBind();
-
-	switch(_buffer_type)
-	{
-		case VERTEX:
-		case ELEMENT:
-		case UNIFORM:
-			glBindBuffer(GL_COPY_WRITE_BUFFER, _id);
-			break;
-		case FRAME:
-			glBindFramebuffer(GL_COPY_WRITE_BUFFER, _id);
-			break;
-		case RENDER:
-			glBindRenderbuffer(GL_COPY_WRITE_BUFFER, _id);
-			break;
-	}
-	bo.bind();
-
-	glCopyBufferSubData(bo._buffer_type, GL_COPY_WRITE_BUFFER, 0, 0, size());
-
-	if(self_is_bind) bind();
-	else unbind();
-
-	if(source_is_bind) bo.bind();
-	else bo.unbind();
+	glBufferData(buffer_type, n_bytes, ptr_value, mem_type);
+	instance()->size = n_bytes;
+	instance()->mem_type = mem_type;
 }
 
 void BO::free()
@@ -339,14 +322,14 @@ void BO::free()
 	}
 
 #ifdef _DEBUG
-	cout << "destructing " << type_str() << " " << _id << endl;
+	cout << "destructing " << type_str() << " " << instance()->id << endl;
 #endif
 	unbind();
-	existing_BOs[_buffer_type].erase(_id);
-	glDeleteBuffers(1, &_id);
+	glDeleteBuffers(1, &(instance()->id));
+	instance()->id = 0;
 }
 
-void* BO::ptr()
+void* BO::mapBuffer()
 {
 	if(size() == 0)
 	{
@@ -354,24 +337,24 @@ void* BO::ptr()
 	}
 	
 	bind();
-	void* pointer = glMapBuffer(_buffer_type, GL_READ_WRITE);
-	existing_BOs[_buffer_type][_id].is_mapped = true;
+	void* pointer = glMapBuffer(buffer_type, GL_READ_WRITE);
+	instance()->is_mapped = true;
 	return pointer;
 }
 
-bool BO::apply()
+bool BO::unMapBuffer()
 {
 	if(empty())
 	{
 		return false;
 	}
-	if(existing_BOs[_buffer_type][_id].is_mapped == false)
+	if(instance()->is_mapped == false)
 	{
 		return false;
 	}
 
 	bind();
-	bool result = glUnmapBuffer(_buffer_type);
-	existing_BOs[_buffer_type][_id].is_mapped = false;
+	bool result = glUnmapBuffer(buffer_type);
+	instance()->is_mapped = false;
 	return result;
 }

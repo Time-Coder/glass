@@ -54,7 +54,6 @@ class UBO: public BO
 private:
 	static bool is_poll_init;
 	static Counter binding_points_poll;
-	static std::unordered_map<uint, UBO_Instance> existing_UBOs;
 
 private:
 	void init();
@@ -66,7 +65,7 @@ public:
 	UBO();
 	UBO(const UBO& ubo);
 	UBO(UBO&& ubo);
-	~UBO();
+	virtual ~UBO();
 
 	template<class DataType>
 	UBO& operator =(const DataType& ubo);
@@ -77,7 +76,7 @@ public:
 
 	void bind(uint point);
 	void bind();
-	uint bindingPoint()const;
+	uint bindingPoint();
 	void setStructure(const Uniform::BlockMap::Reference& block);
 
 	template<class DataType>
@@ -118,11 +117,11 @@ public:
 template<class DataType>
 void UBO::set_atom(const std::string& name, const DataType& value)
 {
-	if(!existing_UBOs[_id].block.contains(name))
+	if(!userData<UBO_Instance>()->block.contains(name))
 	{
-		throw glass::KeyError(name + "is not a member of uniform block " + existing_UBOs[_id].block.name);
+		throw glass::KeyError(name + "is not a member of uniform block " + userData<UBO_Instance>()->block.name);
 	}
-	std::string type = existing_UBOs[_id].block[name].type;
+	std::string type = userData<UBO_Instance>()->block[name].type;
 
 	__SET_ATOM_GENERAL_CODE
 	else
@@ -140,16 +139,16 @@ void UBO::Reference::operator =(const DataType& value)
 template<class DataType>
 void UBO::set(const std::string& name, const DataType& value)
 {
-	if(existing_UBOs[_id].block.empty())
+	if(userData<UBO_Instance>()->block.empty())
 	{
 		throw glass::RuntimeError("Please call UBO::setStructure(Uniform::Block) before assign value.");
 	}
 
-	existing_UBOs[_id].block.parent->refresh();
+	userData<UBO_Instance>()->block.parent->refresh();
 
-	if(!existing_UBOs[_id].block.contains(name))
+	if(!userData<UBO_Instance>()->block.contains(name))
 	{
-		throw glass::KeyError(name + " is not a member of uniform block " + existing_UBOs[_id].block.name);
+		throw glass::KeyError(name + " is not a member of uniform block " + userData<UBO_Instance>()->block.name);
 	}
 
 	if(is_atom(name))
@@ -158,39 +157,39 @@ void UBO::set(const std::string& name, const DataType& value)
 		return;
 	}
 
-	std::string type = existing_UBOs[_id].block[name].type;
+	std::string type = userData<UBO_Instance>()->block[name].type;
 	if(type != type_name(DataType))
 	{
 		throw glass::TypeError("Cannot convert " + type_name(DataType) + " to " + type + ".");
 	}
-	existing_UBOs[_id].block.parent->please_define(type);
+	userData<UBO_Instance>()->block.parent->please_define(type);
 
-	if(existing_UBOs[_id].block.parent->defined_structs.count(type))
+	if(userData<UBO_Instance>()->block.parent->defined_structs.count(type))
 	{
-		unsigned long long host_hash = existing_UBOs[_id].block.parent->defined_structs[type].host_hash;
+		unsigned long long host_hash = userData<UBO_Instance>()->block.parent->defined_structs[type].host_hash;
 		if(host_hash != 0 && typeid(DataType).hash_code() != host_hash)
 		{
 			throw glass::TypeError("Cannot convert host type " + type_name(DataType) + " to GLSL type " + type);
 		}
 	}
 
-	if(sizeof(DataType) < existing_UBOs[_id].block[name].size)
+	if(sizeof(DataType) < userData<UBO_Instance>()->block[name].size)
 	{
 		throw glass::TypeError("Cannot convert host type " + type_name(DataType) + " to glsl type " + type);
 	}
 
 	unsigned char* ptr = (unsigned char*)(&(value));
 	if(std::is_base_of<Uniform::Bindable, DataType>::value && 
-	   (existing_UBOs[_id].block.parent->defined_structs.count(type) == 0 ||
-	    existing_UBOs[_id].block.parent->defined_structs[type].host_hash == 0) )
+	   (userData<UBO_Instance>()->block.parent->defined_structs.count(type) == 0 ||
+	    userData<UBO_Instance>()->block.parent->defined_structs[type].host_hash == 0) )
 	{
 		ptr += Uniform::Bindable::offset;
 	}
-	for(std::string atom : existing_UBOs[_id].block[name].atoms)
+	for(std::string atom : userData<UBO_Instance>()->block[name].atoms)
 	{
-		ptr += existing_UBOs[_id].block[atom].offset;
+		ptr += userData<UBO_Instance>()->block[atom].offset;
 		set_atom(atom, (void*)(ptr));
-		ptr += existing_UBOs[_id].block[atom].size + existing_UBOs[_id].block[atom].padding_size;
+		ptr += userData<UBO_Instance>()->block[atom].size + userData<UBO_Instance>()->block[atom].padding_size;
 	}
 }
 
@@ -207,18 +206,18 @@ UBO& UBO::operator =(const DataType& value)
 	void* ptr_end = (void*)((unsigned char*)ptr + sizeof(value));
 
 	if(std::is_base_of<Uniform::Bindable, DataType>::value &&
-	   (existing_UBOs[_id].block.parent->defined_structs.count(type_name(DataType)) == 0 ||
-	   	existing_UBOs[_id].block.parent->defined_structs[type_name(DataType)].host_hash == 0) )
+	   (userData<UBO_Instance>()->block.parent->defined_structs.count(type_name(DataType)) == 0 ||
+	   	userData<UBO_Instance>()->block.parent->defined_structs[type_name(DataType)].host_hash == 0) )
 	{
 		ptr = (void*)((unsigned char*)ptr + Uniform::Bindable::offset);
 	}
 
-	for(int i = 0; i < existing_UBOs[_id].block.instance()->members.size(); i++)
+	for(int i = 0; i < userData<UBO_Instance>()->block.instance()->members.size(); i++)
 	{
-		if(existing_UBOs[_id].block.instance()->members[i].name.find(".") == std::string::npos &&
-		   existing_UBOs[_id].block.instance()->members[i].name.find("[") == std::string::npos)
+		if(userData<UBO_Instance>()->block.instance()->members[i].name.find(".") == std::string::npos &&
+		   userData<UBO_Instance>()->block.instance()->members[i].name.find("[") == std::string::npos)
 		{
-			ptr = this->set(existing_UBOs[_id].block.instance()->members[i].name, ptr);
+			ptr = this->set(userData<UBO_Instance>()->block.instance()->members[i].name, ptr);
 			if(ptr >= ptr_end)
 			{
 				break;

@@ -45,7 +45,7 @@ void Uniform::Bindable::sync()
 		{
 			ptr += Uniform::Bindable::offset;
 		}
-		for(int i = 0; i < it->parent->uniform_map[it->name].atoms.size(); i++)
+        for(uint i = 0; i < it->parent->uniform_map[it->name].atoms.size(); i++)
 		{
 			std::string child_name = it->parent->uniform_map[it->name].atoms[i];
 			
@@ -128,7 +128,7 @@ bool Uniform::BlockMap::Reference::operator >=(const Uniform::BlockMap::Referenc
 		return false;
 	}
 
-	for(int i = 0; i < block.instance()->members.size() && i < instance()->members.size(); i++)
+    for(uint i = 0; i < block.instance()->members.size() && i < instance()->members.size(); i++)
 	{
 		if(block.instance()->members[i].location != instance()->members[i].location || block.instance()->members[i].type != instance()->members[i].type)
 		{
@@ -145,7 +145,7 @@ bool Uniform::BlockMap::Reference::operator <=(const Uniform::BlockMap::Referenc
 		return false;
 	}
 
-	for(int i = 0; i < block.instance()->members.size(); i++)
+    for(uint i = 0; i < block.instance()->members.size(); i++)
 	{
 		if(block.instance()->members[i].location != instance()->members[i].location || block.instance()->members[i].type != instance()->members[i].type)
 		{
@@ -162,7 +162,7 @@ bool Uniform::BlockMap::Reference::operator !=(const Uniform::BlockMap::Referenc
 		return true;
 	}
 
-	for(int i = 0; i < instance()->members.size(); i++)
+    for(uint i = 0; i < instance()->members.size(); i++)
 	{
 		if(block.instance()->members[i].location != instance()->members[i].location || block.instance()->members[i].type != instance()->members[i].type)
 		{
@@ -179,7 +179,7 @@ bool Uniform::BlockMap::Reference::operator ==(const Uniform::BlockMap::Referenc
 		return false;
 	}
 
-	for(int i = 0; i < instance()->members.size(); i++)
+    for(uint i = 0; i < instance()->members.size(); i++)
 	{
 		if(block.instance()->members[i].location != instance()->members[i].location || block.instance()->members[i].type != instance()->members[i].type)
 		{
@@ -216,12 +216,12 @@ void Uniform::find_uniforms(const string& code)
 	while(true)
 	{
 		pos = code.find("uniform", pos);
-		if(pos == string::npos)
+        if((size_t)pos == string::npos)
 		{
 			return;
 		}
 		if(!(pos == 0 || (pos-1 >= 0          && (code[pos-1] == ' ' || code[pos-1] == '\n' || code[pos-1] == '\t'))) ||
-		   !(             pos+7 < code.size() && (code[pos+7] == ' ' || code[pos+7] == '\n' || code[pos+7] == '\t')))
+           !(             (size_t)pos+7 < code.size() && (code[pos+7] == ' ' || code[pos+7] == '\n' || code[pos+7] == '\t')))
 		{
 			pos += 7;
 			continue;
@@ -231,7 +231,7 @@ void Uniform::find_uniforms(const string& code)
 		int pos_semicolon = code.find(";", pos_start);
 		int pos_equal = code.find("=", pos_start);
 		int pos_end = pos_semicolon;
-		if(pos_equal != string::npos && pos_equal < pos_semicolon)
+        if((size_t)pos_equal != string::npos && pos_equal < pos_semicolon)
 		{
 			pos_end = pos_equal;
 		}
@@ -248,7 +248,7 @@ void Uniform::find_uniforms(const string& code)
 		{
 			string name = str::format_var_name(*it);
 			int pos_left_brace = name.find("[");
-			if(pos_left_brace == string::npos)
+            if((size_t)pos_left_brace == string::npos)
 			{
 				original_uniform_map[name] = Uniform::Variable(type, name);
 			}
@@ -303,7 +303,7 @@ void Uniform::resolve_one_uniform_block_member(const string& block_name, const s
 	// uniform_block_map[block_name].members[block_member_name].offset = offset_of(type);
 
 	int pos_left_brace = type.find("[");
-	if(pos_left_brace == string::npos)
+    if((size_t)pos_left_brace == string::npos)
 	{
 		if(defined_structs.count(type) == 0)
 		{
@@ -368,7 +368,7 @@ void Uniform::resolve_one_uniform(const string& name)
 	// uniform_map[name].offset = offset_of(type);
 
 	int pos_left_brace = type.find("[");
-	if(pos_left_brace == string::npos) // not an array
+    if((size_t)pos_left_brace == string::npos) // not an array
 	{
 		if(defined_structs.count(type) == 0) // is built-in type
 		{
@@ -507,7 +507,7 @@ uint Uniform::size_of(string type)
 		uint n_members = defined_structs[type].members.size();
 		uint offset = 0, old_offset = 0;
 		uint max_align_size = 0;
-		for(int i = 0; i < n_members; i++)
+        for(uint i = 0; i < n_members; i++)
 		{
 			string current_type = defined_structs[type].members[i].type;
 
@@ -564,12 +564,12 @@ void Uniform::find_structs(const string& code)
 	while(true)
 	{
 		pos = code.find("struct", pos);
-		if(pos == string::npos)
+        if((size_t)pos == string::npos)
 		{
 			return;
 		}
 		if(!(pos == 0 || (pos-1 >= 0          && (code[pos-1] == '\n' || code[pos-1] == ' ' || code[pos-1] == '\t'))) ||
-		   !(             pos+6 < code.size() && (code[pos+6] == '\n' || code[pos+6] == ' ' || code[pos+6] == '\t')))
+           !(             (size_t)pos+6 < code.size() && (code[pos+6] == '\n' || code[pos+6] == ' ' || code[pos+6] == '\t')))
 		{
 			pos += 6;
 			continue;
@@ -591,7 +591,7 @@ void Uniform::find_structs(const string& code)
 			{
 				string name = str::format_var_name(*it);
 				int pos_left_brace = name.find("[");
-				if(pos_left_brace == string::npos)
+                if((size_t)pos_left_brace == string::npos)
 				{
 					structure.members.push_back(Uniform::Variable(type, name));
 				}
@@ -616,12 +616,12 @@ void Uniform::find_uniform_blocks(const string& code)
 	while(true)
 	{
 		pos = code.find("uniform", pos);
-		if(pos == string::npos)
+        if((size_t)pos == string::npos)
 		{
 			return;
 		}
 		if(!(pos == 0 || (pos-1 >= 0          && (code[pos-1] == '\n' || code[pos-1] == ' ' || code[pos-1] == '\t'))) ||
-		   !(             pos+7 < code.size() && (code[pos+7] == '\n' || code[pos+7] == ' ' || code[pos+7] == '\t' || code[pos+7] == '(')))
+           !(             (size_t)pos+7 < code.size() && (code[pos+7] == '\n' || code[pos+7] == ' ' || code[pos+7] == '\t' || code[pos+7] == '(')))
 		{
 			pos += 7;
 			continue;
@@ -637,7 +637,7 @@ void Uniform::find_uniform_blocks(const string& code)
 		}
 
 		pos_end = code.find("}", pos);
-		if(pos_end == string::npos)
+        if((size_t)pos_end == string::npos)
 		{
 			return;
 		}
@@ -660,7 +660,7 @@ void Uniform::find_uniform_blocks(const string& code)
 			{
 				string name = str::format_var_name(*it);
 				int pos_left_brace = name.find("[");
-				if(pos_left_brace == string::npos)
+                if((size_t)pos_left_brace == string::npos)
 				{
 					original_uniform_block_map[block_name][name] = Uniform::Variable(type, name);
 				}
@@ -897,12 +897,12 @@ void Uniform::set_atom(const string& name, void* ptr_value)
 
 void UBO::set_atom(const string& name, void* ptr_value)
 {
-	if(!(existing_UBOs[_id].block.contains(name)))
+	if(!(userData<UBO_Instance>()->block.contains(name)))
 	{
-		throw glass::KeyError(name + " is not a member of uniform block " + existing_UBOs[_id].block.name);
+		throw glass::KeyError(name + " is not a member of uniform block " + userData<UBO_Instance>()->block.name);
 	}
 
-	string type = existing_UBOs[_id].block[name].type;
+	string type = userData<UBO_Instance>()->block[name].type;
 	
 	SET_ATOM_COMMON_CODE
 	else throw glass::TypeError("Uniform block member " + name + " is not an atom variable.");

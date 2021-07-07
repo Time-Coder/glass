@@ -1,5 +1,10 @@
 #include "glass/utils/path.h"
 
+#ifdef USE_QT
+#include <QString>
+#include <QFileInfo>
+#endif
+
 using namespace std;
 
 void path::format(string& filename)
@@ -56,7 +61,6 @@ vector<string> path::ls(string folder_name)
     dirent* p = nullptr;
     while( (p = readdir(open_dir)) != nullptr)
     {
-        struct stat st;
         if(p->d_name[0] != '.')
         {
         	if(folder_name != ".")
@@ -93,22 +97,6 @@ string path::pwd()
 	format(str_path);
 
 	return str_path;
-}
-
-std::string path::username()
-{
-#ifdef __linux__
-    uid_t userid;
-    struct passwd* pwd;
-    userid = getuid();
-    pwd = getpwuid(userid);
-    return pwd->pw_name;
-#else
-    DWORD len = 128;
-    char szBuffer[len];
-    GetUserName(szBuffer, &len);
-    return szBuffer;
-#endif
 }
 
 bool path::isfile(string filename)
@@ -220,17 +208,25 @@ string path::abspath(string filename)
 {
 	path::format(filename);
 
-	char absolute_path[MAX_PATH+1];
 #ifdef __linux__
+    char absolute_path[MAX_PATH+1];
 	char *ptr;
 	ptr = realpath(filename.c_str(), absolute_path);
+    return result;
 #else
-	GetFullPathName(filename.c_str(), MAX_PATH, absolute_path, NULL);
-#endif
-	string result = absolute_path;
-	format(result);
 
-	return result;
+#ifdef USE_QT
+    return QFileInfo(QString::fromStdString(filename)).absoluteFilePath().toStdString();
+#else
+    char absolute_path[MAX_PATH+1];
+	GetFullPathName(filename.c_str(), MAX_PATH, absolute_path, NULL);
+    string result = absolute_path;
+    format(result);
+
+    return result;
+#endif
+
+#endif
 }
 
 string path::relpath(string filename, string basepath)
@@ -267,7 +263,7 @@ string path::relpath(string filename, string basepath)
 	}
 	pos++;
 
-	while(pos >= 0 && pos < filename.size() && filename[pos] != '/')
+    while(pos >= 0 && (size_t)pos < filename.size() && filename[pos] != '/')
 	{
 		pos--;
 	}
@@ -281,11 +277,11 @@ string path::relpath(string filename, string basepath)
 string path::basename(const string& filename)
 {
 	int name_begin = filename.find_last_of("/\\") + 1;
-	if(name_begin == string::npos)
+    if((size_t)name_begin == string::npos)
 	{
 		return filename;
 	}
-	if(name_begin == filename.size())
+    if((size_t)name_begin == filename.size())
 	{
 		return "";
 	}
@@ -295,7 +291,7 @@ string path::basename(const string& filename)
 string path::dirname(const string& full_name)
 {
 	int end_pos = full_name.find_last_of("/\\");
-	if(end_pos == string::npos)
+    if((size_t)end_pos == string::npos)
 	{
 		return ".";
 	}
@@ -309,7 +305,7 @@ string path::extname(const string& full_name)
 {
 	int pos_point = full_name.find_last_of(".");
 	int pos_slash = full_name.find_last_of("/\\");
-	if(pos_slash < pos_point && pos_point != full_name.size()-1)
+    if(pos_slash < pos_point && (size_t)pos_point != full_name.size()-1)
 	{
 		return full_name.substr(pos_point+1, full_name.size()-pos_point-1);
 	}
@@ -398,7 +394,7 @@ int path::cp(string src, string dest)
 		{
 			return copy_file_to_dir(src, dest);
 		}
-		else if(isdir(path::dirname(dest)) && !isdir(dest) || in_str(name, '.') > 0)
+        else if((isdir(path::dirname(dest)) && !isdir(dest)) || in_str(name, '.') > 0)
 		{
 			return copy_file_to_file(src, dest);
 		}

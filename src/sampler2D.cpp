@@ -307,7 +307,7 @@ void sampler2D::wrap_t(uint wrap_type)
 
 void sampler2D::wrap(uint wrap_type_s, uint wrap_type_t)
 {
-	if(wrap_type_t == -1)
+    if(wrap_type_t == (uint)(-1))
 	{
 		wrap_type_t = wrap_type_s;
 	}
@@ -318,7 +318,7 @@ void sampler2D::wrap(uint wrap_type_s, uint wrap_type_t)
 
 void sampler2D::filter(uint filter_type_min, uint filter_type_mag)
 {
-	if(filter_type_mag == -1)
+    if(filter_type_mag == (uint)(-1))
 	{
 		filter_type_mag = filter_type_min;
 	}

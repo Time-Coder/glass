@@ -361,7 +361,7 @@ static void stbiw__putc(glass_stbi__write_context *s, unsigned char c)
 
 static void stbiw__write1(glass_stbi__write_context *s, unsigned char a)
 {
-   if (s->buf_used + 1 > sizeof(s->buffer))
+   if ((long long unsigned int)(s->buf_used + 1) > sizeof(s->buffer))
       stbiw__write_flush(s);
    s->buffer[s->buf_used++] = a;
 }
@@ -369,7 +369,7 @@ static void stbiw__write1(glass_stbi__write_context *s, unsigned char a)
 static void stbiw__write3(glass_stbi__write_context *s, unsigned char a, unsigned char b, unsigned char c)
 {
    int n;
-   if (s->buf_used + 3 > sizeof(s->buffer))
+   if ((long long unsigned int)(s->buf_used + 3) > sizeof(s->buffer))
       stbiw__write_flush(s);
    n = s->buf_used;
    s->buf_used = n+3;
@@ -463,7 +463,13 @@ static int glass_stbi_write_bmp_core(glass_stbi__write_context *s, int x, int y,
 
 STBIWDEF int glass_stbi_write_bmp_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
 {
-   glass_stbi__write_context s = { 0 };
+   glass_stbi__write_context s =
+   {
+       .func = NULL,
+       .context = NULL,
+       .buffer = {0},
+       .buf_used = 0
+   };
    glass_stbi__start_write_callbacks(&s, func, context);
    return glass_stbi_write_bmp_core(&s, x, y, comp, data);
 }
@@ -471,7 +477,13 @@ STBIWDEF int glass_stbi_write_bmp_to_func(glass_stbi_write_func *func, void *con
 #ifndef STBI_WRITE_NO_STDIO
 STBIWDEF int glass_stbi_write_bmp(char const *filename, int x, int y, int comp, const void *data)
 {
-   glass_stbi__write_context s = { 0 };
+   glass_stbi__write_context s =
+   {
+       .func = NULL,
+       .context = NULL,
+       .buffer = {0},
+       .buf_used = 0
+   };
    if (glass_stbi__start_write_file(&s,filename)) {
       int r = glass_stbi_write_bmp_core(&s, x, y, comp, data);
       glass_stbi__end_write_file(&s);
@@ -562,7 +574,13 @@ static int glass_stbi_write_tga_core(glass_stbi__write_context *s, int x, int y,
 
 STBIWDEF int glass_stbi_write_tga_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
 {
-   glass_stbi__write_context s = { 0 };
+    glass_stbi__write_context s =
+    {
+        .func = NULL,
+        .context = NULL,
+        .buffer = {0},
+        .buf_used = 0
+    };
    glass_stbi__start_write_callbacks(&s, func, context);
    return glass_stbi_write_tga_core(&s, x, y, comp, (void *) data);
 }
@@ -570,7 +588,13 @@ STBIWDEF int glass_stbi_write_tga_to_func(glass_stbi_write_func *func, void *con
 #ifndef STBI_WRITE_NO_STDIO
 STBIWDEF int glass_stbi_write_tga(char const *filename, int x, int y, int comp, const void *data)
 {
-   glass_stbi__write_context s = { 0 };
+   glass_stbi__write_context s =
+   {
+       .func = NULL,
+       .context = NULL,
+       .buffer = {0},
+       .buf_used = 0
+   };
    if (glass_stbi__start_write_file(&s,filename)) {
       int r = glass_stbi_write_tga_core(&s, x, y, comp, (void *) data);
       glass_stbi__end_write_file(&s);
@@ -736,7 +760,13 @@ static int glass_stbi_write_hdr_core(glass_stbi__write_context *s, int x, int y,
 
 STBIWDEF int glass_stbi_write_hdr_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const float *data)
 {
-   glass_stbi__write_context s = { 0 };
+    glass_stbi__write_context s =
+    {
+        .func = NULL,
+        .context = NULL,
+        .buffer = {0},
+        .buf_used = 0
+    };
    glass_stbi__start_write_callbacks(&s, func, context);
    return glass_stbi_write_hdr_core(&s, x, y, comp, (float *) data);
 }
@@ -744,7 +774,13 @@ STBIWDEF int glass_stbi_write_hdr_to_func(glass_stbi_write_func *func, void *con
 #ifndef STBI_WRITE_NO_STDIO
 STBIWDEF int glass_stbi_write_hdr(char const *filename, int x, int y, int comp, const float *data)
 {
-   glass_stbi__write_context s = { 0 };
+    glass_stbi__write_context s =
+    {
+        .func = NULL,
+        .context = NULL,
+        .buffer = {0},
+        .buf_used = 0
+    };
    if (glass_stbi__start_write_file(&s,filename)) {
       int r = glass_stbi_write_hdr_core(&s, x, y, comp, (float *) data);
       glass_stbi__end_write_file(&s);
@@ -1540,7 +1576,13 @@ static int glass_stbi_write_jpg_core(glass_stbi__write_context *s, int width, in
 
 STBIWDEF int glass_stbi_write_jpg_to_func(glass_stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality)
 {
-   glass_stbi__write_context s = { 0 };
+    glass_stbi__write_context s =
+    {
+        .func = NULL,
+        .context = NULL,
+        .buffer = {0},
+        .buf_used = 0
+    };
    glass_stbi__start_write_callbacks(&s, func, context);
    return glass_stbi_write_jpg_core(&s, x, y, comp, (void *) data, quality);
 }
@@ -1549,7 +1591,13 @@ STBIWDEF int glass_stbi_write_jpg_to_func(glass_stbi_write_func *func, void *con
 #ifndef STBI_WRITE_NO_STDIO
 STBIWDEF int glass_stbi_write_jpg(char const *filename, int x, int y, int comp, const void *data, int quality)
 {
-   glass_stbi__write_context s = { 0 };
+    glass_stbi__write_context s =
+    {
+        .func = NULL,
+        .context = NULL,
+        .buffer = {0},
+        .buf_used = 0
+    };
    if (glass_stbi__start_write_file(&s,filename)) {
       int r = glass_stbi_write_jpg_core(&s, x, y, comp, data, quality);
       glass_stbi__end_write_file(&s);

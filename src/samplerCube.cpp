@@ -643,11 +643,11 @@ void samplerCube::wrap_r(uint wrap_type)
 
 void samplerCube::wrap(uint wrap_type_s, uint wrap_type_t, uint wrap_type_r)
 {
-	if(wrap_type_t == -1)
+    if(wrap_type_t == (uint)(-1))
 	{
 		wrap_type_t = wrap_type_s;
 	}
-	if(wrap_type_r == -1)
+    if(wrap_type_r == (uint)(-1))
 	{
 		wrap_type_r = wrap_type_t;
 	}
@@ -705,7 +705,7 @@ void samplerCube::filter_mag(uint filter_type)
 
 void samplerCube::filter(uint filter_type_min, uint filter_type_mag)
 {
-	if(filter_type_mag == -1)
+    if(filter_type_mag == (uint)(-1))
 	{
 		filter_type_mag = filter_type_min;
 	}

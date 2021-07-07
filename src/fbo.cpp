@@ -1,13 +1,15 @@
 #include "glass/FBO"
 #include "glass/utils/helper.h"
 
-using namespace std;
+#ifdef USE_QT
+#include <QOpenGLWidget>
+#endif
 
-unordered_map<uint, FBO::FBO_Instance> FBO::existing_FBOs;
+using namespace std;
 
 int FBO::vector_find(std::vector<_Attachment>& v, const std::string& name)
 {
-	for(int i = 0; i < v.size(); i++)
+    for(uint i = 0; i < v.size(); i++)
 	{
 		if(v[i].name == name)
 		{
@@ -23,8 +25,8 @@ FBO::_Attachment::_Attachment(const string& _name) : name(_name)
 FBO::_Attachment::_Attachment(const FBO::_Attachment& attachment) :
 parent(attachment.parent),
 id(attachment.id),
-type(attachment.type),
 buffer_type(attachment.buffer_type),
+type(attachment.type),
 format(attachment.format),
 dtype(attachment.dtype),
 _buffer(NULL),
@@ -53,8 +55,8 @@ name(attachment.name)
 FBO::_Attachment::_Attachment(FBO::_Attachment&& attachment):
 parent(move(attachment.parent)),
 id(move(attachment.id)),
-type(move(attachment.type)),
 buffer_type(move(attachment.buffer_type)),
+type(move(attachment.type)),
 format(move(attachment.format)),
 dtype(move(attachment.dtype)),
 _buffer(move(attachment._buffer)),
@@ -190,44 +192,39 @@ vec4 getClearColor()
 void FBO::init()
 {
 	BO::init();
-	if(existing_FBOs[_id].clear_color.x == -1)
+	if(userData<FBO_Instance>()->clear_color.x == -1)
 	{
-		existing_FBOs[_id].clear_color = getClearColor();
+		userData<FBO_Instance>()->clear_color = getClearColor();
 	}
 }
 
 void FBO::del()
 {
-	if(existing_BOs[FRAME].count(_id) && existing_BOs[FRAME][_id].n_sources == 1)
-	{
-		existing_FBOs.erase(_id);
-	}
-	BO::del();
+	BO::delWithUserData<FBO_Instance>();
 }
 
 FBO::~FBO()
 {
-	del();
+	this->del();
 }
 
 FBO::FBO(uint screen_width, uint screen_height,
 	     uint buffer_width, uint buffer_height) :
 BO(FRAME)
 {
-	init();
-	existing_FBOs[_id].screen_width = screen_width;
-	existing_FBOs[_id].screen_height = screen_height;
-	existing_FBOs[_id].buffer_width = buffer_width;
-	existing_FBOs[_id].buffer_height = buffer_height;
+	userData<FBO_Instance>()->screen_width = screen_width;
+	userData<FBO_Instance>()->screen_height = screen_height;
+	userData<FBO_Instance>()->buffer_width = buffer_width;
+	userData<FBO_Instance>()->buffer_height = buffer_height;
 
-	if(existing_FBOs[_id].buffer_width == 0)
+	if(userData<FBO_Instance>()->buffer_width == 0)
 	{
-		existing_FBOs[_id].buffer_width = screen_width;
+		userData<FBO_Instance>()->buffer_width = screen_width;
 	}
 
-	if(existing_FBOs[_id].buffer_height == 0)
+	if(userData<FBO_Instance>()->buffer_height == 0)
 	{
-		existing_FBOs[_id].buffer_height = screen_height;
+		userData<FBO_Instance>()->buffer_height = screen_height;
 	}
 }
 
@@ -237,7 +234,7 @@ FBO::FBO(FBO&& fbo) : BO(move(fbo)) {}
 
 FBO& FBO::operator =(const FBO& fbo)
 {
-	if(this != &fbo && _id != fbo._id)
+	if(this != &fbo && self != fbo.self)
 	{
 		return static_cast<FBO&>(BO::operator=(fbo));
 	}
@@ -249,7 +246,7 @@ FBO& FBO::operator =(const FBO& fbo)
 
 FBO& FBO::operator =(FBO&& fbo)
 {
-	if(this != &fbo && _id != fbo._id)
+	if(this != &fbo && self != fbo.self)
 	{
 		return static_cast<FBO&>(BO::operator=(std::move(fbo)));
 	}
@@ -259,24 +256,24 @@ FBO& FBO::operator =(FBO&& fbo)
 	}
 }
 
-uint FBO::screenWidth()const
+uint FBO::screenWidth()
 {
-	return existing_FBOs[_id].screen_width;
+	return userData<FBO_Instance>()->screen_width;
 }
 
-uint FBO::screenHeight()const
+uint FBO::screenHeight()
 {
-	return existing_FBOs[_id].screen_height;
+	return userData<FBO_Instance>()->screen_height;
 }
 
-uint FBO::bufferWidth()const
+uint FBO::bufferWidth()
 {
-	return existing_FBOs[_id].buffer_width;
+	return userData<FBO_Instance>()->buffer_width;
 }
 
-uint FBO::bufferHeight()const
+uint FBO::bufferHeight()
 {
-	return existing_FBOs[_id].buffer_height;
+	return userData<FBO_Instance>()->buffer_height;
 }
 
 void FBO::resize(uint __width, uint __height)
@@ -288,61 +285,61 @@ void FBO::resize(uint __width, uint __height)
 void FBO::screenResize(uint __screen_width, uint __screen_height)
 {
 	init();
-	existing_FBOs[_id].screen_width = __screen_width;
-	existing_FBOs[_id].screen_height = __screen_height;
+	userData<FBO_Instance>()->screen_width = __screen_width;
+	userData<FBO_Instance>()->screen_height = __screen_height;
 }
 
 void FBO::bufferResize(uint __buffer_width, uint __buffer_height)
 {
 	init();
-	existing_FBOs[_id].buffer_width = __buffer_width;
-	existing_FBOs[_id].buffer_height = __buffer_height;
+	userData<FBO_Instance>()->buffer_width = __buffer_width;
+	userData<FBO_Instance>()->buffer_height = __buffer_height;
 
-	if(existing_FBOs[_id].depth_attachment != NULL)
+	if(userData<FBO_Instance>()->depth_attachment != NULL)
 	{
-		if(existing_FBOs[_id].depth_attachment->buffer_type == "sampler2D")
+		if(userData<FBO_Instance>()->depth_attachment->buffer_type == "sampler2D")
 		{
-			existing_FBOs[_id].depth_attachment->buffer<sampler2D>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			userData<FBO_Instance>()->depth_attachment->buffer<sampler2D>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
-		else if(existing_FBOs[_id].depth_attachment->buffer_type == "samplerCube")
+		else if(userData<FBO_Instance>()->depth_attachment->buffer_type == "samplerCube")
 		{
-			existing_FBOs[_id].depth_attachment->buffer<samplerCube>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			userData<FBO_Instance>()->depth_attachment->buffer<samplerCube>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
-		else if(existing_FBOs[_id].depth_attachment->buffer_type == "RBO")
+		else if(userData<FBO_Instance>()->depth_attachment->buffer_type == "RBO")
 		{
-			existing_FBOs[_id].depth_attachment->buffer<RBO>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			userData<FBO_Instance>()->depth_attachment->buffer<RBO>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
 	}
 
-	if(existing_FBOs[_id].stencil_attachment != NULL)
+	if(userData<FBO_Instance>()->stencil_attachment != NULL)
 	{
-		if(existing_FBOs[_id].stencil_attachment->buffer_type == "sampler2D")
+		if(userData<FBO_Instance>()->stencil_attachment->buffer_type == "sampler2D")
 		{
-			existing_FBOs[_id].stencil_attachment->buffer<sampler2D>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			userData<FBO_Instance>()->stencil_attachment->buffer<sampler2D>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
-		else if(existing_FBOs[_id].stencil_attachment->buffer_type == "samplerCube")
+		else if(userData<FBO_Instance>()->stencil_attachment->buffer_type == "samplerCube")
 		{
-			existing_FBOs[_id].stencil_attachment->buffer<samplerCube>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			userData<FBO_Instance>()->stencil_attachment->buffer<samplerCube>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
-		else if(existing_FBOs[_id].stencil_attachment->buffer_type == "RBO")
+		else if(userData<FBO_Instance>()->stencil_attachment->buffer_type == "RBO")
 		{
-			existing_FBOs[_id].stencil_attachment->buffer<RBO>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			userData<FBO_Instance>()->stencil_attachment->buffer<RBO>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
 	}
 
-	for(auto it = existing_FBOs[_id].color_attachments.begin(); it != existing_FBOs[_id].color_attachments.end(); it++)
+	for(auto it = userData<FBO_Instance>()->color_attachments.begin(); it != userData<FBO_Instance>()->color_attachments.end(); it++)
 	{
 		if(it->buffer_type == "sampler2D")
 		{
-			it->buffer<sampler2D>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			it->buffer<sampler2D>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
 		else if(it->buffer_type == "samplerCube")
 		{
-			it->buffer<samplerCube>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			it->buffer<samplerCube>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
 		else if(it->buffer_type == "RBO")
 		{
-			it->buffer<RBO>().realloc(existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+			it->buffer<RBO>().realloc(userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 		}
 	}
 }
@@ -360,53 +357,66 @@ void FBO::_unbind()const
 void FBO::bind()
 {
 	_apply();
-	existing_FBOs[_id].old_clear_color = getClearColor();
+	userData<FBO_Instance>()->old_clear_color = getClearColor();
 	
 	// glCullFace(GL_FRONT);
-	if(existing_FBOs[_id].depth_attachment != NULL)
+	if(userData<FBO_Instance>()->depth_attachment != NULL)
 	{
 		glEnable(GL_DEPTH_TEST);
 	}
-	if(existing_FBOs[_id].auto_resize)
+	if(userData<FBO_Instance>()->auto_resize)
 	{
-		glViewport(0, 0, existing_FBOs[_id].buffer_width, existing_FBOs[_id].buffer_height);
+        glViewport(0, 0, userData<FBO_Instance>()->buffer_width, userData<FBO_Instance>()->buffer_height);
 	}
-	if(existing_FBOs[_id].auto_clear)
+	if(userData<FBO_Instance>()->auto_clear)
 	{
 		clear();
 	}
 }
 
-void FBO::unbind()const
+void FBO::unbind()
 {
 	_unbind();
 	// glCullFace(GL_BACK);
-	if(existing_FBOs[_id].auto_resize)
+	if(userData<FBO_Instance>()->auto_resize)
 	{
-		glViewport(0, 0, existing_FBOs[_id].screen_width, existing_FBOs[_id].screen_height);
+        double device_pixel_ratio = 1;
+#ifdef USE_QT
+        if(userData<FBO_Instance>()->device != NULL)
+        {
+            device_pixel_ratio = userData<FBO_Instance>()->device->devicePixelRatio();
+        }
+#endif
+        glViewport(0, 0, device_pixel_ratio*userData<FBO_Instance>()->screen_width, device_pixel_ratio*userData<FBO_Instance>()->screen_height);
 	}
-	if(existing_FBOs[_id].auto_clear)
+	if(userData<FBO_Instance>()->auto_clear)
 	{
-		glClearColor(existing_FBOs[_id].old_clear_color.x, existing_FBOs[_id].old_clear_color.y, existing_FBOs[_id].old_clear_color.z, existing_FBOs[_id].old_clear_color.w);
+		glClearColor(userData<FBO_Instance>()->old_clear_color.x, userData<FBO_Instance>()->old_clear_color.y, userData<FBO_Instance>()->old_clear_color.z, userData<FBO_Instance>()->old_clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
+#ifdef USE_QT
+    if(userData<FBO_Instance>()->device != NULL)
+    {
+        userData<FBO_Instance>()->device->makeCurrent();
+    }
+#endif
 }
 
 void FBO::autoClear(bool flag)
 {
 	init();
-	existing_FBOs[_id].auto_clear = flag;
+	userData<FBO_Instance>()->auto_clear = flag;
 }
 
 void FBO::autoResize(bool flag)
 {
 	init();
-	existing_FBOs[_id].auto_resize = flag;
+	userData<FBO_Instance>()->auto_resize = flag;
 }
 
 uint FBO::status()
 {
-	if(_id == 0)
+	if(id() == 0)
 	{
 		return 0;
 	}
@@ -417,7 +427,7 @@ uint FBO::status()
 
 bool FBO::completed()
 {
-	if(_id == 0)
+	if(id() == 0)
 	{
 		return false;
 	}
@@ -428,42 +438,42 @@ bool FBO::completed()
 
 void FBO::clear()
 {
-	if(_id == 0 || (existing_FBOs.count(_id) && existing_FBOs[_id].clear_value == 0))
+	if(id() == 0 || userData<FBO_Instance>()->clear_value == 0)
 	{
 		return;
 	}
 
 	_bind();
-	glClearColor(existing_FBOs[_id].clear_color.x, existing_FBOs[_id].clear_color.y, existing_FBOs[_id].clear_color.z, existing_FBOs[_id].clear_color.w);
-	glClear(existing_FBOs[_id].clear_value);
+	glClearColor(userData<FBO_Instance>()->clear_color.x, userData<FBO_Instance>()->clear_color.y, userData<FBO_Instance>()->clear_color.z, userData<FBO_Instance>()->clear_color.w);
+	glClear(userData<FBO_Instance>()->clear_value);
 }
 
 void FBO::_apply()
 {
 	_bind();
-	if(existing_FBOs[_id].is_applied == true)
+	if(userData<FBO_Instance>()->is_applied == true)
 	{
 		return;
 	}
 
-	if(existing_FBOs[_id].color_attachments.empty() &&
-	   existing_FBOs[_id].depth_attachment == NULL && 
-	   existing_FBOs[_id].stencil_attachment == NULL)
+	if(userData<FBO_Instance>()->color_attachments.empty() &&
+	   userData<FBO_Instance>()->depth_attachment == NULL && 
+	   userData<FBO_Instance>()->stencil_attachment == NULL)
 	{
 		_unbind();
 		throw glass::RuntimeError("FBO is incompleted!");
 	}
 
 	// glEnable(GL_CULL_FACE);
-	if(existing_FBOs[_id].color_attachments.empty())
+	if(userData<FBO_Instance>()->color_attachments.empty())
 	{
 		glDrawBuffer(GL_NONE);
 	    glReadBuffer(GL_NONE);
 	}
-	else if(existing_FBOs[_id].color_attachments.size() > 1)
+	else if(userData<FBO_Instance>()->color_attachments.size() > 1)
 	{
-		vector<GLuint> attachments(existing_FBOs[_id].color_attachments.size());
-		for(int i = 0; i < attachments.size(); i++)
+		vector<GLuint> attachments(userData<FBO_Instance>()->color_attachments.size());
+        for(uint i = 0; i < attachments.size(); i++)
 		{
 			attachments[i] = GL_COLOR_ATTACHMENT0 + i;
 		}
@@ -476,28 +486,36 @@ void FBO::_apply()
 		throw glass::RuntimeError("FBO is incompleted.");
 	}
 
-	existing_FBOs[_id].is_applied = true;
+	userData<FBO_Instance>()->is_applied = true;
 }
 
 void FBO::clearColor(const vec3& c)
 {
 	init();
-	existing_FBOs[_id].clear_color = vec4(c, 1.0);
+	userData<FBO_Instance>()->clear_color = vec4(c, 1.0);
 }
 
 void FBO::clearColor(const vec4& c)
 {
 	init();
-	existing_FBOs[_id].clear_color = c;
+	userData<FBO_Instance>()->clear_color = c;
 }
 
 void FBO::clearColor(float r, float g, float b, float a)
 {
 	init();
-	existing_FBOs[_id].clear_color = vec4(r, g, b, a);
+	userData<FBO_Instance>()->clear_color = vec4(r, g, b, a);
 }
 
 vec4 FBO::clearColor()
 {
-	return existing_FBOs[_id].clear_color;
+	return userData<FBO_Instance>()->clear_color;
 }
+
+#ifdef USE_QT
+void FBO::setPaintDevice(QOpenGLWidget* device)
+{
+    init();
+    userData<FBO_Instance>()->device = device;
+}
+#endif

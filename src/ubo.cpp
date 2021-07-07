@@ -14,7 +14,7 @@ void Counter::init(uint _length)
 	{
 		throw glass::MemoryError("Failed to allocate memory.");
 	}
-	for(int i = 0; i < length; i++)
+    for(uint i = 0; i < length; i++)
 	{
 		data[i] = 0;
 	}
@@ -64,7 +64,6 @@ void Counter::put_back(uint value)
 	data[value]++;
 }
 
-unordered_map<uint, UBO::UBO_Instance> UBO::existing_UBOs;
 bool UBO::is_poll_init = false;
 Counter UBO::binding_points_poll;
 
@@ -74,17 +73,17 @@ name(_name) {}
 
 string UBO::Reference::type()const
 {
-	return UBO::existing_UBOs[parent->_id].block[name].type;
+	return parent->userData<UBO_Instance>()->block[name].type;
 }
 
 uint UBO::Reference::size()const
 {
-	return UBO::existing_UBOs[parent->_id].block[name].size;
+	return parent->userData<UBO_Instance>()->block[name].size;
 }
 
 int UBO::Reference::offset()const
 {
-	return UBO::existing_UBOs[parent->_id].block[name].location;
+	return parent->userData<UBO_Instance>()->block[name].location;
 }
 
 UBO::Reference UBO::Reference::operator [](const string& sub_name)const
@@ -127,7 +126,7 @@ void UBO::del()
 		binding_points_poll.put_back(bindingPoint());
 	}
 
-	BO::del();
+	delWithUserData<UBO_Instance>();
 }
 
 UBO::UBO(): BO(UNIFORM) {}
@@ -138,7 +137,7 @@ UBO::UBO(UBO&& ubo) : BO(move(ubo)) {}
 
 UBO::~UBO()
 {
-	del();
+	this->del();
 }
 
 void UBO::bind()
@@ -148,17 +147,14 @@ void UBO::bind()
 
 void UBO::copy(const UBO& ubo)
 {
-	if(this != &ubo && _id != ubo._id)
+	if(this != &ubo && self != ubo.self)
 	{
 		del();
 
-		_id = ubo._id;
+		self = ubo.self;
 
-		if(existing_UBOs.count(_id))
-		{
-			existing_UBOs[_id].binding_point = ubo.bindingPoint();
-			binding_points_poll.borrow(ubo.bindingPoint());
-		}
+		userData<UBO_Instance>()->binding_point = ubo.bindingPoint();
+		binding_points_poll.borrow(ubo.bindingPoint());
 	}
 }
 
@@ -166,7 +162,7 @@ UBO& UBO::operator =(UBO&& ubo)
 {
 	if(this != &ubo)
 	{
-		if(!existing_UBOs[_id].block.empty() && existing_UBOs[_id].block != existing_UBOs[ubo._id].block)
+		if(!(userData<UBO_Instance>()->block.empty()) && userData<UBO_Instance>()->block != ubo.userData<UBO_Instance>()->block)
 		{
 			throw glass::RuntimeError("Different structure uniform block cannot assign to each other.");
 		}
@@ -178,7 +174,7 @@ UBO& UBO::operator =(UBO&& ubo)
 
 UBO::Reference UBO::operator [](const string& member_name)
 {
-	if(!existing_UBOs.count(_id) || existing_UBOs[_id].block.empty())
+	if(userData<UBO_Instance>()->block.empty())
 	{
 		throw glass::RuntimeError("Please call UBO::setStructure(Uniform::Block) before assign value!");
 	}
@@ -186,9 +182,9 @@ UBO::Reference UBO::operator [](const string& member_name)
 	return Reference(this, member_name);
 }
 
-uint UBO::bindingPoint()const
+uint UBO::bindingPoint()
 {
-	return existing_UBOs.count(_id) ? existing_UBOs[_id].binding_point : 0;
+	return userData<UBO_Instance>()->binding_point;
 }
 
 void UBO::bind(uint point)
@@ -205,8 +201,8 @@ void UBO::bind(uint point)
 	binding_points_poll.borrow(point);
 
 	bind();
-	existing_UBOs[_id].binding_point = point;
-	glBindBufferBase(GL_UNIFORM_BUFFER, point, _id);
+	userData<UBO_Instance>()->binding_point = point;
+	glBindBufferBase(GL_UNIFORM_BUFFER, point, id());
 }
 
 void UBO::setStructure(const Uniform::BlockMap::Reference& block)
@@ -214,26 +210,26 @@ void UBO::setStructure(const Uniform::BlockMap::Reference& block)
 	this->malloc(block.size());
 
 	bind(binding_points_poll.get());
-	existing_UBOs[_id].block = block;
+	userData<UBO_Instance>()->block = block;
 }
 
 bool UBO::is_atom(const string& name)
 {
-	return (existing_UBOs[_id].block.contains(name) && existing_UBOs[_id].block[name].atoms.size() == 1 && existing_UBOs[_id].block[name].atoms[0] == name);
+	return (userData<UBO_Instance>()->block.contains(name) && userData<UBO_Instance>()->block[name].atoms.size() == 1 && userData<UBO_Instance>()->block[name].atoms[0] == name);
 }
 
 #define SET_PREPARE(TYPENAME) \
-if(!(existing_UBOs[_id].block.contains(name)))\
+if(!(userData<UBO_Instance>()->block.contains(name)))\
 {\
-	throw glass::KeyError("Member " + name + " is not defined in uniform block " + existing_UBOs[_id].block.name);\
+	throw glass::KeyError("Member " + name + " is not defined in uniform block " + userData<UBO_Instance>()->block.name);\
 }\
-if(existing_UBOs[_id].block[name].type != #TYPENAME)\
+if(userData<UBO_Instance>()->block[name].type != #TYPENAME)\
 {\
-	throw glass::TypeError(string("Cannot convert ") + #TYPENAME + " to " + existing_UBOs[_id].block[name].type);\
+	throw glass::TypeError(string("Cannot convert ") + #TYPENAME + " to " + userData<UBO_Instance>()->block[name].type);\
 }\
-if(size() != existing_UBOs[_id].block.size())\
+if(size() != userData<UBO_Instance>()->block.size())\
 {\
-	this->malloc(existing_UBOs[_id].block.size());\
+	this->malloc(userData<UBO_Instance>()->block.size());\
 	bind(binding_points_poll.get());\
 }\
 bind();
@@ -242,7 +238,7 @@ bind();
 void UBO::set_##TYPENAME(const string& name, const TYPENAME& value)\
 {\
 	SET_PREPARE(TYPENAME)\
-	glBufferSubData(GL_UNIFORM_BUFFER, existing_UBOs[_id].block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, (void*)(&value));\
+	glBufferSubData(GL_UNIFORM_BUFFER, userData<UBO_Instance>()->block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, (void*)(&value));\
 	unbind();\
 }
 
@@ -250,7 +246,7 @@ void UBO::set_##TYPENAME(const string& name, const TYPENAME& value)\
 void UBO::set_##TYPENAME(const string& name, TYPENAME value)\
 {\
 	SET_PREPARE(TYPENAME)\
-	glBufferSubData(GL_UNIFORM_BUFFER, existing_UBOs[_id].block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, value.data());\
+	glBufferSubData(GL_UNIFORM_BUFFER, userData<UBO_Instance>()->block[name].location, GLSL::built_in_types[#TYPENAME].glsl_size, value.data());\
 	unbind();\
 }
 
@@ -259,7 +255,7 @@ void UBO::set_bool(const string& name, bool value)
 	SET_PREPARE(bool);
 
 	int int_value = (int)value;
-	glBufferSubData(GL_UNIFORM_BUFFER, existing_UBOs[_id].block[name].location, GLSL::built_in_types["bool"].glsl_size, (void*)(&int_value));
+	glBufferSubData(GL_UNIFORM_BUFFER, userData<UBO_Instance>()->block[name].location, GLSL::built_in_types["bool"].glsl_size, (void*)(&int_value));
 	unbind();
 }
 
@@ -288,39 +284,39 @@ DEFINE_SET_MAT(mat4)
 
 void* UBO::set(const std::string& name, void* ptr_value)
 {
-	if(existing_UBOs[_id].block.empty())
+	if(userData<UBO_Instance>()->block.empty())
 	{
 		throw glass::RuntimeError("Please call UBO::setStructure(Uniform::Block) before assign value!");
 	}
 
-	existing_UBOs[_id].block.parent->refresh();
+	userData<UBO_Instance>()->block.parent->refresh();
 
-	if(!existing_UBOs[_id].block.contains(name))
+	if(!userData<UBO_Instance>()->block.contains(name))
 	{
-		throw glass::KeyError(name + " is not a member of uniform block " + existing_UBOs[_id].block.name);
+		throw glass::KeyError(name + " is not a member of uniform block " + userData<UBO_Instance>()->block.name);
 	}
 	if(is_atom(name))
 	{
 		set_atom(name, ptr_value);
-		return (void*)((unsigned char*)ptr_value + GLSL::built_in_types[existing_UBOs[_id].block[name].type].size);
+		return (void*)((unsigned char*)ptr_value + GLSL::built_in_types[userData<UBO_Instance>()->block[name].type].size);
 	}
 
-	std::string type = existing_UBOs[_id].block[name].type;
+	std::string type = userData<UBO_Instance>()->block[name].type;
 	std::string basetype = str::base_type(type);
-	if(existing_UBOs[_id].block.parent->defined_structs.count(basetype) == 0 ||
-	   existing_UBOs[_id].block.parent->defined_structs[basetype].host_hash == 0)
+	if(userData<UBO_Instance>()->block.parent->defined_structs.count(basetype) == 0 ||
+	   userData<UBO_Instance>()->block.parent->defined_structs[basetype].host_hash == 0)
 	{
 		throw glass::TypeError("Please call Uniform::define<" + basetype + ">() before assign value!");
 	}
 
-	existing_UBOs[_id].block.parent->please_define(type);
+	userData<UBO_Instance>()->block.parent->please_define(type);
 
 	unsigned char* ptr = (unsigned char*)(ptr_value);
-	for(std::string atom : existing_UBOs[_id].block[name].atoms)
+	for(std::string atom : userData<UBO_Instance>()->block[name].atoms)
 	{
-		ptr += existing_UBOs[_id].block[atom].offset;
+		ptr += userData<UBO_Instance>()->block[atom].offset;
 		set_atom(atom, (void*)(ptr));
-		ptr += existing_UBOs[_id].block[atom].size + existing_UBOs[_id].block[atom].padding_size;
+		ptr += userData<UBO_Instance>()->block[atom].size + userData<UBO_Instance>()->block[atom].padding_size;
 	}
 
 	return (void*)ptr;

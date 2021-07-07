@@ -43,6 +43,7 @@ DEFINE_EXCEPTION(IOError)
 DEFINE_EXCEPTION(MemoryError)
 DEFINE_EXCEPTION(RuntimeError)
 DEFINE_EXCEPTION(SyntaxError)
+DEFINE_EXCEPTION(DeveloperError)
 
 class IndexError : public std::exception
 {

@@ -181,8 +181,8 @@ using_VBO(use_VBO)
 GLVector::GLVector(const GLVector& new_vec) :
 _dtype(new_vec._dtype),
 using_VBO(new_vec.using_VBO),
-_capacity(new_vec._capacity),
-_size(new_vec._size)
+_size(new_vec._size),
+_capacity(new_vec._capacity)
 {
 	if(using_VBO)
 	{
@@ -220,8 +220,8 @@ GLVector::GLVector(GLVector&& new_vec) :
 _dtype(move(new_vec._dtype)),
 vec(move(new_vec.vec)),
 using_VBO(move(new_vec.using_VBO)),
-_capacity(move(new_vec._capacity)),
-_size(move(new_vec._size))
+_size(move(new_vec._size)),
+_capacity(move(new_vec._capacity))
 {
 	if(using_VBO)
 	{
@@ -395,7 +395,7 @@ size_t GLVector::erase(long long int i, size_t len) // reviewed
 	{
 		first = 0;
 	}
-	if(first >= length)
+    if(first >= (long long)length)
 	{
 		return length;
 	}
@@ -404,19 +404,19 @@ size_t GLVector::erase(long long int i, size_t len) // reviewed
 	{
 		return 0;
 	}
-	if(last > length)
+    if(last > (long long)length)
 	{
 		last = length;
 	}
 
 	if(using_VBO)
 	{
-		void* pointer = data.ptr();
+		void* pointer = data.mapBuffer();
 		void* start = (void*)((unsigned char*)pointer + first*GLSL::built_in_types[_dtype].glsl_size);
 		void* end = (void*)((unsigned char*)pointer + last*GLSL::built_in_types[_dtype].glsl_size);
 		size_t block_size = std::min(last-first, (long long int)length-last)*GLSL::built_in_types[_dtype].glsl_size;
 		memmove(start, end, block_size);
-		data.apply();
+		data.unMapBuffer();
 		
 		_size -= (last-first);
 		shrink();
@@ -567,6 +567,6 @@ void GLVector::apply()
 {
 	if(using_VBO)
 	{
-		data.apply();
+		data.unMapBuffer();
 	}
 }

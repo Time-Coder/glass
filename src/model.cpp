@@ -370,16 +370,13 @@ void Model::load_normal_map(aiMaterial* ptr_material)
 
 void Model::processMesh(aiMesh *mesh, const aiScene *scene)
 {
-	if(mesh->mMaterialIndex >= 0)
-	{
-	    aiMaterial *ptr_material = scene->mMaterials[mesh->mMaterialIndex];
-	    load_diffuse_map(ptr_material);
-	    load_specular_map(ptr_material);
-	    // load_bump_map(ptr_material);
-	    load_normal_map(ptr_material);
+    aiMaterial *ptr_material = scene->mMaterials[mesh->mMaterialIndex];
+    load_diffuse_map(ptr_material);
+    load_specular_map(ptr_material);
+    // load_bump_map(ptr_material);
+    load_normal_map(ptr_material);
 
-	    update_material_group();
-	}
+    update_material_group();
 
 	layout_key = file_name + "::" + path();
 	if(layout_map.count(layout_key) && !layout_map[layout_key].empty())

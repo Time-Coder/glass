@@ -7,7 +7,35 @@
 #include "glass/sampler2D"
 #include "glass/RBO"
 
+#ifdef USE_QT
+#include <QDebug>
+#include <QCursor>
+#include <QPoint>
+#endif
+
 using namespace std;
+
+GLenum glCheckError_(const char *file, int line)
+{
+    GLenum errorCode;
+    while ((errorCode = glGetError()) != GL_NO_ERROR)
+    {
+        std::string error;
+        switch (errorCode)
+        {
+            case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
+            case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
+            case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
+            case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
+            case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
+            case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+        }
+        std::cout << error << " | " << file << " (" << line << ")" << std::endl;
+    }
+    return errorCode;
+}
+#define glCheckError() glCheckError_(__FILE__, __LINE__) 
 
 template<int n>
 void gauss_kernel(float sigma, float* weight)
@@ -40,6 +68,13 @@ void Scene3D::init_debug()
 	shader["debug"].compile(Shader::VERTEX, glass::debug_vertex_shader);
 	shader["debug"].compile(Shader::FRAGMENT, glass::debug_fragment_shader);
 	shader["debug"].link();
+
+	fbo["debug"].bufferResize(width(), height());
+	fbo["debug"].screenResize(width(), height());
+	#ifdef USE_QT
+	fbo["debug"].setPaintDevice(this);
+	#endif
+	fbo["debug"].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGBA16F, GL_FLOAT));
 
 	if(model.count("plane") == 0)
 	{
@@ -79,6 +114,9 @@ void Scene3D::init_shadering_gbuffer()
 	fbo["gbuffer"].bufferResize(width(), height());
 	fbo["gbuffer"].screenResize(width(), height());
 	fbo["gbuffer"].clearColor(vec4(0));
+	#ifdef USE_QT
+	fbo["gbuffer"].setPaintDevice(this);
+	#endif
 	fbo["gbuffer"].attach("diffuse_specular", FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGBA16F, GL_FLOAT));
 	fbo["gbuffer"].attach("position_shininess", FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGBA16F, GL_FLOAT));
 	fbo["gbuffer"].attach("normal", FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
@@ -104,11 +142,17 @@ void Scene3D::init_shadering_blur()
 
 	fbos["blur"].push_back(FBO(width(), height(), width()/4, height()/4));
 	fbos["blur"][0].clearColor(vec4(0));
+	#ifdef USE_QT
+	fbos["blur"][0].setPaintDevice(this);
+	#endif
 	fbos["blur"][0].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
 	fbos["blur"][0].color<sampler2D>().wrap(GL_CLAMP_TO_EDGE);
 
 	fbos["blur"].push_back(FBO(width(), height(), width()/4, height()/4));
 	fbos["blur"][1].clearColor(vec4(0));
+	#ifdef USE_QT
+	fbos["blur"][1].setPaintDevice(this);
+	#endif
 	fbos["blur"][1].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
 	fbos["blur"][1].color<sampler2D>().wrap(GL_CLAMP_TO_EDGE);
 
@@ -163,6 +207,9 @@ void Scene3D::init_shadering_HDR()
 		{
 			fbos["luminance"][i].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_R16F, GL_FLOAT));
 		}
+		#ifdef USE_QT
+		fbos["luminance"][i].setPaintDevice(this);
+		#endif
 		fbos["luminance"][i].color<sampler2D>().filter(GL_LINEAR);
 		fbos["luminance"][i].color<sampler2D>().wrap(GL_CLAMP_TO_EDGE);
 		i++;
@@ -189,9 +236,15 @@ void Scene3D::init_shadering_lighting()
 
 	fbos["lighting"].push_back(FBO(width(), height(), width(), height()));
 	fbos["lighting"][0].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
+	#ifdef USE_QT
+	fbos["lighting"][0].setPaintDevice(this);
+	#endif
 
 	fbos["lighting"].push_back(FBO(width(), height(), width(), height()));
 	fbos["lighting"][1].attach(FBO::Attachment<sampler2D>(FBO::COLOR, GL_RGB16F, GL_FLOAT));
+	#ifdef USE_QT
+	fbos["lighting"][1].setPaintDevice(this);
+	#endif
 
 	if(!model.count("plane"))
 	{
@@ -214,6 +267,9 @@ void Scene3D::init_shadering_point_light_shadow()
 	shader["point_light_shadow"].warningOff();
 
 	fbo["point_light_shadow"].screenResize(width(), height());
+	#ifdef USE_QT
+	fbo["point_light_shadow"].setPaintDevice(this);
+	#endif
 	fbo["point_light_shadow"].bufferResize(PointLight::frame_width, PointLight::frame_height);
 	fbo["point_light_shadow"].attach(FBO::Attachment<samplerCube>(FBO::DEPTH));
 }
@@ -232,22 +288,38 @@ void Scene3D::init_shadering_dir_light_shadow()
 
 	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][0].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
+	#ifdef USE_QT
+	fbos["dir_light_shadow"][0].setPaintDevice(this);
+	#endif
 
 	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][1].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
+	#ifdef USE_QT
+	fbos["dir_light_shadow"][1].setPaintDevice(this);
+	#endif
 
 	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][2].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
+	#ifdef USE_QT
+	fbos["dir_light_shadow"][2].setPaintDevice(this);
+	#endif
 
 	fbos["dir_light_shadow"].push_back(FBO(width(), height(), DirLight::frame_width, DirLight::frame_height));
 	fbos["dir_light_shadow"][3].attach(FBO::Attachment<sampler2D>(FBO::DEPTH));
+	#ifdef USE_QT
+	fbos["dir_light_shadow"][3].setPaintDevice(this);
+	#endif
 }
 
 void Scene3D::prepare()
 {
+#ifdef USE_QT
+    QCursor::setPos(mapToGlobal(QPoint(0.5*width(), 0.5*height())));
+#endif
 	hideCursor();
 	camera.moveYTo(1.7);
 	camera.moveZTo(2);
+    test_image.setImage("E:/Learning/OpenGL/demo/resources/images/floor.png");
 }
 
 bool Scene3D::lights_shape_not_empty()
@@ -291,8 +363,6 @@ void Scene3D::draw()
 	bool has_model = models_not_empty();
 	bool has_light_shape = lights_shape_not_empty();
 	bool has_skybox = skybox_map.completed();
-
-	init_debug();
 
 	if(!has_model && !has_light_shape && !has_skybox)
 	{
@@ -417,10 +487,13 @@ void Scene3D::draw()
 
 			fbos["lighting"][step(index_lighting)].bind();
 			shader["lighting"].uniform["dir_light"] = it->second;
-			shader["lighting"].uniform["dir_light_depth_map_zero"] = fbos["dir_light_shadow"][0].depth<sampler2D>();
-			shader["lighting"].uniform["dir_light_depth_map_one"] = fbos["dir_light_shadow"][1].depth<sampler2D>();
-			shader["lighting"].uniform["dir_light_depth_map_two"] = fbos["dir_light_shadow"][2].depth<sampler2D>();
-			shader["lighting"].uniform["dir_light_depth_map_three"] = fbos["dir_light_shadow"][3].depth<sampler2D>();
+			if(it->second.usingShadow())
+			{
+				shader["lighting"].uniform["dir_light_depth_map_zero"] = fbos["dir_light_shadow"][0].depth<sampler2D>();
+				shader["lighting"].uniform["dir_light_depth_map_one"] = fbos["dir_light_shadow"][1].depth<sampler2D>();
+				shader["lighting"].uniform["dir_light_depth_map_two"] = fbos["dir_light_shadow"][2].depth<sampler2D>();
+				shader["lighting"].uniform["dir_light_depth_map_three"] = fbos["dir_light_shadow"][3].depth<sampler2D>();
+			}
 			shader["lighting"].draw(model["plane"]);
 			fbos["lighting"][step(index_lighting)].unbind();
 		}
@@ -623,7 +696,7 @@ void Scene3D::draw()
 		shader["merge"].draw(model["plane"]);
 		fbos["luminance"][0].unbind();
 
-		for(int i = 1; i < fbos["luminance"].size(); i++)
+        for(uint i = 1; i < fbos["luminance"].size(); i++)
 		{
 			fbos["luminance"][i].bind();
 			shader["luminance"].uniform["type"] = (i == 1 ? 0 : (i == fbos["luminance"].size()-1 ? 2 : 1));
@@ -649,7 +722,7 @@ void Scene3D::onChangeSize(int width, int height)
 
 	for(auto it = fbos.begin(); it != fbos.end(); it++)
 	{
-		for(int i = 0; i < it->second.size(); i++)
+        for(uint i = 0; i < it->second.size(); i++)
 		{
 			it->second[i].screenResize(width, height);
 		}
@@ -659,6 +732,10 @@ void Scene3D::onChangeSize(int width, int height)
 		fbos["blur"][0].bufferResize(width/4, height/4);
 		fbos["blur"][1].bufferResize(width/4, height/4);
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::onMouseMove()
@@ -667,6 +744,9 @@ void Scene3D::onMouseMove()
 	{
 		camera.yaw(-2.0*dx()/width());
 		camera.pitch(-2.0*dy()/height());
+#ifdef USE_QT
+        update();
+#endif
 	}
 }
 
@@ -749,12 +829,19 @@ void Scene3D::onKeyRepeat(const string& key)
 		camera.screenOffset(0, 0);
 		camera.screenZoom(1);
 		can_move = true;
+#ifdef USE_QT
+        QCursor::setPos(mapToGlobal(QPoint(0.5*width(), 0.5*height())));
+#endif
 		hideCursor();
 	}
 	else if(key == "F")
 	{
 		cout << fps() << endl;
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 string Scene3D::addModel(const vec3& position, const Model& model, string name)
@@ -764,6 +851,10 @@ string Scene3D::addModel(const vec3& position, const Model& model, string name)
 	models[name] = model;
 	models[name].moveTo(position);
 
+#ifdef USE_QT
+    update();
+#endif
+
 	return name;
 }
 
@@ -772,6 +863,10 @@ string Scene3D::addModel(const Model& model, string name)
 	name = getValidName(name, models);
 	
 	models[name] = model;
+
+#ifdef USE_QT
+    update();
+#endif
 
 	return name;
 }
@@ -783,6 +878,10 @@ string Scene3D::addDirLight(const DirLight& dir_light, string name)
 	dir_lights[name] = dir_light;
 	camera.addDirLight(dir_lights[name]);
 
+#ifdef USE_QT
+    update();
+#endif
+
 	return name;
 }
 
@@ -793,6 +892,10 @@ string Scene3D::addPointLight(const vec3& position, const PointLight& point_ligh
 	point_lights[name] = point_light;
 	point_lights[name].moveTo(position);
 
+#ifdef USE_QT
+    update();
+#endif
+
 	return name;
 }
 
@@ -802,6 +905,10 @@ string Scene3D::addPointLight(const PointLight& point_light, string name)
 
 	point_lights[name] = point_light;
 
+#ifdef USE_QT
+    update();
+#endif
+
 	return name;
 }
 
@@ -809,6 +916,10 @@ void Scene3D::setSkyBox(const string& filename)
 {
 	skybox_map.setImage(filename);
 	init_skybox();
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::setSkyBoxUp(const string& filename)
@@ -819,6 +930,10 @@ void Scene3D::setSkyBoxUp(const string& filename)
 	{
 		init_skybox();
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::setSkyBoxDown(const string& filename)
@@ -829,6 +944,10 @@ void Scene3D::setSkyBoxDown(const string& filename)
 	{
 		init_skybox();
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::setSkyBoxLeft(const string& filename)
@@ -839,6 +958,10 @@ void Scene3D::setSkyBoxLeft(const string& filename)
 	{
 		init_skybox();
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::setSkyBoxRight(const string& filename)
@@ -849,6 +972,10 @@ void Scene3D::setSkyBoxRight(const string& filename)
 	{
 		init_skybox();
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::setSkyBoxFront(const string& filename)
@@ -859,6 +986,10 @@ void Scene3D::setSkyBoxFront(const string& filename)
 	{
 		init_skybox();
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::setSkyBoxBack(const string& filename)
@@ -869,11 +1000,19 @@ void Scene3D::setSkyBoxBack(const string& filename)
 	{
 		init_skybox();
 	}
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 void Scene3D::useHDR(bool flag)
 {
 	using_HDR = flag;
+
+#ifdef USE_QT
+    update();
+#endif
 }
 
 bool Scene3D::usingHDR()const

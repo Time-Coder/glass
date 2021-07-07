@@ -251,28 +251,32 @@ unsigned char& Image::operator ()(int i, int j, int channel)
 {
 	switch(channel)
 	{
-		case 0: return _data[n_channels * (i * n_cols + j)];
-		case 1:
-		case 2:
-		{
-			switch(n_channels)
-			{
-				case 1: return _data[n_channels * (i * n_cols + j)];
-				case 3:
-				case 4: return _data[n_channels * (i * n_cols + j) + channel];
-			}
-		}
-		case 3:
-		{
-			switch(n_channels)
-			{
-				case 1:
-				case 3: return (trash = 255);
-				case 4: return _data[n_channels * (i * n_cols + j) + 3];
-			}
-		}
-		default: throw glass::IndexError(channel, 0, 3);
+    case 0: return _data[n_channels * (i * n_cols + j)]; break;
+    case 1:
+    case 2:
+    {
+        switch(n_channels)
+        {
+        case 1: return _data[n_channels * (i * n_cols + j)]; break;
+        case 3:
+        case 4: return _data[n_channels * (i * n_cols + j) + channel]; break;
+        }
+        break;
+    }
+    case 3:
+    {
+        switch(n_channels)
+        {
+        case 1:
+        case 3: return (trash = 255); break;
+        case 4: return _data[n_channels * (i * n_cols + j) + 3]; break;
+        }
+        break;
+    }
+    default: throw glass::IndexError(channel, 0, 3);
 	}
+
+    return trash;
 }
 
 unsigned char  Image::operator ()(int i, int j, int channel)const
@@ -289,6 +293,7 @@ unsigned char  Image::operator ()(int i, int j, int channel)const
 				case 3:
 				case 4: return _data[n_channels * (i * n_cols + j) + channel];
 			}
+            break;
 		}
 		case 3:
 		{
@@ -298,10 +303,12 @@ unsigned char  Image::operator ()(int i, int j, int channel)const
 				case 3: return 255;
 				case 4: return _data[n_channels * (i * n_cols + j) + 3];
 			}
+            break;
 		}
-		default:
-			throw glass::IndexError(0, 3, channel);
+        default: throw glass::IndexError(0, 3, channel);
 	}
+
+    return trash;
 }
 
 vec4 Image::operator ()(int i, int j)const
@@ -386,9 +393,9 @@ int Image::size()const
 Image Image::subimg(unsigned int row_start, unsigned int _rows, unsigned int col_start, unsigned int _cols)const
 {
 	Image image(_rows, _cols, n_channels);
-	for(int i = 0; i < _rows; i++)
+    for(uint i = 0; i < _rows; i++)
 	{
-		for(int j = 0; j < _cols; j++)
+        for(uint j = 0; j < _cols; j++)
 		{
 			for(int channel = 0; channel < n_channels; channel++)
 			{

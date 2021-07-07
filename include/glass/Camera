@@ -30,12 +30,12 @@ private:
 	float __screen_zoom_x = 1.0f, __screen_zoom_y = 1.0f;
 	float __screen_offset_x = 0.0, __screen_offset_y = 0.0;
 
-	double __z_near = 0.1f;
-	double __z_far = 100.0f;
-	double __fov = __PI__/4;
+    uint __screen_width = 800;
+    uint __screen_height = 600;
 
-	uint __screen_width = 800;
-	uint __screen_height = 600;
+    double __z_near = 0.1;
+    double __z_far = 100.0;
+	double __fov = __PI__/4;
 
 	double __aspect;
 	double tan_fov2;

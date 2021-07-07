@@ -9,7 +9,7 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec2>& tex_c
 {
 	vector< vector<double> > weights(positions.size());
 	vector< vector<mat3 > > TBNs(positions.size());
-	for(int i = 0; i < indices.size(); i++)
+    for(uint i = 0; i < indices.size(); i++)
 	{
 		uint P1 = indices[i][0];
 		uint P2 = indices[i][1];
@@ -37,10 +37,10 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec2>& tex_c
 	tangents = vector<vec3>(positions.size());
 	bitangents = vector<vec3>(positions.size());
 	normals = vector<vec3>(positions.size());
-	for(int i = 0; i < positions.size(); i++)
+    for(uint i = 0; i < positions.size(); i++)
 	{
 		mat3 tbn(0);
-		for(int j = 0; j < TBNs[i].size(); j++)
+        for(uint j = 0; j < TBNs[i].size(); j++)
 		{
 			tbn += weights[i][j] * TBNs[i][j];
 		}
@@ -59,7 +59,7 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec3>& norma
 {
 	vector< vector<double> > weights(positions.size());
 	vector< vector<mat3 > > TBNs(positions.size());
-	for(int i = 0; i < indices.size(); i++)
+    for(uint i = 0; i < indices.size(); i++)
 	{
 		uint P1 = indices[i][0];
 		uint P2 = indices[i][1];
@@ -82,11 +82,11 @@ void glass::generateTBN(const vector<vec3>& positions, const vector<vec3>& norma
 
 	tangents = vector<vec3>(positions.size());
 	bitangents = vector<vec3>(positions.size());
-	for(int i = 0; i < positions.size(); i++)
+    for(uint i = 0; i < positions.size(); i++)
 	{
 		mat3 tbn(0);
 		double total_weight = 0;
-		for(int j = 0; j < TBNs[i].size(); j++)
+        for(uint j = 0; j < TBNs[i].size(); j++)
 		{
 			tbn += weights[i][j] * TBNs[i][j];
 			total_weight += weights[i][j];
@@ -305,11 +305,10 @@ Model glass::sphere(float R, unsigned int n_theta, unsigned int n_phi)
 	vector<uvec3> indices(2*(n_phi-1)*(n_theta-1));
 
 	vec3 frag_norm, current_vertex;
-	int it_row, it_col, index;
+    uint it_row, it_col, index;
 	int indices_index = 0;
-	double weight;
 	// int indices_reverse = 1;
-	for(it_row = 0; it_row < n_phi; it_row++)
+    for(it_row = 0; it_row < n_phi; it_row++)
 	{
 		for(it_col = 0; it_col < n_theta; it_col++)
 		{

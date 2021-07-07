@@ -169,7 +169,7 @@ using_VBO(use_VBO)
 		_size = n;
 		_capacity = std::max(DEFAULT_CAPACITY, 2*n);
 		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
-		unsigned char* pointer = (unsigned char*)(data.ptr());
+		unsigned char* pointer = (unsigned char*)(data.mapBuffer());
 		if(_dtype == "mat2")
 		{
 			for(int i = 0; i < n; i++)
@@ -202,7 +202,7 @@ using_VBO(use_VBO)
 				pointer += GLSL::built_in_types[_dtype].glsl_size;
 			}
 		}
-		data.apply();
+		data.unMapBuffer();
 	}
 	else
 	{
@@ -227,7 +227,7 @@ using_VBO(use_VBO)
 		_size = last - first;
 		_capacity = std::max(DEFAULT_CAPACITY, 2*_size);
 		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
-		unsigned char* pointer = (unsigned char*)(data.ptr());
+		unsigned char* pointer = (unsigned char*)(data.mapBuffer());
 		if(_dtype == "mat2")
 		{
 			for(auto it = first; it < last; it++)
@@ -260,7 +260,7 @@ using_VBO(use_VBO)
 				pointer += GLSL::built_in_types[_dtype].glsl_size;
 			}
 		}
-		data.apply();
+		data.unMapBuffer();
 	}
 	else
 	{
@@ -279,7 +279,7 @@ using_VBO(use_VBO)
 		_size = new_vec.size();
 		_capacity = new_vec.capacity();
 		data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
-		unsigned char* pointer = (unsigned char*)(data.ptr());
+		unsigned char* pointer = (unsigned char*)(data.mapBuffer());
 		if(_dtype == "mat2")
 		{
 			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
@@ -312,7 +312,7 @@ using_VBO(use_VBO)
 				pointer += GLSL::built_in_types[_dtype].glsl_size;
 			}
 		}
-		data.apply();
+		data.unMapBuffer();
 	}
 	else
 	{
@@ -360,7 +360,7 @@ GLVector& GLVector::operator =(const std::vector<DataType>& new_vec) // reviewed
 			data.malloc(_capacity * GLSL::built_in_types[_dtype].glsl_size);
 		}
 
-		unsigned char* pointer = (unsigned char*)(data.ptr());
+		unsigned char* pointer = (unsigned char*)(data.mapBuffer());
 		if(_dtype == "mat2")
 		{
 			for(auto it = new_vec.begin(); it < new_vec.end(); it++)
@@ -393,7 +393,7 @@ GLVector& GLVector::operator =(const std::vector<DataType>& new_vec) // reviewed
 				pointer += GLSL::built_in_types[_dtype].glsl_size;
 			}
 		}
-		data.apply();
+		data.unMapBuffer();
 	}
 	else
 	{
@@ -433,31 +433,31 @@ void GLVector::push_back(const DataType& element) // reviewed
 		expand();
 		if(_dtype == "uint")
 		{
-			uint* pointer = (uint*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			uint* pointer = (uint*)((unsigned char*)(data.mapBuffer()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(uint, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "int")
 		{
-			int* pointer = (int*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			int* pointer = (int*)((unsigned char*)(data.mapBuffer()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(int, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "float")
 		{
-			float* pointer = (float*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			float* pointer = (float*)((unsigned char*)(data.mapBuffer()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(float, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "double")
 		{
-			double* pointer = (double*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			double* pointer = (double*)((unsigned char*)(data.mapBuffer()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(double, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(__SAME_WITH_DTYPE(DataType, _dtype))
 		{
-			void* pointer = (void*)((unsigned char*)(data.ptr()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
+			void* pointer = (void*)((unsigned char*)(data.mapBuffer()) + (_size - 1) * GLSL::built_in_types[_dtype].glsl_size);
 			if(_dtype == "mat2")
 			{
 				memcpy(pointer, force_cast<mat2>(element).data(), GLSL::built_in_types[_dtype].glsl_size);
@@ -547,7 +547,7 @@ size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 
 		if(_dtype == "uint")
 		{
-			uint* pointer = (uint*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			uint* pointer = (uint*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-1-i != 0)
 			{
 				memmove((void*)((unsigned char*)pointer + GLSL::built_in_types[_dtype].glsl_size),
@@ -555,11 +555,11 @@ size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
 			}
 			__HANDLE_ELEMENT(uint, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "int")
 		{
-			int* pointer = (int*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			int* pointer = (int*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-1-i != 0)
 			{
 				memmove((void*)((unsigned char*)pointer + GLSL::built_in_types[_dtype].glsl_size),
@@ -567,11 +567,11 @@ size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
 			}
 			__HANDLE_ELEMENT(int, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "float")
 		{
-			float* pointer = (float*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			float* pointer = (float*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-1-i != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+GLSL::built_in_types[_dtype].glsl_size),
@@ -579,11 +579,11 @@ size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
 			}
 			__HANDLE_ELEMENT(float, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "double")
 		{
-			double* pointer = (double*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			double* pointer = (double*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-1-i != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+GLSL::built_in_types[_dtype].glsl_size),
@@ -591,11 +591,11 @@ size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 					    (_size-1-i)*GLSL::built_in_types[_dtype].glsl_size);
 			}
 			__HANDLE_ELEMENT(double, DataType, element, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(__SAME_WITH_DTYPE(DataType, _dtype))
 		{
-			void* pointer = (void*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			void* pointer = (void*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-1-i != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+GLSL::built_in_types[_dtype].glsl_size),
@@ -618,7 +618,7 @@ size_t GLVector::insert(long long int i, const DataType& element) // reviewed
 			{
 				memcpy(pointer, (void*)(&element), GLSL::built_in_types[_dtype].glsl_size);
 			}
-			data.apply();
+			data.unMapBuffer();
 		}
 		else
 		{
@@ -694,7 +694,7 @@ size_t GLVector::insert(long long int index, size_t n, const DataType& element) 
 		expand();
 		if(_dtype == "uint")
 		{
-			uint* pointer = (uint*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			uint* pointer = (uint*)((unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -708,11 +708,11 @@ size_t GLVector::insert(long long int index, size_t n, const DataType& element) 
 				pointer++;
 			}
 
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "int")
 		{
-			int* pointer = (int*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			int* pointer = (int*)((unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -726,11 +726,11 @@ size_t GLVector::insert(long long int index, size_t n, const DataType& element) 
 				pointer++;
 			}
 
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "float")
 		{
-			float* pointer = (float*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			float* pointer = (float*)((unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -744,11 +744,11 @@ size_t GLVector::insert(long long int index, size_t n, const DataType& element) 
 				pointer++;
 			}
 
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "double")
 		{
-			double* pointer = (double*)((unsigned char*)data.ptr() + index*sizeof(double));
+			double* pointer = (double*)((unsigned char*)data.mapBuffer() + index*sizeof(double));
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*sizeof(double)),
@@ -761,11 +761,11 @@ size_t GLVector::insert(long long int index, size_t n, const DataType& element) 
 				__HANDLE_ELEMENT(double, DataType, element, *pointer=);
 				pointer++;
 			}
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(__SAME_WITH_DTYPE(DataType, _dtype))
 		{
-			unsigned char* pointer = (unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size;
+			unsigned char* pointer = (unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size;
 			if(_size-n-index != 0)
 			{
 				memmove((void*)(pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -806,7 +806,7 @@ size_t GLVector::insert(long long int index, size_t n, const DataType& element) 
 				}
 			}
 			
-			data.apply();
+			data.unMapBuffer();
 		}
 		else
 		{
@@ -876,7 +876,7 @@ size_t GLVector::insert(long long int index, const typename std::vector<DataType
 		expand();
 		if(_dtype == "uint")
 		{
-			uint* pointer = (uint*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			uint* pointer = (uint*)((unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -890,11 +890,11 @@ size_t GLVector::insert(long long int index, const typename std::vector<DataType
 				pointer++;
 			}
 
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "int")
 		{
-			int* pointer = (int*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			int* pointer = (int*)((unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -908,11 +908,11 @@ size_t GLVector::insert(long long int index, const typename std::vector<DataType
 				pointer++;
 			}
 
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "float")
 		{
-			float* pointer = (float*)((unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size);
+			float* pointer = (float*)((unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size);
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -926,11 +926,11 @@ size_t GLVector::insert(long long int index, const typename std::vector<DataType
 				pointer++;
 			}
 
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "double")
 		{
-			double* pointer = (double*)((unsigned char*)data.ptr() + index*sizeof(double));
+			double* pointer = (double*)((unsigned char*)data.mapBuffer() + index*sizeof(double));
 			if(_size-n-index != 0)
 			{
 				memmove((void*)((unsigned char*)pointer+n*sizeof(double)),
@@ -943,11 +943,11 @@ size_t GLVector::insert(long long int index, const typename std::vector<DataType
 				__HANDLE_ELEMENT(double, DataType, *it, *pointer=);
 				pointer++;
 			}
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(__SAME_WITH_DTYPE(DataType, _dtype))
 		{
-			unsigned char* pointer = (unsigned char*)data.ptr() + index*GLSL::built_in_types[_dtype].glsl_size;
+			unsigned char* pointer = (unsigned char*)data.mapBuffer() + index*GLSL::built_in_types[_dtype].glsl_size;
 			if(_size-n-index != 0)
 			{
 				memmove((void*)(pointer+n*GLSL::built_in_types[_dtype].glsl_size),
@@ -988,7 +988,7 @@ size_t GLVector::insert(long long int index, const typename std::vector<DataType
 				}
 			}
 			
-			data.apply();
+			data.unMapBuffer();
 		}
 		else
 		{
@@ -1068,31 +1068,31 @@ void GLVector::set(long long int i, const DataType& value)
 	{
 		if(_dtype == "uint")
 		{
-			uint* pointer = (uint*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			uint* pointer = (uint*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(uint, DataType, value, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "int")
 		{
-			int* pointer = (int*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			int* pointer = (int*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(int, DataType, value, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "float")
 		{
-			float* pointer = (float*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			float* pointer = (float*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(float, DataType, value, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(_dtype == "double")
 		{
-			double* pointer = (double*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			double* pointer = (double*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			__HANDLE_ELEMENT(double, DataType, value, *pointer=);
-			data.apply();
+			data.unMapBuffer();
 		}
 		else if(__SAME_WITH_DTYPE(DataType, _dtype))
 		{
-			void* pointer = (void*)((unsigned char*)data.ptr() + i*GLSL::built_in_types[_dtype].glsl_size);
+			void* pointer = (void*)((unsigned char*)data.mapBuffer() + i*GLSL::built_in_types[_dtype].glsl_size);
 			if(_dtype == "mat2")
 			{
 				memcpy(pointer, force_cast<mat2>(value).data(), GLSL::built_in_types[_dtype].glsl_size);
@@ -1109,7 +1109,7 @@ void GLVector::set(long long int i, const DataType& value)
 			{
 				memcpy(pointer, (void*)(&value), GLSL::built_in_types[_dtype].glsl_size);
 			}
-			data.apply();
+			data.unMapBuffer();
 		}
 		else
 		{
@@ -1177,7 +1177,7 @@ DataType GLVector::get(long long int i)
 	{
 		DataType return_value;
 		unsigned char* dest_ptr = (unsigned char*)(&return_value);
-		unsigned char* src_ptr = (unsigned char*)data.ptr() + i * GLSL::built_in_types[_dtype].glsl_size;
+		unsigned char* src_ptr = (unsigned char*)data.mapBuffer() + i * GLSL::built_in_types[_dtype].glsl_size;
 
 		if(_dtype == "int" || _dtype == "uint" || _dtype == "float" || _dtype == "double")
 		{
@@ -1217,7 +1217,7 @@ DataType GLVector::get(long long int i)
 		{
 			memcpy((void*)dest_ptr, (void*)src_ptr, GLSL::built_in_types[_dtype].glsl_size);
 		}
-		data.apply();
+		data.unMapBuffer();
 
 		return return_value;
 	}

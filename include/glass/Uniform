@@ -6,6 +6,9 @@
 #include <map>
 #include <list>
 
+#include "glass/sampler2D"
+#include "glass/samplerCube"
+#include "glass/mat"
 #include "glass/utils/type.h"
 #include "glass/utils/exceptions.h"
 
@@ -13,26 +16,26 @@ typedef unsigned int uint;
 
 class Shader;
 class UBO;
-struct bvec2;
-struct bvec3;
-struct bvec4;
-struct ivec2;
-struct ivec3;
-struct ivec4;
-struct uvec2;
-struct uvec3;
-struct uvec4;
-struct vec2;
-struct vec3;
-struct vec4;
-struct dvec2;
-struct dvec3;
-struct dvec4;
-class mat2;
-class mat3;
-class mat4;
-class sampler2D;
-class samplerCube;
+//struct bvec2;
+//struct bvec3;
+//struct bvec4;
+//struct ivec2;
+//struct ivec3;
+//struct ivec4;
+//struct uvec2;
+//struct uvec3;
+//struct uvec4;
+//struct vec2;
+//struct vec3;
+//struct vec4;
+//struct dvec2;
+//struct dvec3;
+//struct dvec4;
+//class mat2;
+//class mat3;
+//class mat4;
+//class sampler2D;
+//class samplerCube;
 
 class Uniform
 {

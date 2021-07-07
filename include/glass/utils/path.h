@@ -31,7 +31,6 @@ namespace path
 	int cd(std::string dir_name);
 	std::string cd();
 	std::string pwd();
-	std::string username();
 	std::vector<std::string> ls(std::string dir_name = ".");
 	int touch(std::string file_name);
 	int mkdir(std::string dir_name);

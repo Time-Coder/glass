@@ -3,7 +3,15 @@
 
 using namespace std;
 
-unordered_map<uint, RBO::RBO_Instance> RBO::existing_RBOs;
+void RBO::del()
+{
+	delWithUserData<RBO_Instance>();
+}
+
+RBO::~RBO()
+{
+	this->del();
+}
 
 RBO::RBO(uint _width, uint _height, uint _dtype) : 
 BO(RENDER)
@@ -19,7 +27,7 @@ RBO::RBO(RBO&& rbo) : BO(move(rbo)) {}
 
 RBO& RBO::operator =(const RBO& rbo)
 {
-	if(&rbo != this && _id != rbo._id)
+	if(&rbo != this && self != rbo.self)
 	{
 		return static_cast<RBO&>(BO::operator=(rbo));
 	}
@@ -35,24 +43,24 @@ RBO& RBO::operator =(RBO&& rbo)
 	return *this;
 }
 
-uint RBO::width()const
+uint RBO::width()
 {
-	return existing_RBOs.count(_id) ? existing_RBOs[_id].width : 0;
+	return userData<RBO_Instance>()->width;
 }
 
-uint RBO::height()const
+uint RBO::height()
 {
-	return existing_RBOs.count(_id) ? existing_RBOs[_id].height : 0;
+	return userData<RBO_Instance>()->height;
 }
 
-uint RBO::dtype()const
+uint RBO::dtype()
 {
-	return existing_RBOs.count(_id) ? existing_RBOs[_id].height : GL_DEPTH24_STENCIL8;
+	return userData<RBO_Instance>()->height;
 }
 
-bool RBO::empty()const
+bool RBO::empty()
 {
-	return (BO::empty() || existing_RBOs.count(_id) == 0 || existing_RBOs[_id].width == 0 || existing_RBOs[_id].height == 0);
+	return (BO::empty() || userData<RBO_Instance>()->width == 0 || userData<RBO_Instance>()->height == 0);
 }
 
 void RBO::malloc(uint _width, uint _height, uint _dtype)
@@ -64,9 +72,9 @@ void RBO::malloc(uint _width, uint _height, uint _dtype)
 
 	bind();
 	glRenderbufferStorage(GL_RENDERBUFFER, _dtype, _width, _height);
-	existing_RBOs[_id].width = _width;
-	existing_RBOs[_id].height = _height;
-	existing_RBOs[_id].dtype = _dtype;
+	userData<RBO_Instance>()->width = _width;
+	userData<RBO_Instance>()->height = _height;
+	userData<RBO_Instance>()->dtype = _dtype;
 }
 
 void RBO::realloc(uint _width, uint _height)
@@ -78,6 +86,6 @@ void RBO::realloc(uint _width, uint _height)
 
 	bind();
 	glRenderbufferStorage(GL_RENDERBUFFER, dtype(), _width, _height);
-	existing_RBOs[_id].width = _width;
-	existing_RBOs[_id].height = _height;
+	userData<RBO_Instance>()->width = _width;
+	userData<RBO_Instance>()->height = _height;
 }

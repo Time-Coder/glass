@@ -5,7 +5,7 @@ using namespace std;
 
 string str::lower(string content)
 {
-	for(int i = 0; i < content.size(); i++)
+    for(uint i = 0; i < content.size(); i++)
 	{
 		if(content[i] >= 'A' && content[i] <= 'Z')
 		{
@@ -18,7 +18,7 @@ string str::lower(string content)
 
 string str::upper(string content)
 {
-	for(int i = 0; i < content.size(); i++)
+    for(uint i = 0; i < content.size(); i++)
 	{
 		if(content[i] >= 'a' && content[i] <= 'z')
 		{
@@ -77,7 +77,7 @@ string str::replace(string content, const string& pattern, const string& target)
 	while(true)
 	{
 		pos = content.find(pattern, pos);
-		if(pos == string::npos)
+        if((size_t)pos == string::npos)
 		{
 			return content;
 		}
@@ -90,11 +90,11 @@ string str::replace(string content, const string& pattern, const string& target)
 
 int str::skip_space(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return i;
 	}
-	while(i < content.size() && content[i] == ' ' || content[i] == '\t' || content[i] == '\n')
+    while(((size_t)i < content.size() && content[i] == ' ') || content[i] == '\t' || content[i] == '\n')
 	{
 		i++;
 	}
@@ -104,11 +104,11 @@ int str::skip_space(const string& content, int& i)
 
 int str::skip_valid(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return i;
 	}
-	while(i < content.size() && content[i] != ' ' && content[i] != '\t' && content[i] != '\n')
+    while((size_t)i < content.size() && content[i] != ' ' && content[i] != '\t' && content[i] != '\n')
 	{
 		i++;
 	}
@@ -118,7 +118,7 @@ int str::skip_valid(const string& content, int& i)
 
 string str::get_word(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return string("");
 	}
@@ -130,13 +130,13 @@ string str::get_word(const string& content, int& i)
 
 string str::get_var(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return string("");
 	}
 	skip_space(content, i);
 	int pos_start = i;
-	while(i < content.size() && ((content[i] >= 'a' && content[i] <= 'z') ||
+    while((size_t)i < content.size() && ((content[i] >= 'a' && content[i] <= 'z') ||
 		                         (content[i] >= 'A' && content[i] <= 'Z') ||
 		                         (content[i] >= '0' && content[i] <= '9') ||
 		                         content[i] == '_'))
@@ -148,11 +148,11 @@ string str::get_var(const string& content, int& i)
 
 int str::skip_space_reverse(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return i;
 	}
-	while(i >= 0 && content[i] == ' ' || content[i] == '\t' || content[i] == '\n')
+    while((i >= 0 && content[i] == ' ') || content[i] == '\t' || content[i] == '\n')
 	{
 		i--;
 	}
@@ -162,11 +162,11 @@ int str::skip_space_reverse(const string& content, int& i)
 
 int str::skip_valid_reverse(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return i;
 	}
-	while(i >= 0 && content[i] != ' ' && content[i] != '\t' && content[i] != '\n')
+    while(i >= 0 && content[i] != ' ' && content[i] != '\t' && content[i] != '\n')
 	{
 		i--;
 	}
@@ -176,7 +176,7 @@ int str::skip_valid_reverse(const string& content, int& i)
 
 string str::get_word_reverse(const string& content, int& i)
 {
-	if(i < 0 || i >= content.size())
+    if(i < 0 || (size_t)i >= content.size())
 	{
 		return string("");
 	}
@@ -194,12 +194,12 @@ string str::delete_C_style_comments(string code)
 	while(true)
 	{
 		int start_pos = code.find("/*");
-		if(start_pos == string::npos)
+        if((size_t)start_pos == string::npos)
 		{
 			break;
 		}
 		int end_pos = code.find("*/", start_pos+2);
-		if(end_pos == string::npos)
+        if((size_t)end_pos == string::npos)
 		{
 			end_pos = code.size();
 		}
@@ -210,12 +210,12 @@ string str::delete_C_style_comments(string code)
 	while(true)
 	{
 		int start_pos = code.find("//");
-		if(start_pos == string::npos)
+        if((size_t)start_pos == string::npos)
 		{
 			break;
 		}
 		int end_pos = code.find("\n", start_pos+2);
-		if(end_pos == string::npos)
+        if((size_t)end_pos == string::npos)
 		{
 			end_pos = code.size();
 		}
@@ -248,7 +248,7 @@ vector<string> str::split(const string& content, const string& pattern)
 	while(true)
 	{
 		pos = content.find(pattern, pos_start);
-		if(pos == string::npos)
+        if((size_t)pos == string::npos)
 		{
 			result.push_back(content.substr(pos_start));
 			return result;
@@ -263,7 +263,7 @@ vector<string> str::split(const string& content, const string& pattern)
 uint str::lines(const string& content)
 {
 	uint n_lines = 1;
-	for(int i = 0; i < content.size(); i++)
+    for(uint i = 0; i < content.size(); i++)
 	{
 		if(content[i] == '\n')
 		{
@@ -284,7 +284,7 @@ string str::replace_include(string content, const set<string>& include_paths)
 	{
 		content = delete_C_style_comments(content);
 		pos_include_start = content.find("#include");
-		if(pos_include_start == string::npos)
+        if((size_t)pos_include_start == string::npos)
 		{
 			return content;
 		}
@@ -298,7 +298,7 @@ string str::replace_include(string content, const set<string>& include_paths)
 		pos_filename_start++;
 		skip_space(content, pos_filename_start);
 		pos_filename_end = content.find(end_char, pos_filename_start);
-		if(pos_filename_end == string::npos)
+        if((size_t)pos_filename_end == string::npos)
 		{
 			throw glass::Exception(string("Error using #include: ") + end_char + " must be the end char.");
 		}
@@ -333,7 +333,7 @@ uint str::line_number(const string& content, uint pos)
 	uint content_size = content.size();
 	uint size = min(content_size, pos+1);
 	uint n_line = 1;
-	for(int i = 0; i < size; i++)
+    for(uint i = 0; i < size; i++)
 	{
 		if(content[i] == '\n')
 		{
@@ -347,7 +347,7 @@ uint str::line_number(const string& content, uint pos)
 string str::multi_space(uint n)
 {
 	string result;
-	for(int i = 0; i < n; i++)
+    for(uint i = 0; i < n; i++)
 	{
 		result += " ";
 	}
@@ -364,7 +364,7 @@ string str::format_space(string content)
 	content = strip(content);
 
 	int pos = 0, pos_start = 0;
-	while(pos < content.size())
+    while((size_t)pos < content.size())
 	{
 		if(content[pos] == ' ' || content[pos] == '\t' || content[pos] == '\n')
 		{
@@ -401,7 +401,7 @@ double str::eval(const string& expression) // need re-implement
 string str::format_var_name(const string& name)
 {
 	int pos_left_brace = name.find("[");
-	if(pos_left_brace == string::npos)
+    if((size_t)pos_left_brace == string::npos)
 	{
 		return strip(name);
 	}
@@ -416,7 +416,7 @@ string str::format_var_name(const string& name)
 string str::base_type(const string& type)
 {
 	int pos = type.find("[");
-	if(pos == string::npos)
+    if((size_t)pos == string::npos)
 	{
 		return type;
 	}
@@ -427,7 +427,7 @@ string str::base_type(const string& type)
 uint str::array_length(const string& type)
 {
 	int pos = type.find("[");
-	if(pos == string::npos)
+    if((size_t)pos == string::npos)
 	{
 		return 1;
 	}

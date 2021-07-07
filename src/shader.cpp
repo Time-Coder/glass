@@ -142,8 +142,8 @@ void BaseShader::add_include_path(const string& include_path)
 void BaseShader::find_comments()
 {
 	comments_set.clear();
-	int pos_start = 0;
-	int pos_end = 0;
+    size_t pos_start = 0;
+    size_t pos_end = 0;
 	bool should_break = false;
 	while(true)
 	{
@@ -161,7 +161,7 @@ void BaseShader::find_comments()
 		}
 		pos_end += 2;
 
-		for(int i = pos_start; i < pos_end; i++)
+        for(uint i = pos_start; i < pos_end; i++)
 		{
 			comments_set.insert(i);
 		}
@@ -188,7 +188,7 @@ void BaseShader::find_comments()
 			pos_end = _code.size();
 			should_break = true;
 		}
-		for(int i = pos_start; i < pos_end; i++)
+        for(uint i = pos_start; i < pos_end; i++)
 		{
 			comments_set.insert(i);
 		}
@@ -201,12 +201,12 @@ void BaseShader::find_comments()
 
 void BaseShader::replace_includes()
 {
-	int pos_include_start = 0;
-	int pos_filename_start = 0;
-	int pos_include_end = 0;
-	int pos_filename_end = 0;
-	uint n_lines = str::lines(_code);
-	for(int i = 1; i <= n_lines; i++)
+    int pos_include_start = 0;
+    int pos_filename_start = 0;
+    int pos_include_end = 0;
+    int pos_filename_end = 0;
+    uint n_lines = str::lines(_code);
+    for(uint i = 1; i <= n_lines; i++)
 	{
 		line_map[i] = _filename + ":" + str::str(i) + ": error: ";
 	}
@@ -218,7 +218,7 @@ void BaseShader::replace_includes()
 		while(true)
 		{
 			pos_include_start = _code.find("#include", pos_include_start);
-			if(pos_include_start == string::npos)
+            if((size_t)pos_include_start == string::npos)
 			{
 				return;
 			}
@@ -242,7 +242,7 @@ void BaseShader::replace_includes()
 		pos_filename_start++;
 		str::skip_space(_code, pos_filename_start);
 		pos_filename_end = _code.find(end_char, pos_filename_start);
-		if(pos_filename_end == string::npos)
+        if((size_t)pos_filename_end == string::npos)
 		{
 			throw glass::SyntaxError(line_map[str::line_number(_code, pos_filename_start)] + "#include file name must be enveloped by <...> or \"...\"");
 		}
@@ -269,11 +269,11 @@ void BaseShader::replace_includes()
 				n_lines = str::lines(_code);
 
 				map<uint, string> old_line_map = line_map;
-				for(int i = include_line_end; i <= n_lines; i++)
+                for(uint i = include_line_end; i <= n_lines; i++)
 				{
 					line_map[i] = old_line_map[i - include_lines + 1];
 				}
-				for(int i = include_line_number; i < include_line_end; i++)
+                for(uint i = include_line_number; i < include_line_end; i++)
 				{
 					line_map[i] = full_name + ":" + str::str(i-include_line_number+1) + ": error: ";
 				}
@@ -295,7 +295,7 @@ void BaseShader::format_error(string& info)
 	while(true)
 	{
 		int pos_error = info.find("ERROR: ", pos);
-		if(pos_error == string::npos)
+        if((size_t)pos_error == string::npos)
 		{
 			break;
 		}
@@ -351,7 +351,7 @@ void BaseShader::compile(const string& filename)
 	strcpy(value, _code.c_str());
 
 	glShaderSource(_id, 1, &(value), NULL);
-	delete value;
+    delete[] value;
 	glCompileShader(_id);
 
 	int success;
@@ -414,12 +414,12 @@ void Shader::find_layouts(const string& code)
 	while(true)
 	{
 		pos = code.find("layout", pos);
-		if(pos == string::npos)
+        if((size_t)pos == string::npos)
 		{
 			return;
 		}
 		if(!(pos == 0 || (pos-1 >= 0          && (code[pos-1] == '\n' || code[pos-1] == '\t' || code[pos-1] == ' '))) || 
-		   !(             pos+6 < code.size() && (code[pos+6] == '\n' || code[pos+6] == '\t' || code[pos+6] == ' ' || code[pos+6] == '(')))
+           !(             (size_t)pos+6 < code.size() && (code[pos+6] == '\n' || code[pos+6] == '\t' || code[pos+6] == ' ' || code[pos+6] == '(')))
 		{
 			pos += 6;
 			continue;
