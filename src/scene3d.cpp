@@ -313,10 +313,9 @@ void Scene3D::init_shadering_dir_light_shadow()
 
 void Scene3D::prepare()
 {
-#ifdef USE_QT
-    QCursor::setPos(mapToGlobal(QPoint(0.5*width(), 0.5*height())));
+#ifndef USE_QT
+    hideCursor();
 #endif
-	hideCursor();
 	camera.moveYTo(1.7);
 	camera.moveZTo(2);
     test_image.setImage("E:/Learning/OpenGL/demo/resources/images/floor.png");
@@ -738,17 +737,23 @@ void Scene3D::onChangeSize(int width, int height)
 #endif
 }
 
+#ifndef USE_QT
 void Scene3D::onMouseMove()
 {
 	if(can_move)
 	{
 		camera.yaw(-2.0*dx()/width());
 		camera.pitch(-2.0*dy()/height());
-#ifdef USE_QT
-        update();
-#endif
 	}
 }
+#else
+void Scene3D::onDrag()
+{
+    camera.yaw(2.0*dx()/width());
+    camera.pitch(2.0*dy()/height());
+    update();
+}
+#endif
 
 void Scene3D::onKeyRepeat(const string& key)
 {
@@ -819,6 +824,7 @@ void Scene3D::onKeyRepeat(const string& key)
 			}
 		}
 	}
+#ifndef USE_QT
 	else if(key == "ESC")
 	{
 		can_move = false;
@@ -828,12 +834,10 @@ void Scene3D::onKeyRepeat(const string& key)
 	{
 		camera.screenOffset(0, 0);
 		camera.screenZoom(1);
-		can_move = true;
-#ifdef USE_QT
-        QCursor::setPos(mapToGlobal(QPoint(0.5*width(), 0.5*height())));
-#endif
+        can_move = true;
 		hideCursor();
 	}
+#endif
 	else if(key == "F")
 	{
 		cout << fps() << endl;

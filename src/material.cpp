@@ -194,29 +194,60 @@ void Material::setTexture(const string& filename, TextureType type, float height
 	switch(type)
 	{
 	case DIFFUSE:
-		diffuse_map.setImage(filename);
+		diffuse_map_image = filename;
+		// diffuse_map.setImage(filename);
 		using_diffuse_map = true;
 		break;
 
 	case SPECULAR:
-		specular_map.setImage(filename);
+		specular_map_image = filename;
+		// specular_map.setImage(filename);
 		using_specular_map = true;
 		break;
 
 	case BUMP:
-		bump_map.setImage(filename);
+		bump_map_image = filename;
+		// bump_map.setImage(filename);
 		height_factor = fabs(height);
 		using_bump_map = true;
 		bump_inverse = _inverse;
 		break;
 
 	case NORMAL:
-		normal_map.setImage(filename);
+		normal_map_image = filename;
+		// normal_map.setImage(filename);
 		height_factor = fabs(height);
 		using_normal_map = true;
 		break;
 	}
 	sync();
+}
+
+void Material::apply()
+{
+	if(!diffuse_map_image.empty())
+	{
+		diffuse_map.setImage(diffuse_map_image);
+		diffuse_map_image.clear();
+	}
+
+	if(!specular_map_image.empty())
+	{
+		specular_map.setImage(specular_map_image);
+		specular_map_image.clear();
+	}
+
+	if(!bump_map_image.empty())
+	{
+		bump_map.setImage(bump_map_image);
+		bump_map_image.clear();
+	}
+
+	if(!normal_map_image.empty())
+	{
+		normal_map.setImage(normal_map_image);
+		normal_map_image.clear();
+	}
 }
 
 void Material::setTexture(const sampler2D& sampler, TextureType type, float height, bool _inverse)

@@ -145,13 +145,11 @@ void UBO::bind()
 	BO::bind();
 }
 
-void UBO::copy(const UBO& ubo)
+void UBO::copy(UBO& ubo)
 {
 	if(this != &ubo && self != ubo.self)
 	{
-		del();
-
-		self = ubo.self;
+		BO::operator=(ubo);
 
 		userData<UBO_Instance>()->binding_point = ubo.bindingPoint();
 		binding_points_poll.borrow(ubo.bindingPoint());

@@ -29,6 +29,12 @@ struct Material: public Uniform::Bindable
     bool using_normal_map = false;
     // end
 
+    std::string diffuse_map_image;
+    std::string specular_map_image;
+    std::string reflection_map_image;
+    std::string bump_map_image;
+    std::string normal_map_image;
+
     enum TextureType
     {
         DIFFUSE,
@@ -46,6 +52,8 @@ struct Material: public Uniform::Bindable
 
     void useTexture(TextureType type, bool flag = true);
     std::string key()const;
+
+    void apply();
 };
 
 #endif

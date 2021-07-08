@@ -1231,7 +1231,7 @@ void Uniform::BlockMap::Reference::bind(uint point)
 	instance()->binding_point = point;
 }
 
-void Uniform::BlockMap::Reference::bind(const UBO& ubo)
+void Uniform::BlockMap::Reference::bind(UBO& ubo)
 {
 	// if(ubo.block != *this)
 	// {

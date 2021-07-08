@@ -59,7 +59,7 @@ private:
 	void init();
 	void del();
 	bool is_atom(const std::string& name);
-	void copy(const UBO& ubo);
+	void copy(UBO& ubo);
 
 public:
 	UBO();
@@ -68,7 +68,7 @@ public:
 	virtual ~UBO();
 
 	template<class DataType>
-	UBO& operator =(const DataType& ubo);
+	UBO& operator =(DataType& ubo);
 
 	UBO& operator =(UBO&& ubo);
 
@@ -194,7 +194,7 @@ void UBO::set(const std::string& name, const DataType& value)
 }
 
 template<class DataType>
-UBO& UBO::operator =(const DataType& value)
+UBO& UBO::operator =(DataType& value)
 {
 	if(same_type(DataType, UBO))
 	{

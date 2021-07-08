@@ -287,9 +287,25 @@ void GlassWindow::mouseMoveEvent(QMouseEvent* event)
 #ifndef USE_QT
 	glfwGetCursorPos(_window, &(current->__current_x), &(current->__current_y));
 #else
-    QPoint point = event->pos();
-    current->__current_x = point.x();
-    current->__current_y = point.y();
+//    if(!is_cursor_hiden)
+//    {
+        QPoint point = event->pos();
+        current->__current_x = point.x();
+        current->__current_y = point.y();
+//    }
+//    else
+//    {
+//        QPoint point = event->pos();
+//        QPoint center = rect().center();
+//        if(point == center)
+//        {
+//            return;
+//        }
+
+//        current->__current_x += (point.x() - center.x());
+//        current->__current_y += (point.y() - center.y());
+//        QCursor::setPos(mapToGlobal(center));
+//    }
 #endif
 
 	if(current->left_pressed)
@@ -583,8 +599,8 @@ void GlassWindow::mouse_enter_leave_callback(GLFWwindow* window, int flag)
 	else
 	{
 		current->onMouseLeave();
-        current->__last_x = -1;
-        current->__last_y = -1;
+        current->__last_x = std::numeric_limits<double>::quiet_NaN();
+        current->__last_y = std::numeric_limits<double>::quiet_NaN();
 	}
 }
 #else
@@ -608,36 +624,9 @@ void GlassWindow::leaveEvent(QEvent* event)
     {
         onMouseLeave();
     }
-    else
-    {
-        double new_x = __current_x, new_y = __current_y;
-        if(__current_x <= 0)
-        {
-            __base_x -= width();
-            new_x = width();
-        }
-        else if(__current_x >= width())
-        {
-            __base_x += width();
-            new_x = 0;
-        }
 
-        if(__current_y <= 0)
-        {
-            __base_y -= height();
-            new_y = height();
-        }
-        else if(__current_y >= height())
-        {
-            __base_y += height();
-            new_y = 0;
-        }
-
-        QCursor::setPos(mapToGlobal(QPoint(new_x, new_y)));
-    }
-
-    __last_x = -1;
-    __last_y = -1;
+    __last_x = std::numeric_limits<double>::quiet_NaN();
+    __last_y = std::numeric_limits<double>::quiet_NaN();
 }
 #endif
 
@@ -666,12 +655,12 @@ void GlassWindow::wheelEvent(QWheelEvent *event)
 
 int GlassWindow::current_x()
 {
-    return __base_x + __current_x;
+    return __current_x;
 }
 
 int GlassWindow::current_y()
 {
-    return __base_y + __current_y;
+    return __current_y;
 }
 
 double GlassWindow::current_t()
@@ -681,17 +670,17 @@ double GlassWindow::current_t()
 
 int GlassWindow::last_x()
 {
-    return __base_x + (__last_x != -1 ? __last_x : __current_x);
+    return isnan(__last_x) ? __current_x : __last_x;
 }
 
 int GlassWindow::last_y()
 {
-    return __base_y + (__last_y != -1 ? __last_y : __current_y);
+    return isnan(__last_y) ? __current_y : __last_y;
 }
 
 double GlassWindow::last_t()
 {
-    return __last_t != -1 ? __last_t : __current_t;
+    return isnan(__last_t) ? __current_t : __last_t;
 }
 
 int GlassWindow::dx()
@@ -716,62 +705,62 @@ double GlassWindow::fps()
 
 int GlassWindow::last_left_press_x()
 {
-    return __base_x + __last_left_press_x;
+    return __last_left_press_x;
 }
 
 int GlassWindow::last_left_press_y()
 {
-    return __base_y + __last_left_press_y;
+    return __last_left_press_y;
 }
 
 int GlassWindow::last_left_release_x()
 {
-    return __base_x + __last_left_release_x;
+    return __last_left_release_x;
 }
 
 int GlassWindow::last_left_release_y()
 {
-    return __base_y + __last_left_release_y;
+    return __last_left_release_y;
 }
 
 int GlassWindow::last_right_press_x()
 {
-    return __base_x + __last_right_press_x;
+    return __last_right_press_x;
 }
 
 int GlassWindow::last_right_press_y()
 {
-    return __base_y + __last_right_press_y;
+    return __last_right_press_y;
 }
 
 int GlassWindow::last_right_release_x()
 {
-    return __base_x + __last_right_release_x;
+    return __last_right_release_x;
 }
 
 int GlassWindow::last_right_release_y()
 {
-    return __base_y + __last_right_release_y;
+    return __last_right_release_y;
 }
 
 int GlassWindow::last_middle_press_x()
 {
-    return __base_x + __last_middle_press_x;
+    return __last_middle_press_x;
 }
 
 int GlassWindow::last_middle_press_y()
 {
-    return __base_y + __last_middle_press_y;
+    return __last_middle_press_y;
 }
 
 int GlassWindow::last_middle_release_x()
 {
-    return __base_x + __last_middle_release_x;
+    return __last_middle_release_x;
 }
 
 int GlassWindow::last_middle_release_y()
 {
-    return __base_y + __last_middle_release_y;
+    return __last_middle_release_y;
 }
 
 bool GlassWindow::is_left_pressed()
@@ -924,10 +913,6 @@ void GlassWindow::initializeGL()
                                (void*)(this->*(&GlassWindow::onMouseStopMove)) != (void*)(&GlassWindow::onMouseStopMove));
     is_scroll_bound_detecting = ((void*)(this->*(&GlassWindow::onWheelStartScroll)) != (void*)(&GlassWindow::onWheelStartScroll) ||
                                  (void*)(this->*(&GlassWindow::onWheelStopScroll)) != (void*)(&GlassWindow::onWheelStopScroll));
-
-#ifdef USE_QT
-    emit initialized();
-#endif
 }
 
 void GlassWindow::paintGL()
@@ -1002,11 +987,15 @@ __name(name), __color(color)
     surfaceFormat.setSamples(8);
     setFormat(surfaceFormat);
 
+    setMouseTracking(true);
+    setFocusPolicy(Qt::StrongFocus);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     if(width > 0 && height > 0)
     {
-        resize(width, height);
+        setMinimumWidth(width);
+        setMinimumHeight(height);
     }
-    setMouseTracking(true);
 #endif
 
 #ifndef USE_QT
@@ -1082,6 +1071,8 @@ void GlassWindow::hideCursor()
     QApplication::setOverrideCursor(Qt::BlankCursor);
 #endif
     is_cursor_hiden = true;
+    __last_x = std::numeric_limits<double>::quiet_NaN();
+    __last_y = std::numeric_limits<double>::quiet_NaN();
 }
 
 void GlassWindow::showCursor()
@@ -1092,4 +1083,6 @@ void GlassWindow::showCursor()
     QApplication::restoreOverrideCursor();
 #endif
     is_cursor_hiden = false;
+    __last_x = std::numeric_limits<double>::quiet_NaN();
+    __last_y = std::numeric_limits<double>::quiet_NaN();
 }

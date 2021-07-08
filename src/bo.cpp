@@ -52,7 +52,7 @@ void BO::init()
 			throw glass::RuntimeError("Failed to create " + type_str());
 		}
 	#ifdef _DEBUG
-		cout << "constructing " << type_str() << " " << instance->id << endl;
+		cout << "constructing " << type_str() << " " << id() << endl;
 	#endif
 	}
 	else if(instance()->n_sources == 0)
@@ -88,7 +88,7 @@ void BO::del()
 	if(instance()->n_sources == 0) // Not empty: id != 0
 	{
 	#ifdef _DEBUG
-		cout << "destructing " << type_str() << " " << instance->id << endl;
+		cout << "destructing " << type_str() << " " << id() << endl;
 	#endif
 		unbind();
 		switch(buffer_type)
@@ -177,7 +177,7 @@ bool BO::isBind()const
 
 uint BO::n_sources()const
 {
-	return empty() ? 0 : self->n_sources;
+	return (self == NULL ? 0 : self->n_sources);
 }
 
 void BO::bind()
@@ -232,12 +232,12 @@ void BO::unbind()const
 
 size_t BO::size()const
 {
-	return empty() ? 0 : self->size;
+	return (self == NULL ? 0 : self->size);
 }
 
 uint BO::id()const
 {
-	return empty() ? 0 : self->id;
+	return (self == NULL ? 0 : self->id);
 }
 
 BO::BufferType BO::type()const
@@ -260,7 +260,7 @@ string BO::type_str()const
 
 BO::MemoryType BO::memType()const
 {
-	return (empty() ? STATIC : self->mem_type);
+	return (self == NULL ? STATIC : self->mem_type);
 }
 
 void BO::malloc(size_t n_bytes, MemoryType mem_type)
@@ -316,13 +316,14 @@ void BO::memcpy(void* ptr_value, size_t n_bytes, MemoryType mem_type)
 
 void BO::free()
 {
+	instance()->size = 0;
 	if(empty())
 	{
 		return;
 	}
 
 #ifdef _DEBUG
-	cout << "destructing " << type_str() << " " << instance()->id << endl;
+	cout << "destructing " << type_str() << " " << id() << endl;
 #endif
 	unbind();
 	glDeleteBuffers(1, &(instance()->id));

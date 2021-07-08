@@ -2,6 +2,7 @@
 #define __FIGURE_H__
 
 #include <iostream>
+#include <limits>
 
 #include "glass/common.h"
 #include "glass/utils/tictoc.h"
@@ -30,10 +31,6 @@ class GlassWindow
 class GlassWindow: public QOpenGLWidget
 #endif
 {
-#ifdef USE_QT
-    Q_OBJECT
-#endif
-
 	struct Constructor
 	{
 		friend class GlassWindow;
@@ -63,26 +60,24 @@ private:
 	Timer timer;
     Scheduler scheduler_mouse;
     Scheduler scheduler_wheel;
-    double __base_x = 0;
-    double __base_y = 0;
     double __current_x = 0.0;
     double __current_y = 0.0;
     double __current_t = 0.0;
-    double __last_x = -1.0;
-    double __last_y = -1.0;
-    double __last_t = -1.0;
-    double __last_left_press_x = -1.0;
-    double __last_left_press_y = -1.0;
-    double __last_left_release_x = -1.0;
-    double __last_left_release_y = -1.0;
-    double __last_right_press_x = -1.0;
-    double __last_right_press_y = -1.0;
-    double __last_right_release_x = -1.0;
-    double __last_right_release_y = -1.0;
-    double __last_middle_press_x = -1.0;
-    double __last_middle_press_y = -1.0;
-    double __last_middle_release_x = -1.0;
-    double __last_middle_release_y = -1.0;
+    double __last_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_y = std::numeric_limits<double>::quiet_NaN();
+    double __last_t = std::numeric_limits<double>::quiet_NaN();
+    double __last_left_press_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_left_press_y = std::numeric_limits<double>::quiet_NaN();
+    double __last_left_release_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_left_release_y = std::numeric_limits<double>::quiet_NaN();
+    double __last_right_press_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_right_press_y = std::numeric_limits<double>::quiet_NaN();
+    double __last_right_release_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_right_release_y = std::numeric_limits<double>::quiet_NaN();
+    double __last_middle_press_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_middle_press_y = std::numeric_limits<double>::quiet_NaN();
+    double __last_middle_release_x = std::numeric_limits<double>::quiet_NaN();
+    double __last_middle_release_y = std::numeric_limits<double>::quiet_NaN();
     bool left_pressed = false;
     bool middle_pressed = false;
     bool right_pressed = false;
@@ -215,11 +210,6 @@ public:
 	void setIcon(const std::string& filename);
 	void hideCursor();
 	void showCursor();
-
-#ifdef USE_QT
-signals:
-    void initialized();
-#endif
 };
 
 #endif

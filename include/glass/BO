@@ -184,7 +184,7 @@ void BO::delWithUserData()
 	if(instance()->n_sources == 0) // Not empty: id != 0
 	{
 	#ifdef _DEBUG
-		cout << "destructing " << type_str() << " " << instance->id << endl;
+		std::cout << "destructing " << type_str() << " " << id() << std::endl;
 	#endif
 		unbind();
 		switch(buffer_type)

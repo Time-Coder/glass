@@ -118,7 +118,7 @@ public:
 			uint binding_point()const;
 
 			void bind(uint point);
-			void bind(const UBO& ubo);
+			void bind(UBO& ubo);
 			void unbind();
 			bool contains(const std::string& member_name)const;
 			bool empty()const;
@@ -228,7 +228,7 @@ public:
 	int location(const std::string& name);
 	
 	template<class DataType>
-	void set(const std::string& name, const DataType& value);
+	void set(const std::string& name, DataType& value);
 
 	void set_atom(const std::string& name, void* ptr_value);
 
@@ -365,7 +365,7 @@ void Uniform::Bindable::sync(DataType& member)
 }
 
 template<class DataType>
-void Uniform::set(const std::string& name, const DataType& value)
+void Uniform::set(const std::string& name, DataType& value)
 {
 	refresh();
 	if(uniform_map.count(name) == 0)
@@ -383,6 +383,10 @@ void Uniform::set(const std::string& name, const DataType& value)
 	if(type != type_name(DataType))
 	{
 		throw glass::TypeError("Cannot convert " + type_name(DataType) + " to " + type);
+	}
+	if(type == "Material")
+	{
+		force_cast<Material>(value).apply();
 	}
 	please_define(type);
 
