@@ -8,6 +8,8 @@
 #include <QIcon>
 #endif
 
+#include <cmath>
+
 #include "glass/GlassWindow"
 #include "glass/utils/image.h"
 #include "glass/utils/exceptions.h"
